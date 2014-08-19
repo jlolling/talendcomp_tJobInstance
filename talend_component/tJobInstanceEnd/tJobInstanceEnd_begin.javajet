@@ -1,0 +1,174 @@
+<%@ jet 
+	imports="
+		org.talend.core.model.process.INode 
+		org.talend.core.model.process.ElementParameterParser 
+		org.talend.core.model.metadata.IMetadataTable 
+		org.talend.core.model.metadata.IMetadataColumn 
+		org.talend.core.model.process.IConnection
+		org.talend.core.model.process.IConnectionCategory
+		org.talend.designer.codegen.config.CodeGeneratorArgument
+		org.talend.core.model.metadata.types.JavaTypesManager
+		org.talend.core.model.metadata.types.JavaType
+		java.util.List
+    	java.util.Map
+    	org.talend.core.model.process.IProcess
+		org.talend.core.model.process.IContextParameter
+	" 
+%>
+<% 
+    CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
+    INode node = (INode) codeGenArgument.getArgument();
+    String cid = node.getUniqueName();
+    String connectionComp = ElementParameterParser.getValue(node, "__CONNECTION__");
+    boolean useSeparateConn = "true".equals(ElementParameterParser.getValue(node, "__USE_SEPARATE_CONNECTION__"));
+    String startComp = ElementParameterParser.getValue(node, "__JOB_START_COMP__");
+    boolean saveNamedCounters = "true".equals(ElementParameterParser.getValue(node, "__SAVE_NAMED_COUNTERS__"));
+    String jobResult = ElementParameterParser.getValue(node, "__JOB_RESULT__");
+    List<Map<String, String>> inputCounterList = (List<Map<String,String>>) ElementParameterParser.getObjectValue(node, "__INPUTS__");
+    List<Map<String, String>> outputCounterList = (List<Map<String,String>>) ElementParameterParser.getObjectValue(node, "__OUTPUTS__");
+    List<Map<String, String>> updateCounterList = (List<Map<String,String>>) ElementParameterParser.getObjectValue(node, "__UPDATES__");
+    List<Map<String, String>> rejectCounterList = (List<Map<String,String>>) ElementParameterParser.getObjectValue(node, "__REJECTS__");
+    List<Map<String, String>> deleteCounterList = (List<Map<String,String>>) ElementParameterParser.getObjectValue(node, "__DELETES__");
+    String timeRangeStart = ElementParameterParser.getValue(node, "__TIME_RANGE_START__");
+    String timeRangeEnd = ElementParameterParser.getValue(node, "__TIME_RANGE_END__");
+    String valueRangeStart = ElementParameterParser.getValue(node, "__VALUE_RANGE_START__");
+    String valueRangeEnd = ElementParameterParser.getValue(node, "__VALUE_RANGE_END__");
+    boolean saveContextAtEnd = "true".equals(ElementParameterParser.getValue(node, "__SAVE_CONTEXT_AT_END__"));
+	boolean doNotSavePasswords = "true".equals(ElementParameterParser.getValue(node, "__DO_NOT_SAVE_PASSWORDS__"));
+%>
+
+	de.cimt.talendcomp.manage.JobInstanceHelper <%=cid%> = (de.cimt.talendcomp.manage.JobInstanceHelper) globalMap.get("<%=startComp%>");
+	if (<%=cid%> == null) {
+		throw new Exception("Start component <%=cid%> cannot be found in the globalMap");
+	}
+<% if (useSeparateConn) { %>
+	<%=cid%>.setConnection((java.sql.Connection) globalMap.get("conn_<%=connectionComp%>"));
+<% } %>
+<%  if (jobResult != null && jobResult.isEmpty() == false) { %>
+	<%=cid%>.setJobResult(<%=jobResult%>);
+<%  } %>
+<%  if (timeRangeStart != null && timeRangeStart.trim().isEmpty() == false) { %>
+	<%=cid%>.checkTimeRange(<%=timeRangeStart%>);
+<%  } %>
+<%  if (timeRangeEnd != null && timeRangeEnd.trim().isEmpty() == false) { %>
+	<%=cid%>.checkTimeRange(<%=timeRangeEnd%>);
+<%  } %>
+<%  if (valueRangeStart != null && valueRangeStart.trim().isEmpty() == false) { %>
+	<%=cid%>.checkValueRange(<%=valueRangeStart%>);
+<%  } %>
+<%  if (valueRangeEnd != null && valueRangeEnd.trim().isEmpty() == false) { %>
+	<%=cid%>.checkValueRange(<%=valueRangeEnd%>);
+<%  } %>
+<%	if (inputCounterList != null && inputCounterList.isEmpty() == false) { %>
+	// input counter
+<%	    for (Map<String, String> entry : inputCounterList) {
+		    String counterCode = entry.get("INPUT_COUNTER");
+		    boolean add = "true".equals(entry.get("ADD"));
+		    String name = entry.get("COUNTER_NAME");
+		    if (saveNamedCounters == false || name == null || name.trim().isEmpty()) {
+			    name = "null";
+		    }
+		    if (counterCode != null && counterCode.trim().isEmpty() == false) {
+			    if (add) { %>
+	<%=cid%>.addCountInput(<%=counterCode%>, <%=name%>);		
+<%              } else { %>
+	<%=cid%>.subCountInput(<%=counterCode%>, <%=name%>);		
+<%              }
+            } 
+        } 
+	} %>
+<%	if (outputCounterList != null && outputCounterList.isEmpty() == false) { %>
+	// output counter
+<%    	for (Map<String, String> entry : outputCounterList) {
+			String counterCode = entry.get("OUTPUT_COUNTER");
+			boolean add = "true".equals(entry.get("ADD"));
+			String name = entry.get("COUNTER_NAME");
+			if (saveNamedCounters == false || name == null || name.trim().isEmpty()) {
+				name = "null";
+			}
+			if (counterCode != null && counterCode.trim().isEmpty() == false) {
+				if (add) { %>
+	<%=cid%>.addCountOutput(<%=counterCode%>, <%=name%>);		
+<%          	} else { %>
+	<%=cid%>.subCountOutput(<%=counterCode%>, <%=name%>);		
+<%      	    }
+    	    } 
+		} 
+	}%>
+<%	if (updateCounterList != null && updateCounterList.isEmpty() == false) { %>
+	// update counter
+<%    	for (Map<String, String> entry : updateCounterList) {
+			String counterCode = entry.get("UPDATE_COUNTER");
+			boolean add = "true".equals(entry.get("ADD"));
+			String name = entry.get("COUNTER_NAME");
+			if (saveNamedCounters == false || name == null || name.trim().isEmpty()) {
+				name = "null";
+			}
+			if (counterCode != null && counterCode.trim().isEmpty() == false) {
+				if (add) { %>
+	<%=cid%>.addCountUpdate(<%=counterCode%>, <%=name%>);		
+<%          	} else { %>
+	<%=cid%>.subCountUpdate(<%=counterCode%>, <%=name%>);		
+<%      	    }
+    	    } 
+		} 
+	}%>
+<%	if (rejectCounterList != null && rejectCounterList.isEmpty() == false) { %>
+	// reject counter
+<%		for (Map<String, String> entry : rejectCounterList) {
+			String counterCode = entry.get("REJECT_COUNTER");
+			boolean add = "true".equals(entry.get("ADD"));
+			String name = entry.get("COUNTER_NAME");
+			if (saveNamedCounters == false || name == null || name.trim().isEmpty()) {
+				name = "null";
+			}
+			if (counterCode != null && counterCode.trim().isEmpty() == false) {
+				if (add) { %>
+	<%=cid%>.addCountReject(<%=counterCode%>, <%=name%>);		
+<%          	} else { %>
+	<%=cid%>.subCountReject(<%=counterCode%>, <%=name%>);		
+<%          	}
+        	}
+		} 
+	}%>
+<%	if (deleteCounterList != null && deleteCounterList.isEmpty() == false) { %>
+	// delete counter
+<%		for (Map<String, String> entry : deleteCounterList) {
+			String counterCode = entry.get("DELETE_COUNTER");
+			boolean add = "true".equals(entry.get("ADD"));
+			String name = entry.get("COUNTER_NAME");
+			if (saveNamedCounters == false || name == null || name.trim().isEmpty()) {
+				name = "null";
+			}
+			if (counterCode != null && counterCode.trim().isEmpty() == false) {
+				if (add) { %>
+	<%=cid%>.addCountDelete(<%=counterCode%>, <%=name%>);		
+<%          	} else { %>
+	<%=cid%>.subCountDelete(<%=counterCode%>, <%=name%>);		
+<%          	}
+        	}
+		}
+	} %>
+<%  if (saveContextAtEnd) { %>
+	{   // saving context at the end
+		// configure context helper
+		de.cimt.talendcomp.manage.JobInstanceContextHelper contextHelper = new de.cimt.talendcomp.manage.JobInstanceContextHelper();
+		// setup table meta data
+		contextHelper.setTableName(<%=cid%>.getContextTableName());
+		contextHelper.setSchemaName(<%=cid%>.getSchemaName());
+		contextHelper.setAlternativeColumnNames(<%=cid%>.getAlternativeColumnNames());
+		contextHelper.setConnection(<%=cid%>.getConnection());
+		contextHelper.setJobInstanceId(<%=cid%>.getJobInstanceId());
+		contextHelper.setOutput(true);
+<%  	List<IContextParameter> listCtxParams = node.getProcess().getContextManager().getDefaultContext().getContextParameterList();
+    	for (IContextParameter ctxParam : listCtxParams) { %>
+<%          if (doNotSavePasswords == false || (ctxParam.getName().toLowerCase().contains("passw") == false && "id_Password".equals(ctxParam.getType()) == false)) { %>
+		contextHelper.setAttribute("<%=ctxParam.getName()%>", context.<%=ctxParam.getName()%>, false);
+<%          } else { %>
+		// leaf out password attribute <%=ctxParam.getName()%>
+<%          } %>
+<%  	} // for %>
+		contextHelper.writeContext();
+	} // saving context end
+<%	} // if saveContextAtEnd
+%>

@@ -1,0 +1,48 @@
+<%@ jet 
+	imports="
+		org.talend.core.model.process.INode 
+		org.talend.core.model.process.ElementParameterParser 
+		org.talend.core.model.metadata.IMetadataTable 
+		org.talend.core.model.metadata.IMetadataColumn 
+		org.talend.core.model.process.IConnection
+		org.talend.core.model.process.IConnectionCategory
+		org.talend.designer.codegen.config.CodeGeneratorArgument
+		org.talend.core.model.metadata.types.JavaTypesManager
+		org.talend.core.model.metadata.types.JavaType
+		java.util.List
+    	java.util.Map
+	" 
+%>
+<%
+    CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
+    INode node = (INode) codeGenArgument.getArgument();
+    String cid = node.getUniqueName(); %>
+    // increment for current flow
+	<%=cid%>_count++;
+<%    IConnection conn = null;
+    if (node.getIncomingConnections().size() > 0) {
+    	conn = node.getIncomingConnections().get(0);
+    }
+	List<Map<String, String>> columnList = (List<Map<String,String>>) ElementParameterParser.getObjectValue(node, "__RANGE_CONFIG__");
+	if (conn != null && columnList != null) {
+		for (Map<String, String> ce : columnList) {
+			String columnName = ce.get("SCHEMA_COLUMN");
+			String rangeTarget = ce.get("RANGE_TARGET");
+			if ("time_range".equals(rangeTarget)) { %>
+	try {
+		<%=cid%>.checkTimeRange(<%=conn.getName()%>.<%=columnName%>);
+	} catch (Exception e) {
+		globalMap.put("<%=cid%>_ERROR_MESSAGE","check column <%=columnName%> for time range failed:" + e.getMessage());
+		throw e; 
+	}
+<%			} else if ("value_range".equals(rangeTarget)) { %>
+	try {
+		<%=cid%>.checkValueRange(<%=conn.getName()%>.<%=columnName%>);
+	} catch (Exception e) {
+		globalMap.put("<%=cid%>_ERROR_MESSAGE","check column <%=columnName%> for value range failed:" + e.getMessage());
+		throw e; 
+	}
+<%			}
+		}
+	}
+%>
