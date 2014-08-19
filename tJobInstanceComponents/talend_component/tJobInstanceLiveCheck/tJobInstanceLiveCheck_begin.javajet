@@ -1,0 +1,87 @@
+<%@ jet 
+	imports="
+		org.talend.core.model.process.INode 
+		org.talend.core.model.process.ElementParameterParser 
+		org.talend.designer.codegen.config.CodeGeneratorArgument
+		org.talend.core.model.process.IConnection
+	" 
+%>
+<% 
+    CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
+    INode node = (INode) codeGenArgument.getArgument();
+    String cid = node.getUniqueName();
+    String connectionComp = ElementParameterParser.getValue(node, "__CONNECTION__");
+	boolean closeConnection = "true".equals(ElementParameterParser.getValue(node, "__CLOSE_CONNECTION__"));
+    String tableName = ElementParameterParser.getValue(node, "__TABLE_NAME__");
+    String schemaName = ElementParameterParser.getValue(node, "__SCHEMA_NAME__");
+	boolean useProjectSpecificNames = "true".equals(ElementParameterParser.getValue(node, "__USE_PROJECT_SPECIFIC_NAMES__"));
+	String bundleName = ElementParameterParser.getValue(node, "__PROJECT_SPECIFIC_NAME_MAP_RESOURCE__");
+    IConnection conn = null;
+    if (node.getOutgoingConnections().size() > 0) {
+    	conn = node.getOutgoingConnections().get(0);
+    }
+%>
+	// instantiate the job instance helper
+	de.cimt.talendcomp.manage.JobInstanceHelper <%=cid%> = new de.cimt.talendcomp.manage.JobInstanceHelper();
+	// setup table meta data
+<%  if (tableName != null && tableName.trim().isEmpty() == false) { %>
+	<%=cid%>.setTableName(<%=tableName%>);
+<%  } %>
+<%  if (schemaName != null && schemaName.trim().isEmpty() == false) { %>
+	<%=cid%>.setSchemaName(<%=schemaName%>);
+<%  } else {%>
+	{
+		String schemaName = (String) globalMap.get("dbschema_<%=connectionComp%>");
+		if (schemaName == null) {
+			schemaName = (String) globalMap.get("db_<%=connectionComp%>");
+		}
+		if (schemaName == null) {
+			schemaName = (String) globalMap.get("tableschema_<%=connectionComp%>");
+		}
+		if (schemaName == null) {
+			schemaName = (String) globalMap.get("schema_<%=connectionComp%>");
+		}
+		if (schemaName == null) {
+			schemaName = (String) globalMap.get("dbname_<%=connectionComp%>");
+		}
+		if (schemaName != null) {
+			<%=cid%>.setSchemaName(schemaName);
+		}
+	}
+<%  } %>
+<% if (useProjectSpecificNames) { %>
+	if (<%=cid%>.configure(<%=bundleName%>) == false) {
+		throw new Exception("Configuration " + <%=bundleName%> + " could not found!");
+	}
+<% } %>	
+	<%=cid%>.setConnection((java.sql.Connection) globalMap.get("conn_<%=connectionComp%>"));
+    // set job data
+	globalMap.put("<%=cid%>", <%=cid%>);
+	java.util.List<de.cimt.talendcomp.manage.JobInfo> listDiedInstances_<%=cid%> = new java.util.ArrayList<de.cimt.talendcomp.manage.JobInfo>();
+	try {
+		listDiedInstances_<%=cid%> = <%=cid%>.cleanupBrokenJobInstances();
+	} catch (Exception e) {
+		globalMap.put("<%=cid%>_ERROR_MESSAGE", e.getMessage());
+		throw e;
+	} finally {
+<%  if (closeConnection) { %>
+		<%=cid%>.closeConnection();
+<%  } %>
+	}
+	globalMap.put("<%=cid%>_COUNT_RUNNING_PROCESSES", <%=cid%>.getCountProcesses());
+	globalMap.put("<%=cid%>_COUNT_RUNNING_JOB_INSTANCES", <%=cid%>.getCountRunningJobInstances());
+	globalMap.put("<%=cid%>_COUNT_BROKEN_JOB_INSTANCES", <%=cid%>.getCountBrokenInstances());
+<%  if (conn != null) { %>
+	int count_<%=cid%> = 0;
+	for (de.cimt.talendcomp.manage.JobInfo instance : listDiedInstances_<%=cid%>) {
+    	<%=conn.getName()%> = new <%=conn.getName()%>Struct(); // to avoid cell value reusing in errors
+		<%=conn.getName()%>.JOB_INSTANCE_ID = instance.getJobInstanceId();
+		<%=conn.getName()%>.JOB_NAME = instance.getName();
+		<%=conn.getName()%>.JOB_TALEND_PID = instance.getGuid();
+		<%=conn.getName()%>.JOB_HOST_PID = instance.getHostPid();
+		<%=conn.getName()%>.JOB_WORK_ITEM = instance.getWorkItem();
+		<%=conn.getName()%>.JOB_STARTED_AT = instance.getStartDate();
+		count_<%=cid%>++;
+<%  } %>
+
+	

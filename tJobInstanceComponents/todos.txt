@@ -1,0 +1,17 @@
+TODO:
+
+Option to Check if VM is in UTC timezone mode
+  		// put given time into calendar with environment time zone
+		java.util.Calendar envCalendar = java.util.Calendar.getInstance();
+		
+		// bail out when job is not running in UTC,
+		// since this would result in wrong toString function of sql components
+        java.util.TimeZone envZone = envCalendar.getTimeZone();
+		if (!"UTC".equals(envZone.getID())) {
+			throw new RuntimeException("JVM is not in UTC time zone. Please add -Duser.timezone=UTC to JVM parameters of job.") ;
+		}
+
+JMX bean for live check
+
+check if process is still alive from job instances
+		

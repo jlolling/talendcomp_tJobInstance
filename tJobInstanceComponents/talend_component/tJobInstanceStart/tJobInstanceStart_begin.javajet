@@ -1,0 +1,436 @@
+<%@ jet 
+	imports="
+		org.talend.core.model.process.INode 
+		org.talend.core.model.process.ElementParameterParser 
+		org.talend.designer.codegen.config.CodeGeneratorArgument
+		org.talend.core.model.metadata.types.JavaTypesManager
+		org.talend.core.model.metadata.types.JavaType
+		java.util.List 
+    	java.util.Map
+		org.talend.core.model.process.IContextParameter
+	" 
+%>
+<% 
+    CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
+    INode node = (INode) codeGenArgument.getArgument();
+    String cid = node.getUniqueName();
+    String jobWorkItem = ElementParameterParser.getValue(node, "__JOB_WORK_ITEM__");
+    String timeRangeStart = ElementParameterParser.getValue(node, "__TIME_RANGE_START__");
+    String timeRangeEnd = ElementParameterParser.getValue(node, "__TIME_RANGE_END__");
+    String valueRangeStart = ElementParameterParser.getValue(node, "__VALUE_RANGE_START__");
+    String valueRangeEnd = ElementParameterParser.getValue(node, "__VALUE_RANGE_END__");
+    boolean saveContext = "true".equals(ElementParameterParser.getValue(node, "__SAVE_CONTEXT_AT_START__"));
+    String processInstanceName = ElementParameterParser.getValue(node, "__PROCESS_INSTANCE_NAME__");
+    String contextVarProcess = ElementParameterParser.getValue(node, "__CONTEXT_VAR_PROCESS_INSTANCE_ID__");
+    String contextVar = ElementParameterParser.getValue(node, "__CONTEXT_VAR_JOB_INSTANCE_ID__");
+    String contextVarEJID = ElementParameterParser.getValue(node, "__CONTEXT_VAR_EXT_JOB_INSTANCE_ID__");
+    String restartFromInstanceId = ElementParameterParser.getValue(node, "__RESTART_FROM_JOB_INSTANCE_ID__");
+    String connectionComp = ElementParameterParser.getValue(node, "__CONNECTION__");
+    String jobName = ElementParameterParser.getValue(node, "__JOB_NAME__");
+    String jobDisplayName = ElementParameterParser.getValue(node, "__JOB_DISPLAY_NAME__");
+    String tableName = ElementParameterParser.getValue(node, "__TABLE_NAME__");
+    String tableNameContext = ElementParameterParser.getValue(node, "__TABLE_NAME_CONTEXT__");
+    String tableNameCounter = ElementParameterParser.getValue(node, "__TABLE_NAME_COUNTER__");
+    String schemaName = ElementParameterParser.getValue(node, "__SCHEMA_NAME__");
+    String isSerialPk = ElementParameterParser.getValue(node, "__IS_AUTO_INCREMENT__");
+    String sequence = ElementParameterParser.getValue(node, "__SEQUENCE_EXPRESSION__");
+    if (sequence == null || sequence.isEmpty()) {
+    	sequence = "null";
+    }
+    boolean returnLastInstanceData = "true".equals(ElementParameterParser.getValue(node, "__RETRIEVE_LAST_RUN_DATA__"));
+	String onlySuccessful = ElementParameterParser.getValue(node, "__RETRIEVE_LAST_RUN_DATA_SUCCESSFUL__");
+	String onlyWithData = ElementParameterParser.getValue(node, "__RETRIEVE_LAST_RUN_DATA_WITH_DATA__");
+	boolean collectSourceInstanceIds = "true".equals(ElementParameterParser.getValue(node, "__COLLECT_SOURCE_INSTANCE_IDS__"));
+    List<Map<String, String>> sourceJobList = (List<Map<String,String>>) ElementParameterParser.getObjectValue(node, "__SOURCE_JOB_NAMES__");
+	String listOnlySuccessful = ElementParameterParser.getValue(node, "__RETRIEVE_LAST_SOURCE_SUCCESSFUL__");
+	String listOnlyWithData = ElementParameterParser.getValue(node, "__RETRIEVE_LAST_SOURCE_WITH_DATA__");
+	String okResultCodes = ElementParameterParser.getValue(node, "__OK_RESULT_CODES__");
+	boolean doNotSavePasswords = "true".equals(ElementParameterParser.getValue(node, "__DO_NOT_SAVE_PASSWORDS__"));
+	String maxMessageLength = ElementParameterParser.getValue(node, "__MAX_MESSAGE_LENGTH__");
+	boolean setUTCTimeZone = "true".equals(ElementParameterParser.getValue(node, "__SET_UTC_TIMEZONE__"));
+	boolean useDbAppender = "true".equals(ElementParameterParser.getValue(node, "__USE_DB_APPENDER__"));
+	String patternLayout = ElementParameterParser.getValue(node, "__PATTEN_LAYOUT__");
+	boolean useProjectSpecificNames = "true".equals(ElementParameterParser.getValue(node, "__USE_PROJECT_SPECIFIC_NAMES__"));
+	String bundleName = ElementParameterParser.getValue(node, "__PROJECT_SPECIFIC_NAME_MAP_RESOURCE__");
+	String batchMillis = ElementParameterParser.getValue(node, "__LOG_BATCH_UPDATE_MILLIS__");
+	String batchSize = ElementParameterParser.getValue(node, "__LOG_BATCH_SIZE__");
+%>
+<%  if (setUTCTimeZone) {%>
+    if ("UTC".equals(java.util.TimeZone.getDefault().getID()) == false) {
+       	System.out.println("Change default time zone to UTC starting with job: " + jobName);
+       	java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("UTC"));
+    }
+<%  } %>
+	// find the job start time stamp
+	long jobStartedAt = System.currentTimeMillis();
+	for (java.util.Map.Entry<String, Long> entry : start_Hash.entrySet()) {
+		if (entry.getValue() != null && entry.getValue() < jobStartedAt) {
+			jobStartedAt = entry.getValue();
+		}
+	}
+	// instantiate the job instance helper
+	de.cimt.talendcomp.manage.JobInstanceHelper <%=cid%> = new de.cimt.talendcomp.manage.JobInstanceHelper();
+	<%=cid%>.setJobStartedAt(jobStartedAt);
+	// job info
+	<%=cid%>.setJobInfo(projectName + "/" + jobName + "-" + jobVersion + ":" + contextStr);
+	<%=cid%>.setProject(projectName);
+<%  if (contextVarEJID != null && contextVarEJID.isEmpty() == false) { %>
+	// external job instance id given
+	<%=cid%>.setExtJobId(<%=contextVarEJID%>);
+<%  } %>
+<%  if (schemaName != null && schemaName.trim().isEmpty() == false) { %>
+	<%=cid%>.setSchemaName(<%=schemaName%>);
+<%  } else {%>
+	{
+		String schemaName = (String) globalMap.get("dbschema_<%=connectionComp%>");
+		if (schemaName == null) {
+			schemaName = (String) globalMap.get("db_<%=connectionComp%>");
+		}
+		if (schemaName == null) {
+			schemaName = (String) globalMap.get("tableschema_<%=connectionComp%>");
+		}
+		if (schemaName == null) {
+			schemaName = (String) globalMap.get("schema_<%=connectionComp%>");
+		}
+		if (schemaName == null) {
+			schemaName = (String) globalMap.get("dbname_<%=connectionComp%>");
+		}
+		if (schemaName != null) {
+			<%=cid%>.setSchemaName(schemaName);
+		}
+	}
+<%  } %>
+<% if (useProjectSpecificNames) { %>
+	if (<%=cid%>.configure(<%=bundleName%>) == false) {
+		throw new Exception("Configuration " + <%=bundleName%> + " could not found!");
+	}
+<% } else { %>	
+	// setup table meta data
+<%  if (tableName != null && tableName.trim().isEmpty() == false) { %>
+	<%=cid%>.setTableName(<%=tableName%>);
+<%  } %>
+<%  if (tableNameContext != null && tableNameContext.trim().isEmpty() == false) { %>
+	<%=cid%>.setContextTableName(<%=tableNameContext%>);
+<%  } %>
+<%  if (tableNameCounter != null && tableNameCounter.trim().isEmpty() == false) { %>
+	<%=cid%>.setCounterTableName(<%=tableNameCounter%>);
+<%  } %>
+<% if (maxMessageLength != null && maxMessageLength.trim().isEmpty() == false) { %>
+	<%=cid%>.setMaxMessageLength(<%=maxMessageLength%>);
+<%  } %>
+	// config if table contains serial column
+	<%=cid%>.setAutoIncrementColumn(<%=isSerialPk%>);
+<%  if ("false".equals(isSerialPk)) { %>
+	<%=cid%>.setSequenceExpression(<%=sequence%>);
+<%  } %>
+<% } %>
+	<%=cid%>.setConnection((java.sql.Connection) globalMap.get("conn_<%=connectionComp%>"));
+    // set job data
+	<%=cid%>.setJobName(<%=jobName%>);
+<%  if (jobDisplayName != null && jobDisplayName.isEmpty() == false) { %>
+	<%=cid%>.setJobDisplayName(<%=jobDisplayName%>);
+<%  } %>
+<%  if (contextVarProcess != null && contextVarProcess.isEmpty() == false) { %>
+	<%=cid%>.setProcessInstanceId(<%=contextVarProcess%>);
+<%  } %>
+<%  if (processInstanceName != null && processInstanceName.isEmpty() == false) { %>
+	<%=cid%>.setProcessInstanceName(<%=processInstanceName%>);
+<%  } %>
+	<%=cid%>.setJobGuid(pid);
+	<%=cid%>.setRootJobGuid(rootPid);
+	<%=cid%>.setParentJobGuid(fatherPid);
+<%  if (jobWorkItem != null && jobWorkItem.trim().isEmpty() == false) { %>
+	<%=cid%>.setJobWorkItem(<%=jobWorkItem%>);
+	globalMap.put("<%=cid%>_WORK_ITEM", <%=cid%>.getJobWorkItem());
+<%  } %>
+<%  if (okResultCodes != null && okResultCodes.trim().isEmpty() == false) { %>
+	<%=cid%>.setOkResultCodes(<%=okResultCodes%>);
+<%  } %>
+<%  if (timeRangeStart != null && timeRangeStart.trim().isEmpty() == false) { %>
+	<%=cid%>.setTimeRangeStart(<%=timeRangeStart%>);
+<%  } %>
+<%  if (timeRangeEnd != null && timeRangeEnd.trim().isEmpty() == false) { %>
+	<%=cid%>.setTimeRangeEnd(<%=timeRangeEnd%>);
+<%  } %>
+<%  if (valueRangeStart != null && valueRangeStart.trim().isEmpty() == false) { %>
+	<%=cid%>.setValueRangeStart(<%=valueRangeStart%>);
+<%  } %>
+<%  if (valueRangeEnd != null && valueRangeEnd.trim().isEmpty() == false) { %>
+	<%=cid%>.setValueRangeEnd(<%=valueRangeEnd%>);
+<%  } %>
+	globalMap.put("<%=cid%>", <%=cid%>);
+	// create entry
+	long jobInstanceId_<%=cid%> = 0;
+	try {
+		jobInstanceId_<%=cid%> = <%=cid%>.createEntry();
+	} catch (Exception e) {
+		globalMap.put("<%=cid%>_ERROR_MESSAGE", e.getMessage());
+		throw e;
+	}
+	globalMap.put("<%=cid%>_JOB_INSTANCE_ID", jobInstanceId_<%=cid%>);
+	globalMap.put("JOB_INSTANCE_ID", jobInstanceId_<%=cid%>);
+<%	if (contextVar != null && contextVar.isEmpty() == false) { %>
+	<%=contextVar%> = jobInstanceId_<%=cid%>;
+<%  } %>
+<%  if (useDbAppender) { %>
+    <%=cid%>.setLogLayoutPattern(<%=patternLayout%>);
+<%  if (batchMillis != null && batchMillis.trim().isEmpty() == false) { %>
+    // submit messages in time interval
+	<%=cid%>.setLogBatchPeriodMillis(<%=batchMillis%>);
+<%  } %>
+<%  if (batchSize != null && batchSize.trim().isEmpty() == false) { %>
+    // max messages in queue until submit 
+	<%=cid%>.setLogBatchSize(<%=batchSize%>);
+<%  } %>
+	globalMap.put("<%=cid%>_DB_APPENDER", <%=cid%>.getAppender());
+<%  } %>
+<%  if (returnLastInstanceData) { %>
+    // retrieve last job run data
+	try {
+		boolean <%=cid%>_PrevJobExists = <%=cid%>.retrievePreviousInstanceData(<%=onlySuccessful%>,<%=onlyWithData%>);
+		globalMap.put("<%=cid%>_PREV_JOB_EXISTS", <%=cid%>_PrevJobExists);
+		if (<%=cid%>_PrevJobExists) {
+			globalMap.put("<%=cid%>_PREV_JOB_INSTANCE_ID", <%=cid%>.getPrevJobInstanceId());
+			globalMap.put("<%=cid%>_PREV_JOB_START_DATE", <%=cid%>.getPrevJobStartDate());
+			globalMap.put("<%=cid%>_PREV_JOB_STOP_DATE", <%=cid%>.getPrevJobStopDate());
+			globalMap.put("<%=cid%>_PREV_JOB_TALEND_PID", <%=cid%>.getPrevJobGuid());
+			globalMap.put("<%=cid%>_PREV_JOB_HOST_PID", <%=cid%>.getPrevHostPid());
+			globalMap.put("<%=cid%>_PREV_JOB_HOST_NAME", <%=cid%>.getPrevHostName());
+			globalMap.put("<%=cid%>_PREV_TIME_RANGE_START", <%=cid%>.getPrevTimeRangeStart());
+			globalMap.put("<%=cid%>_PREV_TIME_RANGE_END", <%=cid%>.getPrevTimeRangeEnd());
+			globalMap.put("<%=cid%>_PREV_VALUE_RANGE_START", <%=cid%>.getPrevValueRangeStart());
+			globalMap.put("<%=cid%>_PREV_VALUE_RANGE_END", <%=cid%>.getPrevValueRangeEnd());
+			globalMap.put("<%=cid%>_PREV_JOB_RETURN_CODE", <%=cid%>.getPrevReturnCode());
+			globalMap.put("<%=cid%>_PREV_WORK_ITEM", <%=cid%>.getPrevWorkItem());
+			globalMap.put("<%=cid%>_PREV_RESULT_ITEM", <%=cid%>.getPrevJobResult());
+			globalMap.put("<%=cid%>_PREV_COUNT_INPUT", <%=cid%>.getPrevInput());
+			globalMap.put("<%=cid%>_PREV_COUNT_OUTPUT", <%=cid%>.getPrevOutput());
+			globalMap.put("<%=cid%>_PREV_COUNT_UPDATED", <%=cid%>.getPrevUpdated());
+			globalMap.put("<%=cid%>_PREV_COUNT_REJECTED", <%=cid%>.getPrevRejects());
+			globalMap.put("<%=cid%>_PREV_COUNT_DELETED", <%=cid%>.getPrevDeleted());
+		} else {
+			globalMap.remove("<%=cid%>_PREV_JOB_INSTANCE_ID");
+			globalMap.remove("<%=cid%>_PREV_JOB_START_DATE");
+			globalMap.remove("<%=cid%>_PREV_JOB_STOP_DATE");
+			globalMap.remove("<%=cid%>_PREV_JOB_TALEND_PID");
+			globalMap.remove("<%=cid%>_PREV_JOB_HOST_PID");
+			globalMap.remove("<%=cid%>_PREV_JOB_HOST_NAME");
+			globalMap.remove("<%=cid%>_PREV_TIME_RANGE_START");
+			globalMap.remove("<%=cid%>_PREV_TIME_RANGE_END");
+			globalMap.remove("<%=cid%>_PREV_VALUE_RANGE_START");
+			globalMap.remove("<%=cid%>_PREV_VALUE_RANGE_END");
+			globalMap.remove("<%=cid%>_PREV_JOB_RETURN_CODE");
+			globalMap.remove("<%=cid%>_PREV_WORK_ITEM");
+			globalMap.remove("<%=cid%>_PREV_RESULT_ITEM");
+			globalMap.remove("<%=cid%>_PREV_COUNT_INPUT");
+			globalMap.remove("<%=cid%>_PREV_COUNT_OUTPUT");
+			globalMap.remove("<%=cid%>_PREV_COUNT_UPDATED");
+			globalMap.remove("<%=cid%>_PREV_COUNT_REJECTED");
+			globalMap.remove("<%=cid%>_PREV_COUNT_DELETED");
+		}
+<%  if (collectSourceInstanceIds) {
+		boolean firstLoop = true;
+		StringBuilder listNames = new StringBuilder();
+	    for (Map<String, String> entry : sourceJobList) {
+			String sourceJobName = entry.get("NAME");
+	    	if (firstLoop) {
+	    		firstLoop = false;
+	    	} else {
+	    		listNames.append(",");
+	    	}
+			listNames.append(sourceJobName);
+		}
+		if (firstLoop) {
+			listNames.append("(String[]) null");
+		} %>
+		String <%=cid%>_listJobInstanceIds = <%=cid%>.getJobInstanceIdListAfterPreviousJob(<%=listOnlySuccessful%>, <%=listOnlyWithData%>, <%=listNames.toString()%>);
+		globalMap.put("<%=cid%>_SOURCE_JOB_INSTANCE_ID_LIST", <%=cid%>_listJobInstanceIds); 
+<%  } %>
+	} catch (Exception e) {
+		globalMap.put("<%=cid%>_ERROR_MESSAGE", e.getMessage());
+		throw e;
+	}
+<%  } %>
+<%  if (saveContext) { %>
+	{   // saving context start
+		// configure context helper
+		de.cimt.talendcomp.manage.JobInstanceContextHelper contextHelper = new de.cimt.talendcomp.manage.JobInstanceContextHelper();
+		// setup table meta data
+		contextHelper.setTableName(<%=cid%>.getContextTableName());
+		contextHelper.setAlternativeColumnNames(<%=cid%>.getAlternativeColumnNames());
+		contextHelper.setSchemaName(<%=cid%>.getSchemaName());
+		contextHelper.setConnection(<%=cid%>.getConnection());
+		contextHelper.setJobInstanceId(<%=cid%>.getJobInstanceId());
+		contextHelper.setOutput(false);
+		boolean isRestart = false;
+<%		if (restartFromInstanceId != null && restartFromInstanceId.isEmpty() == false) { %>
+		// reload context from job instance
+		if (<%=restartFromInstanceId%> != null && <%=restartFromInstanceId%> > 0) {
+			isRestart = true;
+			System.out.println("restart job instance:" + <%=restartFromInstanceId%>);
+			contextHelper.readContext(<%=restartFromInstanceId%>);
+		}
+<%		} %>
+<%  	List<IContextParameter> listCtxParams = node.getProcess().getContextManager().getDefaultContext().getContextParameterList();
+    	for (IContextParameter ctxParam : listCtxParams) {
+			if (("context." + ctxParam.getName()).equals(contextVar) == false && 
+			    ("context." + ctxParam.getName()).equals(contextVarEJID) == false) {
+				if (restartFromInstanceId != null && restartFromInstanceId.isEmpty() == false) { 
+					String javaClass = null;
+					if ("id_List Of Value".equals(ctxParam.getType()) || "id_File".equals(ctxParam.getType()) || "id_Directory".equals(ctxParam.getType())) {
+						javaClass = "java.lang.String";	
+					} else {
+						try { 
+							JavaType javaType = JavaTypesManager.getJavaTypeFromId(ctxParam.getType());
+							if (javaType != null && javaType.getNullableClass() != null) {
+								javaClass = javaType.getNullableClass().getName();
+							}
+						} catch (Throwable t) {} 
+					}				
+					if (javaClass != null) { %>
+<%                      if (doNotSavePasswords == false || (ctxParam.getName().toLowerCase().contains("passw") == false && "id_Password".equals(ctxParam.getType()) == false)) { %>
+		if (isRestart) {
+			context.<%=ctxParam.getName()%> = (<%=javaClass%>) contextHelper.getAttribute("<%=ctxParam.getName()%>");
+		} else {
+			contextHelper.setAttribute("<%=ctxParam.getName()%>", context.<%=ctxParam.getName()%>, false);
+		}
+<%                      } else { %>
+		// leaf out password attribute <%=ctxParam.getName()%>
+<%                      } %>
+<%  				} else { %>
+		// ignore attribute <%=ctxParam.getName()%> with type <%=ctxParam.getType()%> because unknown java type or no nullable class
+<%					} %>
+<%				} else { %>
+<%                  if (doNotSavePasswords == false || (ctxParam.getName().toLowerCase().contains("passw") == false && "id_Password".equals(ctxParam.getType()) == false)) { %>
+		contextHelper.setAttribute("<%=ctxParam.getName()%>", context.<%=ctxParam.getName()%>, false);
+<%                  } else { %>
+		// leaf out password attribute <%=ctxParam.getName()%>
+<%                  } %>
+<%				} %>
+<%			} %>
+<%  	} // for %>
+<%		if (restartFromInstanceId != null && restartFromInstanceId.isEmpty() == false) { %>
+		<%=restartFromInstanceId%> = null; // to avoid restart next job also!
+<%		} %>
+		// write Context snapshot for current job instance
+		contextHelper.writeContext();
+	} // saving context end
+<%  } // if (saveContext) %>
+
+<%  
+	boolean useLog4j = "true".equals(ElementParameterParser.getValue(node, "__USE_LOG4J__"));
+    String log4jConfigFile = ElementParameterParser.getValue(node, "__LOG4J_CONFIG_FILE__");
+    boolean useJobLogFile = "true".equals(ElementParameterParser.getValue(node, "__USE_LOG_FILE__"));
+    String logFilePattern = ElementParameterParser.getValue(node, "__LOG_FILE_PATH__");
+    String logFileLayout = ElementParameterParser.getValue(node, "__LOG_FILE_LAYOUT__");
+    boolean catchSysout = "true".equals(ElementParameterParser.getValue(node, "__CATCH_SYSOUT__"));
+    boolean debug = "true".equals(ElementParameterParser.getValue(node, "__DEBUG__"));
+    String forwardToConsole = ElementParameterParser.getValue(node, "__FORWARD_TO_CONSOLE__");
+    String helperName = ElementParameterParser.getValue(node, "__HELPER_NAME__");
+    if (helperName == null || helperName.trim().isEmpty() || "\"\"".equals(helperName)) {
+    	helperName = "pid";
+    }
+    boolean addContextToMDC = "true".equals(ElementParameterParser.getValue(node, "__ADD_CONTEXT_TO_MDC__"));
+    if (useLog4j) { %>
+    { // open block to have the variables locally
+	de.cimt.talendcomp.log4j.Log4JHelper lh = de.cimt.talendcomp.log4j.Log4JHelper.get(<%=helperName%>);
+	if (lh == null) {
+		lh = new de.cimt.talendcomp.log4j.Log4JHelper();
+		de.cimt.talendcomp.log4j.Log4JHelper.put(<%=helperName%>, lh);
+		lh.setJobStartedAt(jobStartedAt);
+<%  if (log4jConfigFile != null && log4jConfigFile.trim().isEmpty() == false) { %>
+		de.cimt.talendcomp.log4j.Log4JHelper.setLog4jConfigFile(<%=log4jConfigFile%>);
+<%  } %>
+		lh.setDebug(<%=debug%>);
+		lh.setProject(projectName);
+		lh.setJobName(<%=jobName%>);
+		lh.setVersion(jobVersion);
+		lh.setContext(contextStr);
+		lh.setPid(pid);
+		lh.setRootPid(rootPid);
+		lh.setFatherPid(fatherPid);
+<%  if (addContextToMDC) {
+    	List<IContextParameter> listCtxParams = node.getProcess().getContextManager().getDefaultContext().getContextParameterList();
+    	for (IContextParameter ctxParam : listCtxParams) { %>
+<%          if (ctxParam.getName().toLowerCase().contains("passw") == false && "id_Password".equals(ctxParam.getType()) == false) { %>
+		lh.addContextVar("<%=ctxParam.getName()%>", context.<%=ctxParam.getName()%>);
+<%          } else { %>
+		// leaf out password attribute <%=ctxParam.getName()%>
+<%          } %>
+<%  	} // for
+    } // if (addContextToMDC)  %>
+		lh.setJobInstanceId((Long) globalMap.get("<%=cid%>_JOB_INSTANCE_ID"));
+		lh.setWorkItem((String) globalMap.get("<%=cid%>_WORK_ITEM"));
+		// initialize Log4J if needed
+		if (de.cimt.talendcomp.log4j.Log4JHelper.isLog4JInitialized() == false) {
+			try {
+				de.cimt.talendcomp.log4j.Log4JHelper.initLog4J();
+			} catch (Exception e) {
+				globalMap.put("<%=cid%>_ERROR_MESSAGE", "Init log4j failed:" + e.getMessage());
+				throw e; 
+			}
+		}
+   	lh.initJobLogger();
+<% if (useJobLogFile && logFilePattern != null && logFilePattern.trim().isEmpty() == false) { %>
+		globalMap.put("<%=cid%>_LOG_FILE_PATH", lh.configureFileAppender(<%=logFilePattern%>, <%=logFileLayout%>));
+		Object fileAppender = lh.getFileAppender();
+		if (fileAppender != null && lh.getPid().equals(pid)) {
+			// to be able to close it at the end of the job, but only if it our own appender
+			globalMap.put("<%=cid%>_FILE_APPENDER", fileAppender);
+		}
+<% } %>
+<%  if (useDbAppender) { %>
+		org.apache.log4j.Appender dbAppender = (org.apache.log4j.Appender) globalMap.get("<%=cid%>_DB_APPENDER");
+		if (dbAppender != null) {
+			lh.addAppender(dbAppender);
+		} else {
+			System.err.println("No database appender available.");
+		}
+<%  } %>
+<%  if (debug) { %>
+		lh.printOutLoggers();
+<%  } %>
+<% if (catchSysout) { %>
+		lh.catchStandardOut(<%=forwardToConsole%>);
+<% } %>
+	} // if (lh == null)
+	// instantiate a new resume util
+	class LogConnector extends ResumeUtil {
+		
+		private de.cimt.talendcomp.log4j.Log4JHelper logHelper = null;
+		private Long jobInstanceId = null;
+		
+		public LogConnector(de.cimt.talendcomp.log4j.Log4JHelper logHelper, Long jobInstanceId) {
+			super(resuming_logs_dir_path, isChildJob, rootPid);
+			super.initCommonInfo(
+					pid, rootPid, fatherPid, projectName,
+					jobName, contextStr, jobVersion);
+			this.logHelper = logHelper;
+		}
+		
+		@Override
+		public void addLog(String type, String partName, String parentPart, String threadId, String logPriority, String errorCode,
+	            String message, String stackTrace, String dynamicData) {
+	        try {
+		        super.addLog(type, partName, parentPart, threadId, logPriority, errorCode, message, stackTrace, dynamicData);
+	        } catch (Throwable t) {}
+			try {
+				//System.out.println("################################ priority:<" + logPriority + "> partName:" + partName + " message:" + message);
+				if (logPriority != null && logPriority.trim().isEmpty() == false) {
+					logHelper.logOut(partName, logPriority, message, pid, jobInstanceId); 
+				}
+			} catch (Exception e) {
+				globalMap.put("<%=cid%>_ERROR_MESSAGE",
+						"logOut failed:" + e.getMessage());
+				throw new RuntimeException(e);
+			}
+	    }
+		
+	}
+	resumeUtil = new LogConnector(lh, <%=cid%>.getJobInstanceId()); 	
+    } // close block
+<%  } %>
+
+
+
+	
