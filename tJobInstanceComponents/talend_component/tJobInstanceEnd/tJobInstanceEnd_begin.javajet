@@ -59,6 +59,10 @@
 <%  if (valueRangeEnd != null && valueRangeEnd.trim().isEmpty() == false) { %>
 	<%=cid%>.checkValueRange(<%=valueRangeEnd%>);
 <%  } %>
+	globalMap.put("<%=cid%>_STRING_VALUE_RANGE_START", <%=cid%>.getValueRangeStart());
+	globalMap.put("<%=cid%>_STRING_VALUE_RANGE_END", <%=cid%>.getValueRangeEnd());
+	globalMap.put("<%=cid%>_TIME_RANGE_START", <%=cid%>.getTimeRangeStart());
+	globalMap.put("<%=cid%>_TIME_RANGE_END", <%=cid%>.getTimeRangeEnd());
 <%	if (inputCounterList != null && inputCounterList.isEmpty() == false) { %>
 	// input counter
 <%	    for (Map<String, String> entry : inputCounterList) {
