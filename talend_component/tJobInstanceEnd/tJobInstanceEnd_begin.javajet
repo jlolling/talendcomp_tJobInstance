@@ -34,15 +34,18 @@
     String valueRangeStart = ElementParameterParser.getValue(node, "__VALUE_RANGE_START__");
     String valueRangeEnd = ElementParameterParser.getValue(node, "__VALUE_RANGE_END__");
     boolean saveContextAtEnd = "true".equals(ElementParameterParser.getValue(node, "__SAVE_CONTEXT_AT_END__"));
-	boolean doNotSavePasswords = "true".equals(ElementParameterParser.getValue(node, "__DO_NOT_SAVE_PASSWORDS__"));
+	 boolean doNotSavePasswords = "true".equals(ElementParameterParser.getValue(node, "__DO_NOT_SAVE_PASSWORDS__"));
 %>
-
+	de.cimt.talendcomp.manage.JobInstanceHelper.logMemoryUsage();
+	globalMap.put("<%=cid%>_MEMORY_AVAILABLE", de.cimt.talendcomp.manage.JobInstanceHelper.getMaxMemory());
+	globalMap.put("<%=cid%>_MEMORY_MAX_USED", de.cimt.talendcomp.manage.JobInstanceHelper.getMaxUsedMemory());
+	globalMap.put("<%=cid%>_MEMORY_MAX_USED_PERCENTAGE", de.cimt.talendcomp.manage.JobInstanceHelper.getPercentageUsage());
 	de.cimt.talendcomp.manage.JobInstanceHelper <%=cid%> = (de.cimt.talendcomp.manage.JobInstanceHelper) globalMap.get("<%=startComp%>");
 	if (<%=cid%> == null) {
 		throw new Exception("Start component <%=cid%> cannot be found in the globalMap");
 	}
 <% if (useSeparateConn) { %>
-	<%=cid%>.setConnection((java.sql.Connection) globalMap.get("conn_<%=connectionComp%>"));
+	<%=cid%>.setEndConnection((java.sql.Connection) globalMap.get("conn_<%=connectionComp%>"));
 <% } %>
 <%  if (jobResult != null && jobResult.isEmpty() == false) { %>
 	<%=cid%>.setJobResult(<%=jobResult%>);
@@ -161,7 +164,7 @@
 		contextHelper.setTableName(<%=cid%>.getContextTableName());
 		contextHelper.setSchemaName(<%=cid%>.getSchemaName());
 		contextHelper.setAlternativeColumnNames(<%=cid%>.getAlternativeColumnNames());
-		contextHelper.setConnection(<%=cid%>.getConnection());
+		contextHelper.setConnection(<%=cid%>.getEndConnection());
 		contextHelper.setJobInstanceId(<%=cid%>.getJobInstanceId());
 		contextHelper.setOutput(true);
 <%  	List<IContextParameter> listCtxParams = node.getProcess().getContextManager().getDefaultContext().getContextParameterList();

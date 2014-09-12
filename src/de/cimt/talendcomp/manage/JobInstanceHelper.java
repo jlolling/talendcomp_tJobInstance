@@ -11,14 +11,21 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.text.Format;
+import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
+import java.util.TimeZone;
+
+import javax.swing.text.NumberFormatter;
 
 import org.apache.log4j.Appender;
 import org.apache.log4j.Logger;
@@ -59,7 +66,8 @@ public class JobInstanceHelper {
 	public static final String JOB_HOST_PID = "HOST_PID";
 	public static final String JOB_HOST_USER = "HOST_USER";
 	public static final String OVERRIDE_DIE_CODE_KEY = "OVERRIDE_DIE_CODE";
-	private Connection connection = null;
+	private Connection startConnection = null;
+	private Connection endConnection = null;
 	private String tableName = TABLE_JOB_INSTANCE_STATUS;
 	private String contextTableName = null;
 	private String logTableName = null;
@@ -79,6 +87,11 @@ public class JobInstanceHelper {
 	private String logLayoutPattern = null;
 	private Integer logBatchPeriodMillis = null;
 	private Integer logBatchSize = null;
+	private static long maxUsedMemory = 0;
+	private static long maximumReachedAt = 0;
+	private static long maxTotalMemory = 0;
+	private static long maxMemory = 0;
+	private static Thread memoryMonitor = null;
 	
 	public JobInstanceHelper() {
 		currentJobInfo = new JobInfo();
@@ -87,7 +100,7 @@ public class JobInstanceHelper {
 	
 	public Appender getAppender() {
 		if (logDbAppender == null) {
-			logDbAppender = new JobInstanceLogDBAppender(connection, currentJobInfo.getJobInstanceId());
+			logDbAppender = new JobInstanceLogDBAppender(startConnection, currentJobInfo.getJobInstanceId());
 			logDbAppender.setTableName(logTableName);
 			logDbAppender.setSchemaName(schemaName);
 			logDbAppender.setAlternativeColumnNames(alternativeColumnNames);
@@ -114,11 +127,11 @@ public class JobInstanceHelper {
 	public long createEntry() throws SQLException {
 		long id = 0;
 		if (currentJobInfo.isRootJob() == false && currentJobInfo.getProcessInstanceId() == 0) {
-			id = selectJobInstanceId(connection, currentJobInfo.getRootJobGuid());
+			id = selectJobInstanceId(startConnection, currentJobInfo.getRootJobGuid());
 			if (id > 0) {
 				currentJobInfo.setProcessInstanceId(id);
 			} else if (currentJobInfo.getParentJobGuid() != null && currentJobInfo.getParentJobGuid().isEmpty() == false) {
-				id = selectJobInstanceId(connection, currentJobInfo.getParentJobGuid());
+				id = selectJobInstanceId(startConnection, currentJobInfo.getParentJobGuid());
 				if (id > 0) {
 					currentJobInfo.setProcessInstanceId(id);
 				}
@@ -176,12 +189,12 @@ public class JobInstanceHelper {
 		}
 		// parameter 1-17
 		sb.append("?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-		boolean wasAutoCommit = connection.getAutoCommit();
+		boolean wasAutoCommit = startConnection.getAutoCommit();
 		if (wasAutoCommit == false) {
-			connection.setAutoCommit(true);
+			startConnection.setAutoCommit(true);
 		}
 		String insertSQL = sb.toString();
-		PreparedStatement psInsert = connection.prepareStatement(insertSQL);
+		PreparedStatement psInsert = startConnection.prepareStatement(insertSQL);
 		psInsert.setString(1, currentJobInfo.getName());
 		psInsert.setString(2, currentJobInfo.getGuid());
 		if (currentJobInfo.getRootJobGuid() != null) {
@@ -225,9 +238,9 @@ public class JobInstanceHelper {
 		if (count == 0) {
 			throw new SQLException("No dataset inserted!");
 		}
-		currentJobInfo.setJobInstanceId(selectJobInstanceId(connection, currentJobInfo.getGuid()));
+		currentJobInfo.setJobInstanceId(selectJobInstanceId(startConnection, currentJobInfo.getGuid()));
 		if (wasAutoCommit == false) {
-			connection.setAutoCommit(false);
+			startConnection.setAutoCommit(false);
 		}
 		if (currentJobInfo.getJobInstanceId() == -1) {
 			throw new SQLException("No job_instances entry found for jobGuid=" + currentJobInfo.getGuid());
@@ -253,13 +266,13 @@ public class JobInstanceHelper {
 			sb.append(" = 0 or "); // delete only successfully finished or...
 			sb.append(getColumn(JOB_ENDED_AT));
 			sb.append(" is null)");  // .... aborted runs
-			PreparedStatement ps = connection.prepareStatement(sb.toString());
+			PreparedStatement ps = endConnection.prepareStatement(sb.toString());
 			ps.setString(1, currentJobInfo.getName());
 			ps.setString(2, currentJobInfo.getWorkItem());
 			ps.setLong(3, currentJobInfo.getJobInstanceId());
 			int countDeletedJobInstances = ps.executeUpdate();
-			if (connection.getAutoCommit() == false) {
-				connection.commit();
+			if (endConnection.getAutoCommit() == false) {
+				endConnection.commit();
 			}
 			return countDeletedJobInstances;
 		} else {
@@ -278,7 +291,7 @@ public class JobInstanceHelper {
 		sb.append("=? order by ");
 		sb.append(getColumn(JOB_INSTANCE_ID));
 		sb.append(" desc");
-		PreparedStatement psSelect = connection.prepareStatement(sb.toString());
+		PreparedStatement psSelect = startConnection.prepareStatement(sb.toString());
 		psSelect.setString(1, jobGuid);
 		ResultSet rs = psSelect.executeQuery();
 		long id = 0;
@@ -290,41 +303,8 @@ public class JobInstanceHelper {
 		return id;
 	}
 	
-	public void updateEntryForStartExistingJob() throws Exception {
-		checkConnection(connection);
-		StringBuilder sb = new StringBuilder();
-		sb.append("update ");
-		sb.append(getTable());
-		sb.append(" set ");
-		sb.append(getColumn(JOB_STARTED_AT)); // 1
-		sb.append(" = ?,");
-		sb.append(getColumn(JOB_RETURN_CODE));
-		sb.append(" = 0 ");
-		sb.append("where ");
-		sb.append(getColumn(JOB_INSTANCE_ID)); // 2
-		sb.append(" = ?");
-		boolean wasAutoCommit = connection.getAutoCommit();
-		if (wasAutoCommit == false) {
-			connection.setAutoCommit(true);
-		}
-		String updateSQL = sb.toString();
-		PreparedStatement psUpdate = connection.prepareStatement(updateSQL);
-		currentJobInfo.setStartDate(new Date());
-		psUpdate.setTimestamp(1, new Timestamp(currentJobInfo.getStartDate().getTime()));
-		psUpdate.setLong(2, currentJobInfo.getJobInstanceId());
-		int count = psUpdate.executeUpdate();
-		psUpdate.close();
-		ch.setJobInstanceId(currentJobInfo.getJobInstanceId());
-		if (wasAutoCommit == false) {
-			connection.setAutoCommit(false);
-		}
-		if (count == 0) {
-			throw new SQLException("No job instance entry updated for " + getColumn(JOB_INSTANCE_ID) + "=" + currentJobInfo.getJobInstanceId());
-		}
-	}
-	
 	public void updateEntry() throws Exception {
-		checkConnection(connection);
+		checkConnection(endConnection);
 		StringBuilder sb = new StringBuilder();
 		sb.append("update ");
 		sb.append(getTable());
@@ -361,7 +341,7 @@ public class JobInstanceHelper {
 		sb.append(getColumn(JOB_INSTANCE_ID)); // 15
 		sb.append("=?");
 		String updateSQL = sb.toString();
-		PreparedStatement psUpdate = connection.prepareStatement(updateSQL);
+		PreparedStatement psUpdate = endConnection.prepareStatement(updateSQL);
 		psUpdate.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
 		if (currentJobInfo.getJobResult() != null) {
 			psUpdate.setString(2, currentJobInfo.getJobResult());
@@ -430,7 +410,7 @@ public class JobInstanceHelper {
 		sb.append(" order by ");
 		sb.append(getColumn(JOB_STARTED_AT));
 		sb.append(" desc");
-		PreparedStatement psSelect = connection.prepareStatement(sb.toString());
+		PreparedStatement psSelect = startConnection.prepareStatement(sb.toString());
 		psSelect.setString(1, currentJobInfo.getName());
 		psSelect.setTimestamp(2, new Timestamp(currentJobInfo.getStartDate().getTime()));
 		ResultSet rs = psSelect.executeQuery();
@@ -490,7 +470,7 @@ public class JobInstanceHelper {
 		}
 		sb.append(" order by ");
 		sb.append(getColumn(JOB_INSTANCE_ID));
-		PreparedStatement psSelect = connection.prepareStatement(sb.toString());
+		PreparedStatement psSelect = startConnection.prepareStatement(sb.toString());
 		ResultSet rs = psSelect.executeQuery();
 		List<JobInfo> list = new ArrayList<JobInfo>();
 		while (rs.next()) {
@@ -561,7 +541,7 @@ public class JobInstanceHelper {
 		}
 		sb.append(" order by ");
 		sb.append(getColumn(JOB_INSTANCE_ID));
-		PreparedStatement psSelect = connection.prepareStatement(sb.toString());
+		PreparedStatement psSelect = startConnection.prepareStatement(sb.toString());
 		ResultSet rs = psSelect.executeQuery();
 		StringBuilder res = new StringBuilder();
 		boolean firstLoop = true;
@@ -638,7 +618,11 @@ public class JobInstanceHelper {
 	}
 	
 	public Connection getConnection() {
-		return connection;
+		return startConnection;
+	}
+	
+	public Connection getEndConnection() {
+		return endConnection;
 	}
 
 	public void setConnection(Connection connection) throws Exception {
@@ -650,8 +634,24 @@ public class JobInstanceHelper {
 		if (connection.getAutoCommit() == false) {
 			connection.setAutoCommit(true);
 		}
-		this.connection = connection;
-		ch.setConnection(connection);
+		this.startConnection = connection;
+		this.endConnection = connection;
+		ch.setConnection(this.startConnection);
+	}
+	
+	public void setEndConnection(Connection connection) throws Exception {
+		if (connection.isClosed()) {
+			throw new Exception("Connection is already closed!");
+		} else if (connection.isReadOnly()) {
+			throw new Exception("Connection is read only, this component needs to modify data!");
+		}
+		if (connection.getAutoCommit() == false) {
+			connection.setAutoCommit(true);
+		}
+		if (startConnection == connection) {
+			System.err.println("As connection for tJobInstanceEnd it should be used a different connection than for tJobInstanceStart !");
+		}
+		this.endConnection = connection;
 	}
 
 	public long getJobInstanceId() {
@@ -995,11 +995,16 @@ public class JobInstanceHelper {
     }
     
     public void closeConnection() throws SQLException {
-    	if (connection != null) {
+    	if (startConnection != null) {
     		if (logDbAppender == null) {
-    			if (connection.isClosed() == false) {
-            		connection.close();
+    			if (startConnection.isClosed() == false) {
+            		startConnection.close();
     			}
+    		}
+    	}
+    	if (endConnection != null) {
+    		if (endConnection != startConnection) {
+    			endConnection.close();
     		}
     	}
     }
@@ -1313,6 +1318,7 @@ public class JobInstanceHelper {
 			logDbAppender.close();
 		}
 		Logger.getLogger("talend").removeAppender(logDbAppender);
+		logDbAppender = null; // to enable in closeConnection the close of the connection
 	}
 		
 	public boolean configure(String bundleName) throws IOException {
@@ -1415,7 +1421,7 @@ public class JobInstanceHelper {
 	private Date lastSystemStart = null;
 	
 	public List<JobInfo> cleanupBrokenJobInstances() throws Exception {
-		checkConnection(connection);
+		checkConnection(startConnection);
 		countRunningJobInstances = 0;
 		countBrokenInstances = 0;
 		String hostName = currentJobInfo.getHostName();
@@ -1452,8 +1458,8 @@ public class JobInstanceHelper {
 			updateInstanceLastStart.append(" is null and ");
 			updateInstanceLastStart.append(getColumn(JOB_STARTED_AT));
 			updateInstanceLastStart.append(" <= ?");
-			synchronized(connection) {
-				PreparedStatement ps = connection.prepareStatement(updateInstanceLastStart.toString());
+			synchronized(startConnection) {
+				PreparedStatement ps = startConnection.prepareStatement(updateInstanceLastStart.toString());
 				ps.setTimestamp(1, new java.sql.Timestamp(lastSystemStart.getTime()));
 				ps.setTimestamp(2, new java.sql.Timestamp(lastSystemStart.getTime()));
 				countBrokenInstances = ps.executeUpdate();
@@ -1470,8 +1476,8 @@ public class JobInstanceHelper {
 		select.append("' and ");
 		select.append(getColumn(JOB_ENDED_AT));
 		select.append(" is null");
-		synchronized(connection) {
-			Statement stat = connection.createStatement();
+		synchronized(startConnection) {
+			Statement stat = startConnection.createStatement();
 			ResultSet rs = stat.executeQuery(select.toString());
 			while (rs.next()) {
 				runningProcessInstancesList.add(getBrokenJobInfoFromResultSet(rs));
@@ -1511,8 +1517,8 @@ public class JobInstanceHelper {
 		updateInstance.append(" is null and ");
 		updateInstance.append(getColumn(JOB_INSTANCE_ID));
 		updateInstance.append("=?");
-		synchronized(connection) {
-			PreparedStatement psUpdate = connection.prepareStatement(updateInstance.toString());
+		synchronized(startConnection) {
+			PreparedStatement psUpdate = startConnection.prepareStatement(updateInstance.toString());
 			for (JobInfo pi : diedProcessInstances) {
 				psUpdate.setTimestamp(1, endedAt);
 				psUpdate.setLong(2, pi.getJobInstanceId());
@@ -1567,7 +1573,7 @@ public class JobInstanceHelper {
 			try {
 				String testSQL = "select " + getColumn(JOB_INSTANCE_ID) + " from " + getTable() + " where " + getColumn(JOB_INSTANCE_ID) + "=0";
 				stat = conn.createStatement();
-				// this will fail of there is something wrong with the connection
+				// this will fail if there is something wrong with the connection
 				ResultSet rs = stat.executeQuery(testSQL);
 				rs.next();
 				rs.close();
@@ -1590,6 +1596,81 @@ public class JobInstanceHelper {
 			} else {
 				throw new Exception("Check connection failed:" + message);
 			}
+		}
+	}
+	
+	private static void measureMemoryUsage() {
+		Runtime rt = Runtime.getRuntime();
+		maxMemory = rt.maxMemory();
+		long currentFreeMemory = rt.freeMemory();
+		long currentTotalMemory = rt.totalMemory();
+		long currentUsedMemory = currentTotalMemory - currentFreeMemory;
+		if (maxUsedMemory < currentUsedMemory) {
+			maxUsedMemory = currentUsedMemory;
+			maximumReachedAt = System.currentTimeMillis();
+		}
+		if (maxTotalMemory < currentTotalMemory) {
+			maxTotalMemory = currentTotalMemory;
+		}
+	}
+	
+	public static void startMemoryMonitoring() {
+		if (memoryMonitor == null) {
+			memoryMonitor = new Thread() {
+				@Override
+				public void run() {
+					measureMemoryUsage();
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+						return;
+					}
+				}
+			};
+			memoryMonitor.start();
+		}
+	}
+	
+	public static void stopMemoryMonitoring() {
+		if (memoryMonitor != null && memoryMonitor.isAlive()) {
+			memoryMonitor.interrupt();
+		}
+		memoryMonitor = null;
+	}
+
+	public static long getMaxUsedMemory() {
+		return maxUsedMemory;
+	}
+
+	public static long getMaxMemory() {
+		return maxMemory;
+	}
+
+	public static long getMaxTotalMemory() {
+		return maxTotalMemory;
+	}
+	
+	public static double getPercentageUsage() {
+		if (maxMemory > 0) {
+			return (((double) maxUsedMemory) / ((double) maxMemory)) * 100;
+		} else {
+			return 0d;
+		}
+	}
+	
+	public static void logMemoryUsage() {
+		if (maxMemory > 0) {
+			// if we have already measured memory, we should update it here at least
+			measureMemoryUsage();
+			NumberFormat nf = NumberFormat.getInstance();
+			nf.setGroupingUsed(true);
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+			System.out.println("Available memory: " + nf.format(maxMemory) + " byte");
+			System.out.println("Maximum used memory (abs.): " + nf.format(maxUsedMemory) + " byte");
+			System.out.println("Maximum used memory (rel.): " + nf.format(Math.round(getPercentageUsage())) + " %");
+			Calendar c = Calendar.getInstance(TimeZone.getDefault());
+			c.setTimeInMillis(maximumReachedAt);
+			System.out.println("Maximum of memory usage measured at: " + sdf.format(c.getTime()));
 		}
 	}
 	
