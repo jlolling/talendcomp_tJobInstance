@@ -26,6 +26,7 @@
     String contextVarEJID = ElementParameterParser.getValue(node, "__CONTEXT_VAR_EXT_JOB_INSTANCE_ID__");
     String restartFromInstanceId = ElementParameterParser.getValue(node, "__RESTART_FROM_JOB_INSTANCE_ID__");
     String connectionComp = ElementParameterParser.getValue(node, "__CONNECTION__");
+    boolean closeConnection = "true".equals(ElementParameterParser.getValue(node, "__CLOSE_CONNECTION__"));
     String jobName = ElementParameterParser.getValue(node, "__JOB_NAME__");
     String jobDisplayName = ElementParameterParser.getValue(node, "__JOB_DISPLAY_NAME__");
     String tableName = ElementParameterParser.getValue(node, "__TABLE_NAME__");
@@ -54,6 +55,7 @@
 	String bundleName = ElementParameterParser.getValue(node, "__PROJECT_SPECIFIC_NAME_MAP_RESOURCE__");
 	String batchMillis = ElementParameterParser.getValue(node, "__LOG_BATCH_UPDATE_MILLIS__");
 	String batchSize = ElementParameterParser.getValue(node, "__LOG_BATCH_SIZE__");
+	boolean memoryMonitoring = "true".equals(ElementParameterParser.getValue(node, "__MEASURE_MEMORY_USAGE__"));
 %>
 <%  if (setUTCTimeZone) {%>
     if ("UTC".equals(java.util.TimeZone.getDefault().getID()) == false) {
@@ -174,14 +176,14 @@
 <%  } %>
 <%  if (useDbAppender) { %>
     <%=cid%>.setLogLayoutPattern(<%=patternLayout%>);
-<%  if (batchMillis != null && batchMillis.trim().isEmpty() == false) { %>
+<%  	if (batchMillis != null && batchMillis.trim().isEmpty() == false) { %>
     // submit messages in time interval
-	<%=cid%>.setLogBatchPeriodMillis(<%=batchMillis%>);
-<%  } %>
-<%  if (batchSize != null && batchSize.trim().isEmpty() == false) { %>
+		<%=cid%>.setLogBatchPeriodMillis(<%=batchMillis%>);
+<%  	} %>
+<%  	if (batchSize != null && batchSize.trim().isEmpty() == false) { %>
     // max messages in queue until submit 
 	<%=cid%>.setLogBatchSize(<%=batchSize%>);
-<%  } %>
+<%  	} %>
 	globalMap.put("<%=cid%>_DB_APPENDER", <%=cid%>.getAppender());
 <%  } %>
 <%  if (returnLastInstanceData) { %>
@@ -338,9 +340,9 @@
 		lh = new de.cimt.talendcomp.log4j.Log4JHelper();
 		de.cimt.talendcomp.log4j.Log4JHelper.put(<%=helperName%>, lh);
 		lh.setJobStartedAt(jobStartedAt);
-<%  if (log4jConfigFile != null && log4jConfigFile.trim().isEmpty() == false) { %>
+<%  	if (log4jConfigFile != null && log4jConfigFile.trim().isEmpty() == false) { %>
 		de.cimt.talendcomp.log4j.Log4JHelper.setLog4jConfigFile(<%=log4jConfigFile%>);
-<%  } %>
+<%  	} %>
 		lh.setDebug(<%=debug%>);
 		lh.setProject(projectName);
 		lh.setJobName(<%=jobName%>);
@@ -349,16 +351,16 @@
 		lh.setPid(pid);
 		lh.setRootPid(rootPid);
 		lh.setFatherPid(fatherPid);
-<%  if (addContextToMDC) {
+<%  	if (addContextToMDC) {
     	List<IContextParameter> listCtxParams = node.getProcess().getContextManager().getDefaultContext().getContextParameterList();
-    	for (IContextParameter ctxParam : listCtxParams) { %>
-<%          if (ctxParam.getName().toLowerCase().contains("passw") == false && "id_Password".equals(ctxParam.getType()) == false) { %>
+    		for (IContextParameter ctxParam : listCtxParams) { %>
+<%          	if (ctxParam.getName().toLowerCase().contains("passw") == false && "id_Password".equals(ctxParam.getType()) == false) { %>
 		lh.addContextVar("<%=ctxParam.getName()%>", context.<%=ctxParam.getName()%>);
-<%          } else { %>
+<%          	} else { %>
 		// leaf out password attribute <%=ctxParam.getName()%>
-<%          } %>
-<%  	} // for
-    } // if (addContextToMDC)  %>
+<%          	} %>
+<%  		} // for
+    	} // if (addContextToMDC)  %>
 		lh.setJobInstanceId((Long) globalMap.get("<%=cid%>_JOB_INSTANCE_ID"));
 		lh.setWorkItem((String) globalMap.get("<%=cid%>_WORK_ITEM"));
 		// initialize Log4J if needed
@@ -370,29 +372,29 @@
 				throw e; 
 			}
 		}
-   	lh.initJobLogger();
-<% if (useJobLogFile && logFilePattern != null && logFilePattern.trim().isEmpty() == false) { %>
+   		lh.initJobLogger();
+<%  	if (useJobLogFile && logFilePattern != null && logFilePattern.trim().isEmpty() == false) { %>
 		globalMap.put("<%=cid%>_LOG_FILE_PATH", lh.configureFileAppender(<%=logFilePattern%>, <%=logFileLayout%>));
 		Object fileAppender = lh.getFileAppender();
 		if (fileAppender != null && lh.getPid().equals(pid)) {
 			// to be able to close it at the end of the job, but only if it our own appender
 			globalMap.put("<%=cid%>_FILE_APPENDER", fileAppender);
 		}
-<% } %>
-<%  if (useDbAppender) { %>
+<%  	} %>
+<%  	if (useDbAppender) { %>
 		org.apache.log4j.Appender dbAppender = (org.apache.log4j.Appender) globalMap.get("<%=cid%>_DB_APPENDER");
 		if (dbAppender != null) {
 			lh.addAppender(dbAppender);
 		} else {
 			System.err.println("No database appender available.");
 		}
-<%  } %>
-<%  if (debug) { %>
+<%  	} %>
+<%  	if (debug) { %>
 		lh.printOutLoggers();
-<%  } %>
-<% if (catchSysout) { %>
+<%  	} %>
+<%  	if (catchSysout) { %>
 		lh.catchStandardOut(<%=forwardToConsole%>);
-<% } %>
+<% 		} %>
 	} // if (lh == null)
 	// instantiate a new resume util
 	class LogConnector extends ResumeUtil {
@@ -426,11 +428,15 @@
 			}
 	    }
 		
-	}
-	resumeUtil = new LogConnector(lh, <%=cid%>.getJobInstanceId()); 	
+	 }
+	 resumeUtil = new LogConnector(lh, <%=cid%>.getJobInstanceId());
     } // close block
+<%  } else if (closeConnection) { // else of if (useLog4j) %>
+    <%=cid%>.closeConnection(); // will close the connection but only if no logDBAppender is used
+<%  } // end of if (useLog4j) %>
+<%  if (memoryMonitoring) { %>
+	 de.cimt.talendcomp.manage.JobInstanceHelper.startMemoryMonitoring();
 <%  } %>
-
 
 
 	
