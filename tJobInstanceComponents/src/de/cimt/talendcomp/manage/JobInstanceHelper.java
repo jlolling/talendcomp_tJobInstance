@@ -11,7 +11,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.sql.Types;
-import java.text.Format;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -24,8 +23,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
-
-import javax.swing.text.NumberFormatter;
 
 import org.apache.log4j.Appender;
 import org.apache.log4j.Logger;
