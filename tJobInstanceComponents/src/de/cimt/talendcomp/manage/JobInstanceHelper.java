@@ -649,6 +649,7 @@ public class JobInstanceHelper {
 			System.err.println("As connection for tJobInstanceEnd it should be used a different connection than for tJobInstanceStart !");
 		}
 		this.endConnection = connection;
+		ch.setConnection(this.endConnection);
 	}
 
 	public long getJobInstanceId() {

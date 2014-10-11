@@ -2,8 +2,8 @@
 
 <COMPONENT>
 	<HEADER AUTHOR="cimt AG" COMPATIBILITY="ALL"
-		DATA_AUTO_PROPAGATE="false" PLATEFORM="ALL" RELEASE_DATE="20140912A"
-		SERIAL="" STARTABLE="true" STATUS="PROD" VERSION="3.3">
+		DATA_AUTO_PROPAGATE="false" PLATEFORM="ALL" RELEASE_DATE="20141009A"
+		SERIAL="" STARTABLE="true" STATUS="PROD" VERSION="3.4">
 		<SIGNATURE />
 	</HEADER>
 	<FAMILIES>
@@ -152,7 +152,7 @@
 		</PARAMETER>
 		<PARAMETER FIELD="TEXT" NAME="SCHEMA_NAME" NUM_ROW="20" />
 		<PARAMETER FIELD="TEXT" NAME="TABLE_NAME" NUM_ROW="20" SHOW_IF="USE_PROJECT_SPECIFIC_NAMES == 'false'" >
-			<DEFAULT></DEFAULT>
+			<DEFAULT>"JOB_INSTANCE_STATUS"</DEFAULT>
 		</PARAMETER>
 		<PARAMETER FIELD="TEXT" NAME="TABLE_NAME_CONTEXT" NUM_ROW="30" SHOW_IF="USE_PROJECT_SPECIFIC_NAMES == 'false'" >
 			<DEFAULT></DEFAULT>
@@ -170,7 +170,7 @@
 	</ADVANCED_PARAMETERS>
 	<CODEGENERATION>
 		<IMPORTS>
-			<IMPORT NAME="cimt.talendcomp.jobinstances" MODULE="cimt.talendcomp.jobinstances-3.3.jar" REQUIRED="true" />
+			<IMPORT NAME="cimt.talendcomp.jobinstances" MODULE="cimt.talendcomp.jobinstances-3.4.jar" REQUIRED="true" />
 			<IMPORT NAME="log4j" MODULE="log4j-1.2.17.jar" REQUIRED="true" />
 			<!-- the name part "user" must match to the value in parameter PROJECT_SPECIFIC_NAME_MAP_RESOURCE
 			<IMPORT NAME="custom_mapping_test" MODULE="mapping_user.properties.jar" REQUIRED="true" />
