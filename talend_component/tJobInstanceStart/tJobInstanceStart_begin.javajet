@@ -15,6 +15,7 @@
     INode node = (INode) codeGenArgument.getArgument();
     String cid = node.getUniqueName();
     String jobWorkItem = ElementParameterParser.getValue(node, "__JOB_WORK_ITEM__");
+    boolean emptyWorkItemAsNull = "true".equals(ElementParameterParser.getValue(node, "__EMPTY_WORK_ITEM_IS_NULL__"));
     String timeRangeStart = ElementParameterParser.getValue(node, "__TIME_RANGE_START__");
     String timeRangeEnd = ElementParameterParser.getValue(node, "__TIME_RANGE_END__");
     String valueRangeStart = ElementParameterParser.getValue(node, "__VALUE_RANGE_START__");
@@ -42,9 +43,11 @@
 	String onlySuccessful = ElementParameterParser.getValue(node, "__RETRIEVE_LAST_RUN_DATA_SUCCESSFUL__");
 	String onlyWithData = ElementParameterParser.getValue(node, "__RETRIEVE_LAST_RUN_DATA_WITH_DATA__");
 	boolean collectSourceInstanceIds = "true".equals(ElementParameterParser.getValue(node, "__COLLECT_SOURCE_INSTANCE_IDS__"));
+	@SuppressWarnings("unchecked")
     List<Map<String, String>> sourceJobList = (List<Map<String,String>>) ElementParameterParser.getObjectValue(node, "__SOURCE_JOB_NAMES__");
 	String listOnlySuccessful = ElementParameterParser.getValue(node, "__RETRIEVE_LAST_SOURCE_SUCCESSFUL__");
 	String listOnlyWithData = ElementParameterParser.getValue(node, "__RETRIEVE_LAST_SOURCE_WITH_DATA__");
+	String forWorkItem = ElementParameterParser.getValue(node, "__RETRIEVE_LAST_RUN_DATA_FOR_WORKITEM__");
 	String okResultCodes = ElementParameterParser.getValue(node, "__OK_RESULT_CODES__");
 	boolean doNotSavePasswords = "true".equals(ElementParameterParser.getValue(node, "__DO_NOT_SAVE_PASSWORDS__"));
 	String maxMessageLength = ElementParameterParser.getValue(node, "__MAX_MESSAGE_LENGTH__");
@@ -56,8 +59,30 @@
 	String batchMillis = ElementParameterParser.getValue(node, "__LOG_BATCH_UPDATE_MILLIS__");
 	String batchSize = ElementParameterParser.getValue(node, "__LOG_BATCH_SIZE__");
 	boolean memoryMonitoring = "true".equals(ElementParameterParser.getValue(node, "__MEASURE_MEMORY_USAGE__"));
+    boolean debug = "true".equals(ElementParameterParser.getValue(node, "__DEBUG__"));
+    boolean reduceResumeLogs = "true".equals(ElementParameterParser.getValue(node, "__REDUCE_RESUME_LOGS__"));
+    String initialPrevJobInstanceId = ElementParameterParser.getValue(node, "__INITIAL_PREV_JOB_INSTANCE_ID__");
+    if (initialPrevJobInstanceId == null || initialPrevJobInstanceId.trim().isEmpty()) {
+    	initialPrevJobInstanceId = "null";
+    }
+    String initialPrevJobStartDate = ElementParameterParser.getValue(node, "__INITIAL_PREV_JOB_START_DATE__");
+    if (initialPrevJobStartDate == null || initialPrevJobStartDate.trim().isEmpty()) {
+    	initialPrevJobStartDate = "null";
+    }
+    String initialPrevTimeRangeEnd = ElementParameterParser.getValue(node, "__INITIAL_PREV_TIME_RANGE_END__");
+    if (initialPrevTimeRangeEnd == null || initialPrevTimeRangeEnd.trim().isEmpty()) {
+    	initialPrevTimeRangeEnd = "null";
+    }
+    String initialPrevValueRangeEnd = ElementParameterParser.getValue(node, "__INITIAL_PREV_VALUE_RANGE_END__");
+    if (initialPrevValueRangeEnd == null || initialPrevValueRangeEnd.trim().isEmpty()) {
+    	initialPrevValueRangeEnd = "null";
+    }
+    String initialPrevResultItem = ElementParameterParser.getValue(node, "__INITIAL_PREV_RESULT_ITEM__");
+    if (initialPrevResultItem == null || initialPrevResultItem.trim().isEmpty()) {
+    	initialPrevResultItem = "null";
+    }
 %>
-<%  if (setUTCTimeZone) {%>
+<%  if (setUTCTimeZone) { %>
     if ("UTC".equals(java.util.TimeZone.getDefault().getID()) == false) {
        	System.out.println("Change default time zone to UTC starting with job: " + jobName);
        	java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("UTC"));
@@ -73,6 +98,8 @@
 	// instantiate the job instance helper
 	de.cimt.talendcomp.manage.JobInstanceHelper <%=cid%> = new de.cimt.talendcomp.manage.JobInstanceHelper();
 	<%=cid%>.setJobStartedAt(jobStartedAt);
+	globalMap.put("<%=cid%>_JOB_START_DATE", <%=cid%>.getJobStartedAt());
+	<%=cid%>.setDebug(<%=debug%>);
 	// job info
 	<%=cid%>.setJobInfo(projectName + "/" + jobName + "-" + jobVersion + ":" + contextStr);
 	<%=cid%>.setProject(projectName);
@@ -142,7 +169,7 @@
 	<%=cid%>.setRootJobGuid(rootPid);
 	<%=cid%>.setParentJobGuid(fatherPid);
 <%  if (jobWorkItem != null && jobWorkItem.trim().isEmpty() == false) { %>
-	<%=cid%>.setJobWorkItem(<%=jobWorkItem%>);
+	<%=cid%>.setJobWorkItem(<%=jobWorkItem%>, <%=emptyWorkItemAsNull%>);
 	globalMap.put("<%=cid%>_WORK_ITEM", <%=cid%>.getJobWorkItem());
 <%  } %>
 <%  if (okResultCodes != null && okResultCodes.trim().isEmpty() == false) { %>
@@ -189,7 +216,10 @@
 <%  if (returnLastInstanceData) { %>
     // retrieve last job run data
 	try {
-		boolean <%=cid%>_PrevJobExists = <%=cid%>.retrievePreviousInstanceData(<%=onlySuccessful%>,<%=onlyWithData%>);
+		boolean <%=cid%>_PrevJobExists = <%=cid%>.retrievePreviousInstanceData(
+			<%=onlySuccessful%>, // onlySuccessful
+			<%=onlyWithData%>, // onlyWithData
+			<%=forWorkItem%>); // forWorkItem
 		globalMap.put("<%=cid%>_PREV_JOB_EXISTS", <%=cid%>_PrevJobExists);
 		if (<%=cid%>_PrevJobExists) {
 			globalMap.put("<%=cid%>_PREV_JOB_INSTANCE_ID", <%=cid%>.getPrevJobInstanceId());
@@ -199,31 +229,43 @@
 			globalMap.put("<%=cid%>_PREV_JOB_HOST_PID", <%=cid%>.getPrevHostPid());
 			globalMap.put("<%=cid%>_PREV_JOB_HOST_NAME", <%=cid%>.getPrevHostName());
 			globalMap.put("<%=cid%>_PREV_TIME_RANGE_START", <%=cid%>.getPrevTimeRangeStart());
-			globalMap.put("<%=cid%>_PREV_TIME_RANGE_END", <%=cid%>.getPrevTimeRangeEnd());
+			java.util.Date prevTimeRangeEnd = <%=cid%>.getPrevTimeRangeEnd();
+			if (prevTimeRangeEnd == null) {
+				prevTimeRangeEnd = <%=initialPrevTimeRangeEnd%>;
+			}
+			globalMap.put("<%=cid%>_PREV_TIME_RANGE_END", prevTimeRangeEnd);
 			globalMap.put("<%=cid%>_PREV_VALUE_RANGE_START", <%=cid%>.getPrevValueRangeStart());
-			globalMap.put("<%=cid%>_PREV_VALUE_RANGE_END", <%=cid%>.getPrevValueRangeEnd());
+			String prevValueRangeEnd = <%=cid%>.getPrevValueRangeEnd();
+			if (prevValueRangeEnd == null) {
+				prevValueRangeEnd = <%=initialPrevValueRangeEnd%>;
+			}
+			globalMap.put("<%=cid%>_PREV_VALUE_RANGE_END", prevValueRangeEnd);
 			globalMap.put("<%=cid%>_PREV_JOB_RETURN_CODE", <%=cid%>.getPrevReturnCode());
 			globalMap.put("<%=cid%>_PREV_WORK_ITEM", <%=cid%>.getPrevWorkItem());
-			globalMap.put("<%=cid%>_PREV_RESULT_ITEM", <%=cid%>.getPrevJobResult());
+			String prevJobResult = <%=cid%>.getPrevJobResult();
+			if (prevJobResult == null) {
+				prevJobResult = <%=initialPrevResultItem%>;
+			}
+			globalMap.put("<%=cid%>_PREV_RESULT_ITEM", prevJobResult);
 			globalMap.put("<%=cid%>_PREV_COUNT_INPUT", <%=cid%>.getPrevInput());
 			globalMap.put("<%=cid%>_PREV_COUNT_OUTPUT", <%=cid%>.getPrevOutput());
 			globalMap.put("<%=cid%>_PREV_COUNT_UPDATED", <%=cid%>.getPrevUpdated());
 			globalMap.put("<%=cid%>_PREV_COUNT_REJECTED", <%=cid%>.getPrevRejects());
 			globalMap.put("<%=cid%>_PREV_COUNT_DELETED", <%=cid%>.getPrevDeleted());
 		} else {
-			globalMap.remove("<%=cid%>_PREV_JOB_INSTANCE_ID");
-			globalMap.remove("<%=cid%>_PREV_JOB_START_DATE");
+			globalMap.put("<%=cid%>_PREV_JOB_INSTANCE_ID", <%=initialPrevJobInstanceId%>);
+			globalMap.put("<%=cid%>_PREV_JOB_START_DATE", <%=initialPrevJobStartDate%>);
 			globalMap.remove("<%=cid%>_PREV_JOB_STOP_DATE");
 			globalMap.remove("<%=cid%>_PREV_JOB_TALEND_PID");
 			globalMap.remove("<%=cid%>_PREV_JOB_HOST_PID");
 			globalMap.remove("<%=cid%>_PREV_JOB_HOST_NAME");
 			globalMap.remove("<%=cid%>_PREV_TIME_RANGE_START");
-			globalMap.remove("<%=cid%>_PREV_TIME_RANGE_END");
+			globalMap.put("<%=cid%>_PREV_TIME_RANGE_END", <%=initialPrevTimeRangeEnd%>);
 			globalMap.remove("<%=cid%>_PREV_VALUE_RANGE_START");
-			globalMap.remove("<%=cid%>_PREV_VALUE_RANGE_END");
+			globalMap.put("<%=cid%>_PREV_VALUE_RANGE_END", <%=initialPrevValueRangeEnd%>);
 			globalMap.remove("<%=cid%>_PREV_JOB_RETURN_CODE");
 			globalMap.remove("<%=cid%>_PREV_WORK_ITEM");
-			globalMap.remove("<%=cid%>_PREV_RESULT_ITEM");
+			globalMap.put("<%=cid%>_PREV_RESULT_ITEM", <%=initialPrevResultItem%>);
 			globalMap.remove("<%=cid%>_PREV_COUNT_INPUT");
 			globalMap.remove("<%=cid%>_PREV_COUNT_OUTPUT");
 			globalMap.remove("<%=cid%>_PREV_COUNT_UPDATED");
@@ -326,7 +368,6 @@
     String logFilePattern = ElementParameterParser.getValue(node, "__LOG_FILE_PATH__");
     String logFileLayout = ElementParameterParser.getValue(node, "__LOG_FILE_LAYOUT__");
     boolean catchSysout = "true".equals(ElementParameterParser.getValue(node, "__CATCH_SYSOUT__"));
-    boolean debug = "true".equals(ElementParameterParser.getValue(node, "__DEBUG__"));
     String forwardToConsole = ElementParameterParser.getValue(node, "__FORWARD_TO_CONSOLE__");
     String helperName = ElementParameterParser.getValue(node, "__HELPER_NAME__");
     if (helperName == null || helperName.trim().isEmpty() || "\"\"".equals(helperName)) {
@@ -398,7 +439,7 @@
 	} // if (lh == null)
 	// instantiate a new resume util
 	class LogConnector extends ResumeUtil {
-		
+				
 		private de.cimt.talendcomp.log4j.Log4JHelper logHelper = null;
 		private Long jobInstanceId = null;
 		
@@ -413,11 +454,13 @@
 		@Override
 		public void addLog(String type, String partName, String parentPart, String threadId, String logPriority, String errorCode,
 	            String message, String stackTrace, String dynamicData) {
+<%     if (reduceResumeLogs) { %>
+			if ("CHECKPOINT".equals(type) == false && "NODE".equals(type) == false && "JOB_STARTED".equals(type) == false && "JOB_ENDED".equals(type) == false) {
+<%     } %>
 	        try {
 		        super.addLog(type, partName, parentPart, threadId, logPriority, errorCode, message, stackTrace, dynamicData);
 	        } catch (Throwable t) {}
 			try {
-				//System.out.println("################################ priority:<" + logPriority + "> partName:" + partName + " message:" + message);
 				if (logPriority != null && logPriority.trim().isEmpty() == false) {
 					logHelper.logOut(partName, logPriority, message, pid, jobInstanceId); 
 				}
@@ -426,6 +469,9 @@
 						"logOut failed:" + e.getMessage());
 				throw new RuntimeException(e);
 			}
+<%     if (reduceResumeLogs) { %>
+			}
+<%     } %>	        
 	    }
 		
 	 }
@@ -434,6 +480,31 @@
 <%  } else if (closeConnection) { // else of if (useLog4j) %>
     <%=cid%>.closeConnection(); // will close the connection but only if no logDBAppender is used
 <%  } // end of if (useLog4j) %>
+<%  if (useLog4j == false && reduceResumeLogs) { %>
+	// instantiate a new resume util which reduces resume logs
+	class ResumeUtilRed extends ResumeUtil {
+				
+		public ResumeUtilRed() {
+			super(resuming_logs_dir_path, isChildJob, rootPid);
+
+			super.initCommonInfo(
+					pid, rootPid, fatherPid, projectName,
+					jobName, contextStr, jobVersion);
+		}
+		
+		@Override
+		public void addLog(String type, String partName, String parentPart, String threadId, String logPriority, String errorCode,
+	            String message, String stackTrace, String dynamicData) {
+			if ("CHECKPOINT".equals(type) == false && "NODE".equals(type) == false && "JOB_STARTED".equals(type) == false && "JOB_ENDED".equals(type) == false) {
+	        try {
+		        super.addLog(type, partName, parentPart, threadId, logPriority, errorCode, message, stackTrace, dynamicData);
+	        } catch (Throwable t) {}
+			}
+	    }
+		
+	 }
+	 resumeUtil = new ResumeUtilRed();
+<%  } %>
 <%  if (memoryMonitoring) { %>
 	 de.cimt.talendcomp.manage.JobInstanceHelper.startMemoryMonitoring();
 <%  } %>

@@ -1,3 +1,18 @@
+/**
+ * Copyright 2015 Jan Lolling jan.lolling@gmail.com
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package de.cimt.talendcomp.manage;
 
 import java.io.IOException;
@@ -89,6 +104,9 @@ public class JobInstanceHelper {
 	private static long maxTotalMemory = 0;
 	private static long maxMemory = 0;
 	private static Thread memoryMonitor = null;
+	private boolean debug = false;
+	private int returnCodeForDeadInstances = 999;
+	private Map<String, Integer> scannerCounterMap = new HashMap<String, Integer>();
 	
 	public JobInstanceHelper() {
 		currentJobInfo = new JobInfo();
@@ -190,8 +208,11 @@ public class JobInstanceHelper {
 		if (wasAutoCommit == false) {
 			startConnection.setAutoCommit(true);
 		}
-		String insertSQL = sb.toString();
-		PreparedStatement psInsert = startConnection.prepareStatement(insertSQL);
+		String sql = sb.toString();
+		if (debug) {
+			System.out.println(sql);
+		}
+		PreparedStatement psInsert = startConnection.prepareStatement(sql);
 		psInsert.setString(1, currentJobInfo.getName());
 		psInsert.setString(2, currentJobInfo.getGuid());
 		if (currentJobInfo.getRootJobGuid() != null) {
@@ -263,7 +284,11 @@ public class JobInstanceHelper {
 			sb.append(" = 0 or "); // delete only successfully finished or...
 			sb.append(getColumn(JOB_ENDED_AT));
 			sb.append(" is null)");  // .... aborted runs
-			PreparedStatement ps = endConnection.prepareStatement(sb.toString());
+			String sql = sb.toString();
+			if (debug) {
+				System.out.println(sql);
+			}
+			PreparedStatement ps = endConnection.prepareStatement(sql);
 			ps.setString(1, currentJobInfo.getName());
 			ps.setString(2, currentJobInfo.getWorkItem());
 			ps.setLong(3, currentJobInfo.getJobInstanceId());
@@ -288,7 +313,11 @@ public class JobInstanceHelper {
 		sb.append("=? order by ");
 		sb.append(getColumn(JOB_INSTANCE_ID));
 		sb.append(" desc");
-		PreparedStatement psSelect = startConnection.prepareStatement(sb.toString());
+		String sql = sb.toString();
+		if (debug) {
+			System.out.println(sql);
+		}
+		PreparedStatement psSelect = startConnection.prepareStatement(sql);
 		psSelect.setString(1, jobGuid);
 		ResultSet rs = psSelect.executeQuery();
 		long id = 0;
@@ -337,8 +366,11 @@ public class JobInstanceHelper {
 		sb.append("where ");
 		sb.append(getColumn(JOB_INSTANCE_ID)); // 15
 		sb.append("=?");
-		String updateSQL = sb.toString();
-		PreparedStatement psUpdate = endConnection.prepareStatement(updateSQL);
+		String sql = sb.toString();
+		if (debug) {
+			System.out.println(sql);
+		}
+		PreparedStatement psUpdate = endConnection.prepareStatement(sql);
 		psUpdate.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
 		if (currentJobInfo.getJobResult() != null) {
 			psUpdate.setString(2, currentJobInfo.getJobResult());
@@ -375,15 +407,26 @@ public class JobInstanceHelper {
 		}
 	}
 
-	public boolean retrievePreviousInstanceData(boolean successful, boolean withOutput) throws SQLException {
+	public boolean retrievePreviousInstanceData(boolean successful, boolean withOutput, boolean forWorkItem) throws SQLException {
 		StringBuilder sb = new StringBuilder();
 		sb.append("select * from ");
 		sb.append(getTable());
 		sb.append(" where ");
 		sb.append(getColumn(JOB_NAME));
 		sb.append("=? and ");
-		sb.append(getColumn(JOB_STARTED_AT));
-		sb.append(" < ?");
+		sb.append(getColumn(JOB_INSTANCE_ID));
+		sb.append(" < ?");		
+		boolean searchForWorkItem = false;
+		if (forWorkItem) {
+			sb.append(" and ");
+			sb.append(getColumn(JOB_WORK_ITEM));
+			if (currentJobInfo.getWorkItem() != null) {
+				sb.append(" = ?");
+				searchForWorkItem = true;
+			} else {
+				sb.append(" is null ");
+			}
+		}
 		if (successful) {
 			sb.append(" and ");
 			sb.append(getColumn(JOB_RETURN_CODE));
@@ -405,11 +448,18 @@ public class JobInstanceHelper {
 			sb.append(" > 0)");
 		}
 		sb.append(" order by ");
-		sb.append(getColumn(JOB_STARTED_AT));
+		sb.append(getColumn(JOB_INSTANCE_ID));
 		sb.append(" desc");
-		PreparedStatement psSelect = startConnection.prepareStatement(sb.toString());
+		String sql = sb.toString();
+		if (debug) {
+			System.out.println(sql);
+		}
+		PreparedStatement psSelect = startConnection.prepareStatement(sql);
 		psSelect.setString(1, currentJobInfo.getName());
-		psSelect.setTimestamp(2, new Timestamp(currentJobInfo.getStartDate().getTime()));
+		psSelect.setLong(2, currentJobInfo.getJobInstanceId());
+		if (searchForWorkItem) {
+			psSelect.setString(3, currentJobInfo.getWorkItem());
+		}
 		ResultSet rs = psSelect.executeQuery();
 		if (rs.next()) {
 			hasPrevInstance = true;
@@ -467,7 +517,11 @@ public class JobInstanceHelper {
 		}
 		sb.append(" order by ");
 		sb.append(getColumn(JOB_INSTANCE_ID));
-		PreparedStatement psSelect = startConnection.prepareStatement(sb.toString());
+		String sql = sb.toString();
+		if (debug) {
+			System.out.println(sql);
+		}
+		PreparedStatement psSelect = startConnection.prepareStatement(sql);
 		ResultSet rs = psSelect.executeQuery();
 		List<JobInfo> list = new ArrayList<JobInfo>();
 		while (rs.next()) {
@@ -538,7 +592,11 @@ public class JobInstanceHelper {
 		}
 		sb.append(" order by ");
 		sb.append(getColumn(JOB_INSTANCE_ID));
-		PreparedStatement psSelect = startConnection.prepareStatement(sb.toString());
+		String sql = sb.toString();
+		if (debug) {
+			System.out.println(sql);
+		}
+		PreparedStatement psSelect = startConnection.prepareStatement(sql);
 		ResultSet rs = psSelect.executeQuery();
 		StringBuilder res = new StringBuilder();
 		boolean firstLoop = true;
@@ -694,37 +752,88 @@ public class JobInstanceHelper {
 		return currentJobInfo.getWorkItem();
 	}
 
-	public void setJobWorkItem(Object jobWorkItem) {
+	public void setJobWorkItem(Object jobWorkItem, boolean emptyAsNull) {
 		if (jobWorkItem instanceof String) {
-			currentJobInfo.setWorkItem((String) jobWorkItem);
+			String value = (String) jobWorkItem;
+			if (value.isEmpty() == false || emptyAsNull == false) {
+				currentJobInfo.setWorkItem(value);
+			}
 		} else if (jobWorkItem instanceof Date) {
 			SimpleDateFormat date_param_format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 			currentJobInfo.setWorkItem(date_param_format.format((Date) jobWorkItem));
 		} else if (jobWorkItem != null) {
+			String value = String.valueOf(jobWorkItem);
+			if (value.isEmpty() == false || emptyAsNull == false) {
+				currentJobInfo.setWorkItem(value);
+			}
+		}
+	}
+
+	public void setJobWorkItem(Integer jobWorkItem, boolean emptyAsNull) {
+		if (jobWorkItem != null) {
 			currentJobInfo.setWorkItem(String.valueOf(jobWorkItem));
 		}
 	}
 
-	public void setJobWorkItem(int jobWorkItem) {
+	public void setJobWorkItem(int jobWorkItem, boolean emptyAsNull) {
 		currentJobInfo.setWorkItem(String.valueOf(jobWorkItem));
 	}
 
-	public void setJobWorkItem(long jobWorkItem) {
+	public void setJobWorkItem(Long jobWorkItem, boolean emptyAsNull) {
+		if (jobWorkItem != null) {
+			currentJobInfo.setWorkItem(String.valueOf(jobWorkItem));
+		}
+	}
+
+	public void setJobWorkItem(long jobWorkItem, boolean emptyAsNull) {
 		currentJobInfo.setWorkItem(String.valueOf(jobWorkItem));
 	}
 
-	public void setJobWorkItem(short jobWorkItem) {
-		currentJobInfo.setWorkItem(String.valueOf(jobWorkItem));
+	public void setJobWorkItem(Short jobWorkItem, boolean emptyAsNull) {
+		if (jobWorkItem != null) {
+			currentJobInfo.setWorkItem(String.valueOf(jobWorkItem));
+		}
 	}
 
-	public void setJobWorkItem(char jobWorkItem) {
-		currentJobInfo.setWorkItem(String.valueOf(jobWorkItem));
+	public void setJobWorkItem(Double jobWorkItem, boolean emptyAsNull) {
+		if (jobWorkItem != null) {
+			currentJobInfo.setWorkItem(String.valueOf(jobWorkItem));
+		}
 	}
 
-	public void setJobWorkItem(byte jobWorkItem) {
-		currentJobInfo.setWorkItem(String.valueOf(jobWorkItem));
+	public void setJobWorkItem(BigDecimal jobWorkItem, boolean emptyAsNull) {
+		if (jobWorkItem != null) {
+			currentJobInfo.setWorkItem(String.valueOf(jobWorkItem));
+		}
 	}
 
+	public void setJobWorkItem(Character jobWorkItem, boolean emptyAsNull) {
+		if (jobWorkItem != null) {
+			currentJobInfo.setWorkItem(String.valueOf(jobWorkItem));
+		}
+	}
+
+	public void setJobWorkItem(Byte jobWorkItem, boolean emptyAsNull) {
+		if (jobWorkItem != null) {
+			currentJobInfo.setWorkItem(String.valueOf(jobWorkItem));
+		}
+	}
+
+	public void setJobWorkItem(byte[] jobWorkItem, boolean emptyAsNull) {
+		if (jobWorkItem != null) {
+        	byte[] byteArray = (byte[]) jobWorkItem;
+        	if (byteArray.length > 0) {
+            	StringBuilder sb = new StringBuilder(byteArray.length * 2);
+            	sb.append("x'");
+            	for (byte b : byteArray) {
+            		sb.append(String.format("%02X", b));
+            	}
+            	sb.append("'");
+    			currentJobInfo.setWorkItem(String.valueOf(sb.toString()));
+        	}
+		}
+	}
+	
 	public String getJobResult() {
 		return currentJobInfo.getJobResult();
 	}
@@ -1394,6 +1503,10 @@ public class JobInstanceHelper {
 	public void setLogBatchPeriodMillis(Integer batchPeriodMillis) {
 		this.logBatchPeriodMillis = batchPeriodMillis;
 	}
+	
+	public Date getJobStartedAt() {
+		return currentJobInfo.getStartDate();
+	}
 
 	public void setJobStartedAt(long jobStartedAt) {
 		currentJobInfo.setStartDate(new Date(jobStartedAt));
@@ -1449,7 +1562,7 @@ public class JobInstanceHelper {
 			updateInstanceLastStart.append(getColumn(JOB_DELETED));
 			updateInstanceLastStart.append("=0,");
 			updateInstanceLastStart.append(getColumn(JOB_RETURN_CODE));
-			updateInstanceLastStart.append("=999,");
+			updateInstanceLastStart.append("=" + returnCodeForDeadInstances + ",");
 			updateInstanceLastStart.append(getColumn(JOB_RETURN_MESSAGE));
 			updateInstanceLastStart.append("='Process died' where ");
 			updateInstanceLastStart.append(getColumn(JOB_ENDED_AT));
@@ -1508,7 +1621,7 @@ public class JobInstanceHelper {
 		updateInstance.append(getColumn(JOB_DELETED));
 		updateInstance.append("=0,");
 		updateInstance.append(getColumn(JOB_RETURN_CODE));
-		updateInstance.append("=999,");
+		updateInstance.append("=" + returnCodeForDeadInstances + ",");
 		updateInstance.append(getColumn(JOB_RETURN_MESSAGE));
 		updateInstance.append("='Process died' where ");
 		updateInstance.append(getColumn(JOB_ENDED_AT));
@@ -1671,5 +1784,100 @@ public class JobInstanceHelper {
 			System.out.println("Maximum of memory usage measured at: " + sdf.format(c.getTime()));
 		}
 	}
+
+	public boolean isDebug() {
+		return debug;
+	}
+
+	public void setDebug(boolean debug) {
+		this.debug = debug;
+	}
+
+	public int getReturnCodeForDeadInstances() {
+		return returnCodeForDeadInstances;
+	}
+
+	public void setReturnCodeForDeadInstances(Integer returnCode) {
+		if (returnCode != null && returnCode > 0) {
+			this.returnCodeForDeadInstances = returnCode.intValue();
+		}
+	}
 	
+	public void incrementNbLine(String scannerUniqueName) {
+		if (scannerUniqueName == null || scannerUniqueName.trim().isEmpty()) {
+			throw new IllegalArgumentException("scanner name cannot be null or empty.");
+		}
+		synchronized(scannerCounterMap) {
+			Integer counter = scannerCounterMap.get(scannerUniqueName + "_nb_line_total");
+			if (counter == null) {
+				counter = new Integer(0);
+				scannerCounterMap.put(scannerUniqueName + "_nb_line_total", counter);
+			}
+			scannerCounterMap.put(scannerUniqueName + "_nb_line_total", counter + 1);
+			counter = scannerCounterMap.get(scannerUniqueName + "_nb_line");
+			if (counter == null) {
+				counter = new Integer(0);
+				scannerCounterMap.put(scannerUniqueName + "_nb_line", counter);
+			}
+			scannerCounterMap.put(scannerUniqueName + "_nb_line", counter + 1);
+		}
+	}
+	
+	public int getNbLineTotal(String scannerUniqueName) {
+		if (scannerUniqueName == null || scannerUniqueName.trim().isEmpty()) {
+			throw new IllegalArgumentException("scanner name cannot be null or empty.");
+		}
+		Integer counter = scannerCounterMap.get(scannerUniqueName + "_nb_line_total");
+		if (counter != null) {
+			return counter.intValue();
+		} else {
+			return 0;
+		}
+	}
+	
+	public int getNbLine(String scannerUniqueName) {
+		if (scannerUniqueName == null || scannerUniqueName.trim().isEmpty()) {
+			throw new IllegalArgumentException("scanner name cannot be null or empty.");
+		}
+		Integer counter = scannerCounterMap.get(scannerUniqueName + "_nb_line");
+		if (counter != null) {
+			return counter.intValue();
+		} else {
+			return 0;
+		}
+	}
+
+	public void resetNbLine(String scannerUniqueName) {
+		if (scannerUniqueName == null || scannerUniqueName.trim().isEmpty()) {
+			throw new IllegalArgumentException("scanner name cannot be null or empty.");
+		}
+		scannerCounterMap.remove(scannerUniqueName + "_nb_line");
+	}
+	
+	public void incrementFlowCount(String scannerUniqueName) {
+		if (scannerUniqueName == null || scannerUniqueName.trim().isEmpty()) {
+			throw new IllegalArgumentException("scanner name cannot be null or empty.");
+		}
+		synchronized(scannerCounterMap) {
+			Integer counter = scannerCounterMap.get(scannerUniqueName + "_flow");
+			if (counter == null) {
+				counter = new Integer(0);
+				scannerCounterMap.put(scannerUniqueName + "_flow", counter);
+			}
+			scannerCounterMap.put(scannerUniqueName + "_flow", counter + 1);
+		}
+	}
+	
+	public int getFlowCount(String scannerUniqueName) {
+		if (scannerUniqueName == null || scannerUniqueName.trim().isEmpty()) {
+			throw new IllegalArgumentException("scanner name cannot be null or empty.");
+		}
+		Integer counter = scannerCounterMap.get(scannerUniqueName + "_flow");
+		if (counter != null) {
+			return counter.intValue();
+		} else {
+			return 0;
+		}
+	}
+
 }

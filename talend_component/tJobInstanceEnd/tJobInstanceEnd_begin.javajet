@@ -2,16 +2,9 @@
 	imports="
 		org.talend.core.model.process.INode 
 		org.talend.core.model.process.ElementParameterParser 
-		org.talend.core.model.metadata.IMetadataTable 
-		org.talend.core.model.metadata.IMetadataColumn 
-		org.talend.core.model.process.IConnection
-		org.talend.core.model.process.IConnectionCategory
 		org.talend.designer.codegen.config.CodeGeneratorArgument
-		org.talend.core.model.metadata.types.JavaTypesManager
-		org.talend.core.model.metadata.types.JavaType
 		java.util.List
     	java.util.Map
-    	org.talend.core.model.process.IProcess
 		org.talend.core.model.process.IContextParameter
 	" 
 %>
@@ -24,17 +17,22 @@
     String startComp = ElementParameterParser.getValue(node, "__JOB_START_COMP__");
     boolean saveNamedCounters = "true".equals(ElementParameterParser.getValue(node, "__SAVE_NAMED_COUNTERS__"));
     String jobResult = ElementParameterParser.getValue(node, "__JOB_RESULT__");
+    @SuppressWarnings("unchecked")
     List<Map<String, String>> inputCounterList = (List<Map<String,String>>) ElementParameterParser.getObjectValue(node, "__INPUTS__");
+    @SuppressWarnings("unchecked")
     List<Map<String, String>> outputCounterList = (List<Map<String,String>>) ElementParameterParser.getObjectValue(node, "__OUTPUTS__");
+    @SuppressWarnings("unchecked")
     List<Map<String, String>> updateCounterList = (List<Map<String,String>>) ElementParameterParser.getObjectValue(node, "__UPDATES__");
+    @SuppressWarnings("unchecked")
     List<Map<String, String>> rejectCounterList = (List<Map<String,String>>) ElementParameterParser.getObjectValue(node, "__REJECTS__");
+    @SuppressWarnings("unchecked")
     List<Map<String, String>> deleteCounterList = (List<Map<String,String>>) ElementParameterParser.getObjectValue(node, "__DELETES__");
     String timeRangeStart = ElementParameterParser.getValue(node, "__TIME_RANGE_START__");
     String timeRangeEnd = ElementParameterParser.getValue(node, "__TIME_RANGE_END__");
     String valueRangeStart = ElementParameterParser.getValue(node, "__VALUE_RANGE_START__");
     String valueRangeEnd = ElementParameterParser.getValue(node, "__VALUE_RANGE_END__");
     boolean saveContextAtEnd = "true".equals(ElementParameterParser.getValue(node, "__SAVE_CONTEXT_AT_END__"));
-	 boolean doNotSavePasswords = "true".equals(ElementParameterParser.getValue(node, "__DO_NOT_SAVE_PASSWORDS__"));
+	boolean doNotSavePasswords = "true".equals(ElementParameterParser.getValue(node, "__DO_NOT_SAVE_PASSWORDS__"));
 %>
 	de.cimt.talendcomp.manage.JobInstanceHelper.logMemoryUsage();
 	globalMap.put("<%=cid%>_MEMORY_AVAILABLE", de.cimt.talendcomp.manage.JobInstanceHelper.getMaxMemory());
