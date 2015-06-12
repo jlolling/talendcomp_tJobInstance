@@ -36,7 +36,10 @@ public class JobInstanceHelperTest {
 //		} catch (Exception e) {
 //			e.printStackTrace();
 //		}
-		test_bundle();
+		//test_bundle();
+		String s1 = "57156502";
+		String s2 = "106399905";
+		System.out.println(s1.compareTo(s2));
 	}
 	
     private static void test_changeTimezone() {

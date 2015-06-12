@@ -9,9 +9,6 @@
     INode node = (INode) codeGenArgument.getArgument();
     String cid = node.getUniqueName();
 %>
-	Integer <%=cid%>_sumCounter = (Integer) globalMap.get("<%=cid%>_NB_LINE_AGGREGATED");
-	if (<%=cid%>_sumCounter == null) {
-		<%=cid%>_sumCounter = new Integer(0);
-	}
-	<%=cid%>_sumCounter = new Integer(<%=cid%>_sumCounter.intValue() + <%=cid%>_count);
-	globalMap.put("<%=cid%>_NB_LINE_AGGREGATED", <%=cid%>_sumCounter);
+	globalMap.put("<%=cid%>_NB_LINE", <%=cid%>.getNbLine("<%=cid%>"));
+	globalMap.put("<%=cid%>_NB_LINE_AGGREGATED", <%=cid%>.getNbLineTotal("<%=cid%>"));
+	globalMap.put("<%=cid%>_NB_FLOWS", <%=cid%>.getFlowCount("<%=cid%>"));
