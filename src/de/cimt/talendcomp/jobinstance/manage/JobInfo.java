@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.cimt.talendcomp.manage;
+package de.cimt.talendcomp.jobinstance.manage;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -201,8 +201,12 @@ public class JobInfo {
 		return returnCode;
 	}
 	
-	public void setReturnCode(int returnCode) {
-		this.returnCode = returnCode;
+	public void setReturnCode(Integer returnCode) {
+		if (returnCode != null) {
+			this.returnCode = returnCode.intValue();
+		} else {
+			this.returnCode = 0;
+		}
 	}
 	
 	public String getReturnMessage() {
@@ -210,7 +214,9 @@ public class JobInfo {
 	}
 	
 	public void setReturnMessage(String returnMessage) {
-		this.returnMessage = returnMessage;
+		if (returnMessage != null && returnMessage.trim().isEmpty() == false) {
+			this.returnMessage = returnMessage.trim();
+		}
 	}
 	
 	public String getJobDisplayName() {

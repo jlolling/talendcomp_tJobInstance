@@ -11,10 +11,6 @@
 	<property name="appfilename_wo_ext" value="cimt.talendcomp.jobinstances" />
     <property name="componentname" value="tJobInstanceStart" />
 
-    <target name="resolve" description="--> retreive dependencies with ivy">
-        <ivy:retrieve/>
-    </target>    
-	
 	<target name="loadversion" description="Initalize">
 		<loadfile property="version" srcFile="${src}/VERSION" >
 			<filterchain>
@@ -57,7 +53,7 @@
 	</path>
 
 	<target name="jar"
-	        depends="resolve, compile, loadversion"
+	        depends="compile, loadversion"
 	        description="create the main jar">
 	    <mkdir dir="${distrib}"/>
 		<delete failonerror="false">

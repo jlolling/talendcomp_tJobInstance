@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.cimt.talendcomp.process;
+package de.cimt.talendcomp.jobinstance.process;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -36,12 +36,13 @@ public class ProcessHelper {
 		} else {
 			throw new Exception("Cannot determine operating system!");
 		}
-		if (os.contains("linux") || os.contains("mac")) {
-			isUnix = true;
-			isWindows = false;
-		} else if (os.contains("win")) {
+		if (os.contains("win")) {
 			isUnix = false;
 			isWindows = true;
+		} else {
+			// everything else than Windows is a UNIX system
+			isUnix = true;
+			isWindows = false;
 		}
 	}
 	

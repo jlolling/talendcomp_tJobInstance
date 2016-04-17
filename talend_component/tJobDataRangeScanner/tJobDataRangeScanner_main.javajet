@@ -12,8 +12,9 @@
     CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
     INode node = (INode) codeGenArgument.getArgument();
     String cid = node.getUniqueName(); %>
-    // increment for current flow
-	<%=cid%>.incrementNbLine("<%=cid%>");
+	if (<%=cid%> != null) {
+    	// increment for current flow
+	 	<%=cid%>.incrementNbLine("<%=cid%>");
 <%    IConnection conn = null;
     if (node.getIncomingConnections().size() > 0) {
     	conn = node.getIncomingConnections().get(0);
@@ -25,20 +26,21 @@
 			String columnName = ce.get("SCHEMA_COLUMN");
 			String rangeTarget = ce.get("RANGE_TARGET");
 			if ("time_range".equals(rangeTarget)) { %>
-	try {
-		<%=cid%>.checkTimeRange(<%=conn.getName()%>.<%=columnName%>);
-	} catch (Exception e) {
-		globalMap.put("<%=cid%>_ERROR_MESSAGE","check column <%=columnName%> for time range failed:" + e.getMessage());
-		throw e; 
-	}
+		try {
+			<%=cid%>.checkTimeRange(<%=conn.getName()%>.<%=columnName%>);
+		} catch (Exception e) {
+			globalMap.put("<%=cid%>_ERROR_MESSAGE","check column <%=columnName%> for time range failed:" + e.getMessage());
+			throw e; 
+		}
 <%			} else if ("value_range".equals(rangeTarget)) { %>
-	try {
-		<%=cid%>.checkValueRange(<%=conn.getName()%>.<%=columnName%>);
-	} catch (Exception e) {
-		globalMap.put("<%=cid%>_ERROR_MESSAGE","check column <%=columnName%> for value range failed:" + e.getMessage());
-		throw e; 
-	}
+		try {
+			<%=cid%>.checkValueRange(<%=conn.getName()%>.<%=columnName%>);
+		} catch (Exception e) {
+			globalMap.put("<%=cid%>_ERROR_MESSAGE","check column <%=columnName%> for value range failed:" + e.getMessage());
+			throw e; 
+		}
 <%			}
 		}
 	}
 %>
+	 }

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.cimt.talendcomp.log4j;
+package de.cimt.talendcomp.jobinstance.log4j;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -30,7 +30,7 @@ import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.Layout;
 import org.apache.log4j.spi.LoggingEvent;
 
-import de.cimt.talendcomp.manage.JobInstanceHelper;
+import de.cimt.talendcomp.jobinstance.manage.JobInstanceHelper;
 
 public class JobInstanceLogDBAppender extends AppenderSkeleton {
 
@@ -231,7 +231,7 @@ public class JobInstanceLogDBAppender extends AppenderSkeleton {
 			ps.setTimestamp(2, new Timestamp(e.logTimestamp));
 			ps.setString(3, e.level);
 			ps.setString(4, e.loggerName);
-			ps.setString(5, JobInstanceHelper.limitMessage(e.logMessage, maxMessageLength, 2));
+			ps.setString(5, JobInstanceHelper.enforceTextLength(e.logMessage, maxMessageLength, 2));
 			messageCountInBatch++;
 			if (batchPeriodMillis > 0) {
 				ps.addBatch();

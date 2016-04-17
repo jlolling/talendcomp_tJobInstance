@@ -26,8 +26,11 @@
     String contextVar = ElementParameterParser.getValue(node, "__CONTEXT_VAR_JOB_INSTANCE_ID__");
     String contextVarEJID = ElementParameterParser.getValue(node, "__CONTEXT_VAR_EXT_JOB_INSTANCE_ID__");
     String restartFromInstanceId = ElementParameterParser.getValue(node, "__RESTART_FROM_JOB_INSTANCE_ID__");
+    boolean useDataSource = "true".equals(ElementParameterParser.getValue(node, "__USE_DATA_SOURCE__"));
+    boolean useDataSourceAsDbName = "true".equals(ElementParameterParser.getValue(node, "__USE_DATA_SOURCE_ALIAS_AS_DBNAME__"));
+    String dataSourceAlias = ElementParameterParser.getValue(node, "__DATA_SOURCE_ALIAS__");
     String connectionComp = ElementParameterParser.getValue(node, "__CONNECTION__");
-    boolean closeConnection = "true".equals(ElementParameterParser.getValue(node, "__CLOSE_CONNECTION__"));
+    boolean closeConnection = useDataSource || "true".equals(ElementParameterParser.getValue(node, "__CLOSE_CONNECTION__"));
     String jobName = ElementParameterParser.getValue(node, "__JOB_NAME__");
     String jobDisplayName = ElementParameterParser.getValue(node, "__JOB_DISPLAY_NAME__");
     String tableName = ElementParameterParser.getValue(node, "__TABLE_NAME__");
@@ -35,6 +38,7 @@
     String tableNameCounter = ElementParameterParser.getValue(node, "__TABLE_NAME_COUNTER__");
     String schemaName = ElementParameterParser.getValue(node, "__SCHEMA_NAME__");
     String isSerialPk = ElementParameterParser.getValue(node, "__IS_AUTO_INCREMENT__");
+    String readGeneratedKeys = ElementParameterParser.getValue(node, "__READ_GENERATED_KEYS__");
     String sequence = ElementParameterParser.getValue(node, "__SEQUENCE_EXPRESSION__");
     if (sequence == null || sequence.isEmpty()) {
     	sequence = "null";
@@ -43,6 +47,9 @@
 	String onlySuccessful = ElementParameterParser.getValue(node, "__RETRIEVE_LAST_RUN_DATA_SUCCESSFUL__");
 	String onlyWithData = ElementParameterParser.getValue(node, "__RETRIEVE_LAST_RUN_DATA_WITH_DATA__");
 	boolean collectSourceInstanceIds = "true".equals(ElementParameterParser.getValue(node, "__COLLECT_SOURCE_INSTANCE_IDS__"));
+	boolean checkJobSingleton = "true".equals(ElementParameterParser.getValue(node, "__SINGLETON_JOB_INSTANCE__"));
+	boolean checkJobSingletonByWorkItem = "true".equals(ElementParameterParser.getValue(node, "__SINGLETON_JOB_INSTANCE_FOR_WORKITEM__"));
+	boolean preventEntryIfNotSingleton = "true".equals(ElementParameterParser.getValue(node, "__SINGLETON_JOB_INSTANCE_AVOID_JOB_STATUS__"));
 	@SuppressWarnings("unchecked")
     List<Map<String, String>> sourceJobList = (List<Map<String,String>>) ElementParameterParser.getObjectValue(node, "__SOURCE_JOB_NAMES__");
 	String listOnlySuccessful = ElementParameterParser.getValue(node, "__RETRIEVE_LAST_SOURCE_SUCCESSFUL__");
@@ -81,6 +88,8 @@
     if (initialPrevResultItem == null || initialPrevResultItem.trim().isEmpty()) {
     	initialPrevResultItem = "null";
     }
+    boolean sysoutJobInstanceId = "true".equals(ElementParameterParser.getValue(node, "__SYSOUT_JOB_INSTANCE_ID__"));
+    String sysoutJobInstanceIdExpression = ElementParameterParser.getValue(node, "__SYSOUT_JOB_INSTANCE_ID_EXPRESSION__");
 %>
 <%  if (setUTCTimeZone) { %>
     if ("UTC".equals(java.util.TimeZone.getDefault().getID()) == false) {
@@ -96,7 +105,7 @@
 		}
 	}
 	// instantiate the job instance helper
-	de.cimt.talendcomp.manage.JobInstanceHelper <%=cid%> = new de.cimt.talendcomp.manage.JobInstanceHelper();
+	de.cimt.talendcomp.jobinstance.manage.JobInstanceHelper <%=cid%> = new de.cimt.talendcomp.jobinstance.manage.JobInstanceHelper();
 	<%=cid%>.setJobStartedAt(jobStartedAt);
 	globalMap.put("<%=cid%>_JOB_START_DATE", <%=cid%>.getJobStartedAt());
 	<%=cid%>.setDebug(<%=debug%>);
@@ -106,28 +115,6 @@
 <%  if (contextVarEJID != null && contextVarEJID.isEmpty() == false) { %>
 	// external job instance id given
 	<%=cid%>.setExtJobId(<%=contextVarEJID%>);
-<%  } %>
-<%  if (schemaName != null && schemaName.trim().isEmpty() == false) { %>
-	<%=cid%>.setSchemaName(<%=schemaName%>);
-<%  } else {%>
-	{
-		String schemaName = (String) globalMap.get("dbschema_<%=connectionComp%>");
-		if (schemaName == null) {
-			schemaName = (String) globalMap.get("db_<%=connectionComp%>");
-		}
-		if (schemaName == null) {
-			schemaName = (String) globalMap.get("tableschema_<%=connectionComp%>");
-		}
-		if (schemaName == null) {
-			schemaName = (String) globalMap.get("schema_<%=connectionComp%>");
-		}
-		if (schemaName == null) {
-			schemaName = (String) globalMap.get("dbname_<%=connectionComp%>");
-		}
-		if (schemaName != null) {
-			<%=cid%>.setSchemaName(schemaName);
-		}
-	}
 <%  } %>
 <% if (useProjectSpecificNames) { %>
 	if (<%=cid%>.configure(<%=bundleName%>) == false) {
@@ -149,11 +136,49 @@
 <%  } %>
 	// config if table contains serial column
 	<%=cid%>.setAutoIncrementColumn(<%=isSerialPk%>);
+	<%=cid%>.setUseGeneratedKeys(<%=readGeneratedKeys%>);
 <%  if ("false".equals(isSerialPk)) { %>
 	<%=cid%>.setSequenceExpression(<%=sequence%>);
 <%  } %>
 <% } %>
+<%  if (useDataSource) {%>
+	{
+		java.util.Map<String, routines.system.TalendDataSource> dataSources = (java.util.Map<String, routines.system.TalendDataSource>) globalMap.get(KEY_DB_DATASOURCES);
+		if (dataSources == null) {
+			throw new Exception("No data sources available in this job!");
+		}
+		if (dataSources.get(<%=dataSourceAlias%>) == null) {
+			throw new Exception("No source data source available. Alias: " + <%=dataSourceAlias%>);
+		}
+		<%=cid%>.setConnection(dataSources.get(<%=dataSourceAlias%>).getConnection());
+	}
+<% } else { %>
 	<%=cid%>.setConnection((java.sql.Connection) globalMap.get("conn_<%=connectionComp%>"));
+<% } %>
+<%  if (schemaName != null && schemaName.trim().isEmpty() == false) { %>
+	<%=cid%>.setSchemaName(<%=schemaName%>);
+<%  } else if (useDataSource && useDataSourceAsDbName) {%>
+   <%=cid%>.setSchemaName(<%=dataSourceAlias%>);
+<%  } else {%>
+	{
+		String schemaName = (String) globalMap.get("dbschema_<%=connectionComp%>");
+		if (schemaName == null) {
+			schemaName = (String) globalMap.get("db_<%=connectionComp%>");
+		}
+		if (schemaName == null) {
+			schemaName = (String) globalMap.get("tableschema_<%=connectionComp%>");
+		}
+		if (schemaName == null) {
+			schemaName = (String) globalMap.get("schema_<%=connectionComp%>");
+		}
+		if (schemaName == null) {
+			schemaName = (String) globalMap.get("dbname_<%=connectionComp%>");
+		}
+		if (schemaName != null) {
+			<%=cid%>.setSchemaName(schemaName);
+		}
+	}
+<%  } %>
     // set job data
 	<%=cid%>.setJobName(<%=jobName%>);
 <%  if (jobDisplayName != null && jobDisplayName.isEmpty() == false) { %>
@@ -187,7 +212,27 @@
 <%  if (valueRangeEnd != null && valueRangeEnd.trim().isEmpty() == false) { %>
 	<%=cid%>.setValueRangeEnd(<%=valueRangeEnd%>);
 <%  } %>
-	globalMap.put("<%=cid%>", <%=cid%>);
+   boolean createEntry = true;
+<%  if (checkJobSingleton) { %>
+    // check if a job instance is still running
+	de.cimt.talendcomp.jobinstance.manage.JobInfo alreadyRunningJob = <%=cid%>.getJobInstanceAlreadyRunning(<%=checkJobSingletonByWorkItem%>);
+	if (alreadyRunningJob != null) {
+	   System.err.println("Job: " + jobName + ": Already running instance detected!");
+	   globalMap.put("<%=cid%>_JOB_RUNS_ALONE", false);
+	   globalMap.put("<%=cid%>_ALREADY_RUNNING_JOB_START_DATE", alreadyRunningJob.getStartDate());
+	   globalMap.put("<%=cid%>_ALREADY_RUNNING_JOB_JOB_INSTANCE_ID", alreadyRunningJob.getJobInstanceId());
+	   globalMap.put("<%=cid%>_ALREADY_RUNNING_JOB_WORK_ITEM", alreadyRunningJob.getWorkItem());
+	   globalMap.put("<%=cid%>_ALREADY_RUNNING_JOB_HOST_PID", alreadyRunningJob.getHostPid());
+	   globalMap.put("<%=cid%>_ALREADY_RUNNING_JOB_HOST_NAME", alreadyRunningJob.getHostName());
+<%  if (preventEntryIfNotSingleton) { %>
+      createEntry = false;
+<%  } %>
+	} else {
+	   globalMap.put("<%=cid%>_JOB_RUNS_ALONE", true);
+	}
+<%  } %>
+   if (createEntry) {
+   
 	// create entry
 	long jobInstanceId_<%=cid%> = 0;
 	try {
@@ -198,6 +243,8 @@
 	}
 	globalMap.put("<%=cid%>_JOB_INSTANCE_ID", jobInstanceId_<%=cid%>);
 	globalMap.put("JOB_INSTANCE_ID", jobInstanceId_<%=cid%>);
+	// keep this instance for the end part
+	globalMap.put("<%=cid%>", <%=cid%>);
 <%	if (contextVar != null && contextVar.isEmpty() == false) { %>
 	<%=contextVar%> = jobInstanceId_<%=cid%>;
 <%  } %>
@@ -298,7 +345,7 @@
 <%  if (saveContext) { %>
 	{   // saving context start
 		// configure context helper
-		de.cimt.talendcomp.manage.JobInstanceContextHelper contextHelper = new de.cimt.talendcomp.manage.JobInstanceContextHelper();
+		de.cimt.talendcomp.jobinstance.manage.JobInstanceContextHelper contextHelper = new de.cimt.talendcomp.jobinstance.manage.JobInstanceContextHelper();
 		// setup table meta data
 		contextHelper.setTableName(<%=cid%>.getContextTableName());
 		contextHelper.setAlternativeColumnNames(<%=cid%>.getAlternativeColumnNames());
@@ -376,13 +423,13 @@
     boolean addContextToMDC = "true".equals(ElementParameterParser.getValue(node, "__ADD_CONTEXT_TO_MDC__"));
     if (useLog4j) { %>
     { // open block to have the variables locally
-	de.cimt.talendcomp.log4j.Log4JHelper lh = de.cimt.talendcomp.log4j.Log4JHelper.get(<%=helperName%>);
+	de.cimt.talendcomp.jobinstance.log4j.Log4JHelper lh = de.cimt.talendcomp.jobinstance.log4j.Log4JHelper.get(<%=helperName%>);
 	if (lh == null) {
-		lh = new de.cimt.talendcomp.log4j.Log4JHelper();
-		de.cimt.talendcomp.log4j.Log4JHelper.put(<%=helperName%>, lh);
+		lh = new de.cimt.talendcomp.jobinstance.log4j.Log4JHelper();
+		de.cimt.talendcomp.jobinstance.log4j.Log4JHelper.put(<%=helperName%>, lh);
 		lh.setJobStartedAt(jobStartedAt);
 <%  	if (log4jConfigFile != null && log4jConfigFile.trim().isEmpty() == false) { %>
-		de.cimt.talendcomp.log4j.Log4JHelper.setLog4jConfigFile(<%=log4jConfigFile%>);
+		de.cimt.talendcomp.jobinstance.log4j.Log4JHelper.setLog4jConfigFile(<%=log4jConfigFile%>);
 <%  	} %>
 		lh.setDebug(<%=debug%>);
 		lh.setProject(projectName);
@@ -405,15 +452,15 @@
 		lh.setJobInstanceId((Long) globalMap.get("<%=cid%>_JOB_INSTANCE_ID"));
 		lh.setWorkItem((String) globalMap.get("<%=cid%>_WORK_ITEM"));
 		// initialize Log4J if needed
-		if (de.cimt.talendcomp.log4j.Log4JHelper.isLog4JInitialized() == false) {
+		if (de.cimt.talendcomp.jobinstance.log4j.Log4JHelper.isLog4JInitialized() == false) {
 			try {
-				de.cimt.talendcomp.log4j.Log4JHelper.initLog4J();
+				de.cimt.talendcomp.jobinstance.log4j.Log4JHelper.initLog4J();
 			} catch (Exception e) {
 				globalMap.put("<%=cid%>_ERROR_MESSAGE", "Init log4j failed:" + e.getMessage());
 				throw e; 
 			}
 		}
-   		lh.initJobLogger();
+   	lh.initJobLogger();
 <%  	if (useJobLogFile && logFilePattern != null && logFilePattern.trim().isEmpty() == false) { %>
 		globalMap.put("<%=cid%>_LOG_FILE_PATH", lh.configureFileAppender(<%=logFilePattern%>, <%=logFileLayout%>));
 		Object fileAppender = lh.getFileAppender();
@@ -440,10 +487,10 @@
 	// instantiate a new resume util
 	class LogConnector extends ResumeUtil {
 				
-		private de.cimt.talendcomp.log4j.Log4JHelper logHelper = null;
+		private de.cimt.talendcomp.jobinstance.log4j.Log4JHelper logHelper = null;
 		private Long jobInstanceId = null;
 		
-		public LogConnector(de.cimt.talendcomp.log4j.Log4JHelper logHelper, Long jobInstanceId) {
+		public LogConnector(de.cimt.talendcomp.jobinstance.log4j.Log4JHelper logHelper, Long jobInstanceId) {
 			super(resuming_logs_dir_path, isChildJob, rootPid);
 			super.initCommonInfo(
 					pid, rootPid, fatherPid, projectName,
@@ -477,9 +524,17 @@
 	 }
 	 resumeUtil = new LogConnector(lh, <%=cid%>.getJobInstanceId());
     } // close block
-<%  } else if (closeConnection) { // else of if (useLog4j) %>
-    <%=cid%>.closeConnection(); // will close the connection but only if no logDBAppender is used
 <%  } // end of if (useLog4j) %>
+<%  if (useLog4j == false && closeConnection) { %>
+    	<%=cid%>.closeConnection(); // will close the connection but only if no logDBAppender is used
+<%  } %>
+<%  if (sysoutJobInstanceId) { %>
+    	System.out.println(<%=sysoutJobInstanceIdExpression%>);
+<%  } %>
+    } else { // if (createEntry) ... we have to do this here to take care the connection will be closed
+      <%=cid%>.closeConnection();
+    	System.err.println("Job: " + jobName + " does not creates a job instance status entry, because of job is already running!");
+    } // if (createEntry) ... we have to do this here to take care the connection will be closed
 <%  if (useLog4j == false && reduceResumeLogs) { %>
 	// instantiate a new resume util which reduces resume logs
 	class ResumeUtilRed extends ResumeUtil {
@@ -506,7 +561,7 @@
 	 resumeUtil = new ResumeUtilRed();
 <%  } %>
 <%  if (memoryMonitoring) { %>
-	 de.cimt.talendcomp.manage.JobInstanceHelper.startMemoryMonitoring();
+	 de.cimt.talendcomp.jobinstance.manage.JobInstanceHelper.startMemoryMonitoring();
 <%  } %>
 
 

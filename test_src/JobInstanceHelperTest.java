@@ -7,8 +7,8 @@ import java.util.Date;
 import java.util.Map;
 import java.util.TimeZone;
 
-import de.cimt.talendcomp.manage.JobInstanceContextHelper;
-import de.cimt.talendcomp.manage.JobInstanceHelper;
+import de.cimt.talendcomp.jobinstance.manage.JobInstanceContextHelper;
+import de.cimt.talendcomp.jobinstance.manage.JobInstanceHelper;
 
 
 public class JobInstanceHelperTest {

@@ -10,8 +10,11 @@
     CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
     INode node = (INode) codeGenArgument.getArgument();
     String cid = node.getUniqueName();
+    boolean useDataSource = "true".equals(ElementParameterParser.getValue(node, "__USE_DATA_SOURCE__"));
+    boolean useDataSourceAsDbName = "true".equals(ElementParameterParser.getValue(node, "__USE_DATA_SOURCE_ALIAS_AS_DBNAME__"));
+    String dataSourceAlias = ElementParameterParser.getValue(node, "__DATA_SOURCE_ALIAS__");
     String connectionComp = ElementParameterParser.getValue(node, "__CONNECTION__");
-	boolean closeConnection = "true".equals(ElementParameterParser.getValue(node, "__CLOSE_CONNECTION__"));
+	boolean closeConnection = useDataSource || "true".equals(ElementParameterParser.getValue(node, "__CLOSE_CONNECTION__"));
     String tableName = ElementParameterParser.getValue(node, "__TABLE_NAME__");
     String schemaName = ElementParameterParser.getValue(node, "__SCHEMA_NAME__");
 	boolean useProjectSpecificNames = "true".equals(ElementParameterParser.getValue(node, "__USE_PROJECT_SPECIFIC_NAMES__"));
@@ -22,13 +25,29 @@
     }
 %>
 	// instantiate the job instance helper
-	de.cimt.talendcomp.manage.JobInstanceHelper <%=cid%> = new de.cimt.talendcomp.manage.JobInstanceHelper();
+	de.cimt.talendcomp.jobinstance.manage.JobInstanceHelper <%=cid%> = new de.cimt.talendcomp.jobinstance.manage.JobInstanceHelper();
 	// setup table meta data
 <%  if (tableName != null && tableName.trim().isEmpty() == false) { %>
 	<%=cid%>.setTableName(<%=tableName%>);
 <%  } %>
+<%  if (useDataSource) {%>
+	{
+		java.util.Map<String, routines.system.TalendDataSource> dataSources = (java.util.Map<String, routines.system.TalendDataSource>) globalMap.get(KEY_DB_DATASOURCES);
+		if (dataSources == null) {
+			throw new Exception("No data sources available in this job!");
+		}
+		if (dataSources.get(<%=dataSourceAlias%>) == null) {
+			throw new Exception("No source data source available. Alias: " + <%=dataSourceAlias%>);
+		}
+		<%=cid%>.setConnection(dataSources.get(<%=dataSourceAlias%>).getConnection());
+	}
+<% } else { %>
+	<%=cid%>.setConnection((java.sql.Connection) globalMap.get("conn_<%=connectionComp%>"));
+<% } %>
 <%  if (schemaName != null && schemaName.trim().isEmpty() == false) { %>
 	<%=cid%>.setSchemaName(<%=schemaName%>);
+<%  } else if (useDataSource && useDataSourceAsDbName) {%>
+   <%=cid%>.setSchemaName(<%=dataSourceAlias%>);
 <%  } else {%>
 	{
 		String schemaName = (String) globalMap.get("dbschema_<%=connectionComp%>");
@@ -48,16 +67,15 @@
 			<%=cid%>.setSchemaName(schemaName);
 		}
 	}
-<%  } %>
+<% } %>
 <% if (useProjectSpecificNames) { %>
 	if (<%=cid%>.configure(<%=bundleName%>) == false) {
 		throw new Exception("Configuration " + <%=bundleName%> + " could not found!");
 	}
 <% } %>	
-	<%=cid%>.setConnection((java.sql.Connection) globalMap.get("conn_<%=connectionComp%>"));
     // set job data
 	globalMap.put("<%=cid%>", <%=cid%>);
-	java.util.List<de.cimt.talendcomp.manage.JobInfo> listDiedInstances_<%=cid%> = new java.util.ArrayList<de.cimt.talendcomp.manage.JobInfo>();
+	java.util.List<de.cimt.talendcomp.jobinstance.manage.JobInfo> listDiedInstances_<%=cid%> = new java.util.ArrayList<de.cimt.talendcomp.jobinstance.manage.JobInfo>();
 	try {
 		listDiedInstances_<%=cid%> = <%=cid%>.cleanupBrokenJobInstances();
 	} catch (Exception e) {
@@ -73,7 +91,7 @@
 	globalMap.put("<%=cid%>_COUNT_BROKEN_JOB_INSTANCES", <%=cid%>.getCountBrokenInstances());
 <%  if (conn != null) { %>
 	int count_<%=cid%> = 0;
-	for (de.cimt.talendcomp.manage.JobInfo instance : listDiedInstances_<%=cid%>) {
+	for (de.cimt.talendcomp.jobinstance.manage.JobInfo instance : listDiedInstances_<%=cid%>) {
     	<%=conn.getName()%> = new <%=conn.getName()%>Struct(); // to avoid cell value reusing in errors
 		<%=conn.getName()%>.JOB_INSTANCE_ID = instance.getJobInstanceId();
 		<%=conn.getName()%>.JOB_NAME = instance.getName();
