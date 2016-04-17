@@ -14,57 +14,64 @@
     boolean enableOkHashCheck = "true".equals(ElementParameterParser.getValue(node, "__CHECK_ALL_COMPONENTS_FINISHED__"));
 %>
 	// extract return codes and messages from globalMap
-	errorCode = <%=cid%>.retrieveJobReturn(globalMap, errorCode);
-	if (<%=cid%>.getReturnMessage() != null) {
-		globalMap.put("<%=cid%>_RETURN_MESSAGE", <%=cid%>.getReturnMessage());
-	}
-	int <%=cid%>_returnCode = <%=cid%>.getReturnCode();
-<% if (enableOkHashCheck) { %>
-	if (<%=cid%>_returnCode == 0) {
-		// check if we miss a failure
-		for (java.util.Map.Entry<String, Boolean> okHashEntry : ok_Hash.entrySet()) {
-			if (okHashEntry.getValue() == false && okHashEntry.getKey().equals("<%=cid%>") == false) {
-				<%=cid%>_returnCode = 1; // default error code for failed sub jobs
-				<%=cid%>.setReturnCode(<%=cid%>_returnCode);
-				if (<%=cid%>.getReturnMessage() == null || <%=cid%>.getReturnMessage().isEmpty()) {
-					<%=cid%>.setReturnMessage("Error in component " + okHashEntry.getKey());
-				}
-				break;
-			}	
+	de.cimt.talendcomp.jobinstance.manage.JobExit exit = de.cimt.talendcomp.jobinstance.manage.JobInstanceHelper.retrieveJobReturn(globalMap, errorCode); 
+	errorCode = exit.getCode();
+	// in case of the pre job failed we cannot do anything!
+	if (<%=cid%> != null) {
+	   // give it back to the component for the update in the database
+	   <%=cid%>.setReturnCode(exit.getCode());
+	   <%=cid%>.setReturnMessage(exit.getMessage());
+		if (<%=cid%>.getReturnMessage() != null) {
+			globalMap.put("<%=cid%>_RETURN_MESSAGE", <%=cid%>.getReturnMessage());
 		}
-	}
+		int <%=cid%>_returnCode = <%=cid%>.getReturnCode();
+<% if (enableOkHashCheck) { %>
+		if (<%=cid%>_returnCode == 0) {
+			// check if we miss a failure
+			for (java.util.Map.Entry<String, Boolean> okHashEntry : ok_Hash.entrySet()) {
+				if (okHashEntry.getValue() == false && okHashEntry.getKey().equals("<%=cid%>") == false) {
+					<%=cid%>_returnCode = 1; // default error code for failed sub jobs
+					<%=cid%>.setReturnCode(<%=cid%>_returnCode);
+					if (<%=cid%>.getReturnMessage() == null || <%=cid%>.getReturnMessage().isEmpty()) {
+						<%=cid%>.setReturnMessage("Error in component " + okHashEntry.getKey());
+					}
+					break;
+				}	
+			}
+		}
 <% } %>
-	globalMap.put("<%=cid%>_RETURN_CODE", <%=cid%>_returnCode);
-	try {
-		<%=cid%>.updateEntry();
+		globalMap.put("<%=cid%>_RETURN_CODE", <%=cid%>_returnCode);
+		try {
+			<%=cid%>.updateEntry();
 <%  if (cleanupByWorkItem) { %>
-		// cleanup previous job instances with the same work item
-		globalMap.put("<%=cid%>_DELETED_PREVIOUS_JOB_INSTANCES", <%=cid%>.cleanupByWorkItem());
+			// cleanup previous job instances with the same work item
+			globalMap.put("<%=cid%>_DELETED_PREVIOUS_JOB_INSTANCES", <%=cid%>.cleanupByWorkItem());
 <%  } %>
-   <%=cid%>.closeDbAppender();
-   globalMap.remove("<%=cid%>_DB_APPENDER");
-	// close all other known appenders in this job
-	for (java.util.Map.Entry<String, Object> entry : globalMap.entrySet()) {
-		if (entry.getKey().endsWith("_APPENDER")) {
-			Object object = entry.getValue();
-			if (object instanceof org.apache.log4j.Appender) {
-				// detach appender
-				org.apache.log4j.Logger.getLogger("talend").removeAppender((org.apache.log4j.Appender) object);
-				try {
-					// close appender
-					((org.apache.log4j.Appender) object).close();
-				} catch (Throwable t) {
-					// ignore errors
+   	<%=cid%>.closeDbAppender();
+   	globalMap.remove("<%=cid%>_DB_APPENDER");
+		// close all other known appenders in this job
+		for (java.util.Map.Entry<String, Object> entry : globalMap.entrySet()) {
+			if (entry.getKey().endsWith("_APPENDER")) {
+				Object object = entry.getValue();
+				if (object instanceof org.apache.log4j.Appender) {
+					// detach appender
+					org.apache.log4j.Logger.getLogger("talend").removeAppender((org.apache.log4j.Appender) object);
+					try {
+						// close appender
+						((org.apache.log4j.Appender) object).close();
+					} catch (Throwable t) {
+						// ignore errors
+					}
 				}
 			}
 		}
-	}
 <%  if (closeConnection) { %>
 		<%=cid%>.closeConnection();
 <%  } %>
-	} catch (Exception e) {
-		globalMap.put("<%=cid%>_ERROR_MESSAGE", e.getMessage());
-		throw e;
-	}
+		} catch (Exception e) {
+			globalMap.put("<%=cid%>_ERROR_MESSAGE", e.getMessage());
+			throw e;
+		}
+	} // if (<%=cid%> != null)
 	
 	

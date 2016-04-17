@@ -12,6 +12,8 @@
     String startComp = ElementParameterParser.getValue(node, "__JOB_START_COMP__");
 %>
 	// create helper instance
-	de.cimt.talendcomp.manage.JobInstanceHelper <%=cid%> = (de.cimt.talendcomp.manage.JobInstanceHelper) globalMap.get("<%=startComp%>");
-	<%=cid%>.incrementFlowCount("<%=cid%>");
-	<%=cid%>.resetNbLine("<%=cid%>");
+	de.cimt.talendcomp.jobinstance.manage.JobInstanceHelper <%=cid%> = (de.cimt.talendcomp.jobinstance.manage.JobInstanceHelper) globalMap.get("<%=startComp%>");
+	if (<%=cid%> != null) {
+		<%=cid%>.incrementFlowCount("<%=cid%>");
+		<%=cid%>.resetNbLine("<%=cid%>");
+	}

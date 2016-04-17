@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.cimt.talendcomp.manage;
+package de.cimt.talendcomp.jobinstance.manage;
 
 import java.math.BigDecimal;
 import java.sql.Connection;

@@ -31,9 +31,10 @@ create table dwh_manage.job_instance_status (
    constraint job_instances_pkey primary key (job_instance_id));
 
 create index dwh_manage.job_instances_job_guid on dwh_manage.job_instance_status(job_guid);
+create index dwh_manage.job_instances_job_name on dwh_manage.job_instance_status(job_name);
 
 --drop sequence dwh_manage.job_instance_id;
-create sequence dwh_manage.job_instance_id_seq start with 1;
+create sequence dwh_manage.seq_job_instance_id start with 1;
 
 --drop table dwh_manage.job_instances_context;
 create table dwh_manage.job_instance_context (

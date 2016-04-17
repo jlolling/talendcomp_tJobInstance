@@ -2,8 +2,8 @@
 
 <COMPONENT>
 	<HEADER AUTHOR="cimt AG" COMPATIBILITY="ALL"
-		DATA_AUTO_PROPAGATE="true" PLATEFORM="ALL" RELEASE_DATE="20150507A"
-		SERIAL="" STARTABLE="true" STATUS="PROD" VERSION="4.5">
+		DATA_AUTO_PROPAGATE="true" PLATEFORM="ALL" RELEASE_DATE="20160413"
+		SERIAL="" STARTABLE="true" STATUS="PROD" VERSION="5.0">
 		<SIGNATURE />
 	</HEADER>
 	<FAMILIES>
@@ -22,16 +22,49 @@
 	    <CONNECTOR CTYPE="RUN_IF"/>
 	</CONNECTORS>
 	<PARAMETERS>
-    	<PARAMETER
-	      NAME="CONNECTION"
-	      FIELD="COMPONENT_LIST"
-	      FILTER="REGEXP:^(.)*(Connection)(.)*"
-	      NUM_ROW="5" 
-	      REQUIRED="true"
-    	/>
-	    <PARAMETER NAME="CLOSE_CONNECTION" FIELD="CHECK" NUM_ROW="10">
+	
+		<PARAMETER 
+			NAME="USE_DATA_SOURCE" 
+			FIELD="CHECK"
+			NUM_ROW="1">
+			<DEFAULT>false</DEFAULT>
+		</PARAMETER>
+
+		<PARAMETER 
+			NAME="DATA_SOURCE_ALIAS" 
+			FIELD="TEXT" 
+			NUM_ROW="2"
+			REQUIRED="true" 
+			SHOW_IF="(USE_DATA_SOURCE == 'true')">
+			<DEFAULT>"dwh_meta"</DEFAULT>
+		</PARAMETER>
+
+		<PARAMETER 
+			NAME="USE_DATA_SOURCE_ALIAS_AS_DBNAME" 
+			FIELD="CHECK" 
+			NUM_ROW="3"
+			REQUIRED="true" 
+			SHOW_IF="(USE_DATA_SOURCE == 'true')">
 			<DEFAULT>true</DEFAULT>
 		</PARAMETER>
+
+    	<PARAMETER
+	      	NAME="CONNECTION"
+	      	FIELD="COMPONENT_LIST"
+	      	FILTER="REGEXP:^(.)*(Connection)(.)*"
+	      	NUM_ROW="8" 
+	      	REQUIRED="true"
+	      	SHOW_IF="(USE_DATA_SOURCE == 'false')"
+    	/>
+
+	    <PARAMETER 
+	    	NAME="CLOSE_CONNECTION" 
+	    	FIELD="CHECK" 
+	    	SHOW_IF="(USE_DATA_SOURCE == 'true')"
+	    	NUM_ROW="10">
+			<DEFAULT>true</DEFAULT>
+		</PARAMETER>
+		
 		<PARAMETER NAME="SCHEMA" FIELD="SCHEMA_TYPE"
 			REQUIRED="true" NUM_ROW="20" >
 			<TABLE READONLY="true">
@@ -67,7 +100,7 @@
 	</ADVANCED_PARAMETERS>
 	<CODEGENERATION>
 		<IMPORTS>
-			<IMPORT NAME="cimt.talendcomp.jobinstances" MODULE="cimt.talendcomp.jobinstances-4.5.jar" REQUIRED="true" />
+			<IMPORT NAME="cimt.talendcomp.jobinstances" MODULE="cimt.talendcomp.jobinstances-5.0.jar" REQUIRED="true" />
 			<IMPORT NAME="log4j" MODULE="log4j-1.2.17.jar" REQUIRED="true" />
 			<!-- the name part "user" must match to the value in parameter PROJECT_SPECIFIC_NAME_MAP_RESOURCE
 			<IMPORT NAME="custom_mapping_test" MODULE="mapping_user.properties.jar" REQUIRED="true" />

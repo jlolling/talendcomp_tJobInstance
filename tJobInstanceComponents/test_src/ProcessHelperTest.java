@@ -1,7 +1,7 @@
 import java.text.SimpleDateFormat;
 import java.util.List;
 
-import de.cimt.talendcomp.process.ProcessHelper;
+import de.cimt.talendcomp.jobinstance.process.ProcessHelper;
 
 
 public class ProcessHelperTest {
