@@ -63,16 +63,16 @@
 	<%=cid%>.setJobResult(<%=jobResult%>);
 <%  } %>
 <%  if (timeRangeStart != null && timeRangeStart.trim().isEmpty() == false) { %>
-	<%=cid%>.checkTimeRange(<%=timeRangeStart%>);
+	<%=cid%>.setTimeRangeStart(<%=timeRangeStart%>);
 <%  } %>
 <%  if (timeRangeEnd != null && timeRangeEnd.trim().isEmpty() == false) { %>
-	<%=cid%>.checkTimeRange(<%=timeRangeEnd%>);
+	<%=cid%>.setTimeRangeEnd(<%=timeRangeEnd%>);
 <%  } %>
 <%  if (valueRangeStart != null && valueRangeStart.trim().isEmpty() == false) { %>
-	<%=cid%>.checkValueRange(<%=valueRangeStart%>);
+	<%=cid%>.setValueRangeStart(<%=valueRangeStart%>);
 <%  } %>
 <%  if (valueRangeEnd != null && valueRangeEnd.trim().isEmpty() == false) { %>
-	<%=cid%>.checkValueRange(<%=valueRangeEnd%>);
+	<%=cid%>.setValueRangeEnd(<%=valueRangeEnd%>);
 <%  } %>
 	globalMap.put("<%=cid%>_STRING_VALUE_RANGE_START", <%=cid%>.getValueRangeStart());
 	globalMap.put("<%=cid%>_STRING_VALUE_RANGE_END", <%=cid%>.getValueRangeEnd());
