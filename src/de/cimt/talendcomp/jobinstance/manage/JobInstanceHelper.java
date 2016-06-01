@@ -40,6 +40,7 @@ import java.util.Properties;
 import java.util.TimeZone;
 
 import org.apache.log4j.Appender;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 
@@ -48,6 +49,7 @@ import de.cimt.talendcomp.jobinstance.process.ProcessHelper;
 
 public class JobInstanceHelper {
 	
+	private final static Logger logger = null;
 	public static final String TABLE_JOB_INSTANCE_STATUS = "JOB_INSTANCE_STATUS";
 	public static final String VIEW_JOB_INSTANCE_STATUS = "JOB_INSTANCE_STATUS_VIEW";
 	public static final String JOB_INSTANCE_ID = "JOB_INSTANCE_ID";
@@ -106,7 +108,7 @@ public class JobInstanceHelper {
 	private static long maxTotalMemory = 0;
 	private static long maxMemory = 0;
 	private static Thread memoryMonitor = null;
-	private boolean debug = false;
+	private static boolean debug = false;
 	private int returnCodeForDeadInstances = 999;
 	private Map<String, Integer> scannerCounterMap = new HashMap<String, Integer>();
 	private boolean useViewToReadStatus = false;
@@ -143,7 +145,7 @@ public class JobInstanceHelper {
 		currentJobInfo.setHostUser(System.getProperty("user.name"));
 	}
 	
-	public long createEntry() throws SQLException {
+	public long createEntry() throws Exception {
 		long id = 0;
 		if (currentJobInfo.isRootJob() == false && currentJobInfo.getProcessInstanceId() == 0) {
 			id = selectJobInstanceId(startConnection, currentJobInfo.getRootJobGuid());
@@ -198,7 +200,7 @@ public class JobInstanceHelper {
 		sb.append(",");
 		sb.append(getColumn(JOB_HOST_USER)); // 18
 		sb.append(",");
-		sb.append(getColumn(JOB_PROJECT)); // 18
+		sb.append(getColumn(JOB_PROJECT)); // 19
 		sb.append(")");
 		sb.append(" values (");
 		if (autoIncrementColumn == false) {
@@ -206,16 +208,14 @@ public class JobInstanceHelper {
 			sb.append(sequenceExpression);
 			sb.append("),");
 		}
-		// parameter 1-17
+		// parameter 1-19
 		sb.append("?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
 		boolean wasAutoCommit = startConnection.getAutoCommit();
 		if (wasAutoCommit == false) {
 			startConnection.setAutoCommit(true);
 		}
 		String sql = sb.toString();
-		if (debug) {
-			System.out.println(sql);
-		}
+		debug(sql);
 		PreparedStatement psInsert = null;
 		if (autoIncrementColumn) {
 			psInsert = startConnection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
@@ -313,9 +313,7 @@ public class JobInstanceHelper {
 			sb.append(getColumn(JOB_ENDED_AT));
 			sb.append(" is not null");  // do not delete running entries
 			String sql = sb.toString();
-			if (debug) {
-				System.out.println(sql);
-			}
+			debug(sql);
 			PreparedStatement ps = endConnection.prepareStatement(sql);
 			ps.setString(1, currentJobInfo.getName());
 			ps.setString(2, currentJobInfo.getWorkItem());
@@ -342,9 +340,7 @@ public class JobInstanceHelper {
 		sb.append(getColumn(JOB_INSTANCE_ID));
 		sb.append(" desc");
 		String sql = sb.toString();
-		if (debug) {
-			System.out.println(sql);
-		}
+		debug(sql);
 		PreparedStatement psSelect = startConnection.prepareStatement(sql);
 		psSelect.setString(1, jobGuid);
 		ResultSet rs = psSelect.executeQuery();
@@ -395,9 +391,7 @@ public class JobInstanceHelper {
 		sb.append(getColumn(JOB_INSTANCE_ID)); // 15
 		sb.append("=?");
 		String sql = sb.toString();
-		if (debug) {
-			System.out.println(sql);
-		}
+		debug(sql);
 		PreparedStatement psUpdate = endConnection.prepareStatement(sql);
 		psUpdate.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
 		if (currentJobInfo.getJobResult() != null) {
@@ -479,9 +473,7 @@ public class JobInstanceHelper {
 		sb.append(getColumn(JOB_INSTANCE_ID));
 		sb.append(" desc");
 		String sql = sb.toString();
-		if (debug) {
-			System.out.println(sql);
-		}
+		debug(sql);
 		PreparedStatement psSelect = startConnection.prepareStatement(sql);
 		psSelect.setString(1, currentJobInfo.getName());
 		psSelect.setLong(2, currentJobInfo.getJobInstanceId());
@@ -521,9 +513,7 @@ public class JobInstanceHelper {
 		sb.append(getColumn(JOB_INSTANCE_ID));
 		sb.append(" desc");
 		String sql = sb.toString();
-		if (debug) {
-			System.out.println(sql);
-		}
+		debug(sql);
 		PreparedStatement psSelect = startConnection.prepareStatement(sql);
 		psSelect.setString(1, currentJobInfo.getName());
 		if (searchForWorkItem) {
@@ -587,9 +577,7 @@ public class JobInstanceHelper {
 		sb.append(" order by ");
 		sb.append(getColumn(JOB_INSTANCE_ID));
 		String sql = sb.toString();
-		if (debug) {
-			System.out.println(sql);
-		}
+		debug(sql);
 		PreparedStatement psSelect = startConnection.prepareStatement(sql);
 		ResultSet rs = psSelect.executeQuery();
 		List<JobInfo> list = new ArrayList<JobInfo>();
@@ -662,9 +650,7 @@ public class JobInstanceHelper {
 		sb.append(" order by ");
 		sb.append(getColumn(JOB_INSTANCE_ID));
 		String sql = sb.toString();
-		if (debug) {
-			System.out.println(sql);
-		}
+		debug(sql);
 		PreparedStatement psSelect = startConnection.prepareStatement(sql);
 		ResultSet rs = psSelect.executeQuery();
 		StringBuilder res = new StringBuilder();
@@ -1482,6 +1468,7 @@ public class JobInstanceHelper {
 	 */
 	public void setAlternativeColumnName(String originalName, String newName) {
 		if (originalName == null || originalName.trim().isEmpty()) {
+			error("originalName cannot be null or empty", null);
 			throw new IllegalArgumentException("originalName cannot be null or empty");
 		}
 		if (newName != null && newName.trim().isEmpty() == false) {
@@ -1548,7 +1535,7 @@ public class JobInstanceHelper {
 							int length = Integer.valueOf(value);
 							setMaxMessageLength(length);
 						} catch (Exception e) {
-							System.err.println("Attrubute " + key + " expects an integer value");
+							error("Attrubute " + key + " expects an integer value", null);
 						}
 					} else if (key.equalsIgnoreCase("autoIncrement")) {
 						setAutoIncrementColumn(Boolean.parseBoolean(value));
@@ -1856,21 +1843,24 @@ public class JobInstanceHelper {
 			NumberFormat nf = NumberFormat.getInstance();
 			nf.setGroupingUsed(true);
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-			System.out.println("Available memory: " + nf.format(maxMemory) + " byte");
-			System.out.println("Maximum used memory (abs.): " + nf.format(maxUsedMemory) + " byte");
-			System.out.println("Maximum used memory (rel.): " + nf.format(Math.round(getPercentageUsage())) + " %");
+			info("Available memory: " + nf.format(maxMemory) + " byte");
+			info("Maximum used memory (abs.): " + nf.format(maxUsedMemory) + " byte");
+			info("Maximum used memory (rel.): " + nf.format(Math.round(getPercentageUsage())) + " %");
 			Calendar c = Calendar.getInstance(TimeZone.getDefault());
 			c.setTimeInMillis(maximumReachedAt);
 			System.out.println("Maximum of memory usage measured at: " + sdf.format(c.getTime()));
 		}
 	}
 
-	public boolean isDebug() {
-		return debug;
-	}
-
-	public void setDebug(boolean debug) {
-		this.debug = debug;
+	public static void setDebug(boolean debug) {
+		JobInstanceHelper.debug = debug;
+		if (logger != null) {
+			if (debug) {
+				logger.setLevel(Level.DEBUG);
+			} else {
+				logger.setLevel(Level.INFO);
+			}
+		}
 	}
 
 	public int getReturnCodeForDeadInstances() {
@@ -1966,6 +1956,43 @@ public class JobInstanceHelper {
 
 	public void setUseGeneratedKeys(boolean useGeneratedKeys) {
 		this.useGeneratedKeys = useGeneratedKeys;
+	}
+	
+	private static boolean isDebug() {
+		return (logger != null && logger.isDebugEnabled()) || debug;
+	}
+
+	private static void debug(String message) {
+		if (logger != null) {
+			if (logger.isDebugEnabled()) {
+				logger.debug(message);
+			}
+		} else if (isDebug()) {
+			System.out.println("DEBUG:" + message);
+		}
+	}
+	
+	private static void info(String message) {
+		if (logger != null) {
+			if (logger.isInfoEnabled()) {
+				logger.debug(message);
+			}
+		} else {
+			System.out.println("INFO:" + message);
+		}
+	}
+
+	private static void error(String message, Throwable t) {
+		if (logger != null) {
+			if (t != null) {
+				logger.error(message, t);
+			} else {
+				logger.error(message);
+			}
+		} else {
+			System.err.println("ERROR:" + message);
+			t.printStackTrace(System.err);
+		}
 	}
 
 }
