@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>de.cimt.talendcomp</groupId>
+  <artifactId>cimt-talendcomp-jobinstance</artifactId>
+  <name>Job Instance Components library</name>
+  <version>5.1</version>
+  <organization>
+    <name>cimt AG</name>
+  </organization>
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-shade-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <fileSets>
+                <fileSet>
+                  <sourceFile>target/${project.build.finalName}.jar</sourceFile>
+                  <destinationFile>talend_component/tJobInstanceStart/${project.artifactId}-${project.version}.jar</destinationFile>
+                </fileSet>
+                <fileSet>
+                  <sourceFile>target/${project.build.finalName}.jar</sourceFile>
+                  <destinationFile>talend_component/tJobInstanceLiveCheck/${project.artifactId}-${project.version}.jar</destinationFile>
+                </fileSet>
+              </fileSets>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.12</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>hamcrest-core</artifactId>
+          <groupId>org.hamcrest</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>de.cimt.talendcomp.test</groupId>
+      <artifactId>talend-fake-job</artifactId>
+      <version>0.9</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>mysql</groupId>
+      <artifactId>mysql-connector-java</artifactId>
+      <version>5.1.30</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <version>9.4.1209.jre7</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+</project>
+

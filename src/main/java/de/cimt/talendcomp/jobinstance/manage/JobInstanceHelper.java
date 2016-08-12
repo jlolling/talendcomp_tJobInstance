@@ -223,13 +223,20 @@ public class JobInstanceHelper {
 			psInsert = startConnection.prepareStatement(sql, Statement.NO_GENERATED_KEYS);
 		}
 		psInsert.setString(1, currentJobInfo.getName());
+		if (currentJobInfo.getGuid() == null) {
+			throw new IllegalStateException("Job guid is null. Please call setJobGuid(String) before!");
+		}
 		psInsert.setString(2, currentJobInfo.getGuid());
 		if (currentJobInfo.getRootJobGuid() != null) {
 			psInsert.setString(3, currentJobInfo.getRootJobGuid());
 		} else {
 			psInsert.setNull(3, Types.VARCHAR);
 		}
-		psInsert.setString(4, currentJobInfo.getWorkItem());
+		if (currentJobInfo.getWorkItem() != null) {
+			psInsert.setString(4, currentJobInfo.getWorkItem());
+		} else {
+			psInsert.setNull(4, Types.VARCHAR);
+		}
 		if (currentJobInfo.getTimeRangeStart() != null) {
 			psInsert.setTimestamp(5, new Timestamp(currentJobInfo.getTimeRangeStart().getTime()));
 		} else {
@@ -250,10 +257,21 @@ public class JobInstanceHelper {
 		} else {
 			psInsert.setNull(8, Types.VARCHAR);
 		}
+		if (currentJobInfo.getStartDate() == null) {
+			throw new IllegalArgumentException("Job start date is null. Please call setJobStartedAt(long) before!");
+		}
 		psInsert.setTimestamp(9, new Timestamp(currentJobInfo.getStartDate().getTime()));
 		psInsert.setLong(10, currentJobInfo.getProcessInstanceId());
-		psInsert.setString(11, currentJobInfo.getProcessInstanceName());
-		psInsert.setString(12, currentJobInfo.getJobDisplayName());
+		if (currentJobInfo.getProcessInstanceName() != null) {
+			psInsert.setString(11, currentJobInfo.getProcessInstanceName());
+		} else {
+			psInsert.setNull(11, Types.VARCHAR);
+		}
+		if (currentJobInfo.getJobDisplayName() != null) {
+			psInsert.setString(12, currentJobInfo.getJobDisplayName());
+		} else {
+			psInsert.setNull(12, Types.VARCHAR);
+		}
 		psInsert.setString(13, currentJobInfo.getHostName());
 		psInsert.setInt(14, currentJobInfo.getHostPid());
 		psInsert.setString(15, currentJobInfo.getExtJobId());
@@ -329,6 +347,9 @@ public class JobInstanceHelper {
 	}
 	
 	private long selectJobInstanceId(Connection conn, String jobGuid) throws SQLException {
+		if (jobGuid == null || jobGuid.trim().isEmpty()) {
+			throw new IllegalArgumentException("jobGuid cannot be null or empty");
+		}
 		StringBuilder sb = new StringBuilder();
 		sb.append("select ");
 		sb.append(getColumn(JOB_INSTANCE_ID));
@@ -416,8 +437,16 @@ public class JobInstanceHelper {
 		psUpdate.setInt(9, currentJobInfo.getReturnCode());
 		psUpdate.setString(10, currentJobInfo.getProcessInstanceName());
 		psUpdate.setString(11, enforceTextLength(currentJobInfo.getReturnMessage(), messageMaxLength, 1));
-		psUpdate.setString(12, currentJobInfo.getValueRangeStart());
-		psUpdate.setString(13, currentJobInfo.getValueRangeEnd());
+		if (currentJobInfo.getValueRangeStart() != null) {
+			psUpdate.setString(12, currentJobInfo.getValueRangeStart());
+		} else {
+			psUpdate.setNull(12, Types.VARCHAR);
+		}
+		if (currentJobInfo.getValueRangeEnd() != null) {
+			psUpdate.setString(13, currentJobInfo.getValueRangeEnd());
+		} else {
+			psUpdate.setNull(13, Types.VARCHAR);
+		}
 		psUpdate.setInt(14, currentJobInfo.getCountUpdate());
 		psUpdate.setLong(15, currentJobInfo.getJobInstanceId());
 		int count = psUpdate.executeUpdate();

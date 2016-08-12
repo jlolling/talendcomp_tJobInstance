@@ -67,12 +67,12 @@ public class JobInstanceContextHelper {
 	}
 	
 	public void setAttribute(String key, Object value, boolean keepLastValue) {
-		if (key == null || key.isEmpty()) {
+		if (key == null || key.trim().isEmpty()) {
 			throw new IllegalArgumentException("key cannot be null or empty");
 		}
 		if (value != null) {
-			attributeMap.put(key, value);
-			attributeClassMap.put(key, value.getClass().getName());
+			attributeMap.put(key.trim(), value);
+			attributeClassMap.put(key.trim(), value.getClass().getName());
 		} else {
 			if (keepLastValue == false) {
 				attributeMap.remove(key);
@@ -85,10 +85,16 @@ public class JobInstanceContextHelper {
 	}
 	
 	public Object getAttribute(String key) {
+		if (key == null || key.trim().isEmpty()) {
+			throw new IllegalArgumentException("key cannot be null or empty");
+		}
 		return attributeMap.get(key);
 	}
 	
 	public String getAttributeClassName(String key) {
+		if (key == null || key.trim().isEmpty()) {
+			throw new IllegalArgumentException("key cannot be null or empty");
+		}
 		return attributeClassMap.get(key);
 	}
 
@@ -269,6 +275,9 @@ public class JobInstanceContextHelper {
 	}
 
 	private String getColumn(String originalName) {
+		if (originalName == null || originalName.trim().isEmpty()) {
+			throw new IllegalArgumentException("originalName cannot be null or empty");
+		}
 		String newName = alternativeColumnNames.get(originalName.toLowerCase());
 		if (newName != null) {
 			return newName;

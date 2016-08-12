@@ -18,13 +18,13 @@ package de.cimt.talendcomp.jobinstance.log4j;
 import java.io.IOException;
 import java.io.PrintStream;
 
-public class LoggerOutputStreamOut extends LoggerOutputStream {
+public class LoggerOutputStreamStd extends LoggerOutputStream {
 
-	public LoggerOutputStreamOut() {
+	public LoggerOutputStreamStd() {
 		super();
 	}
 	
-	public LoggerOutputStreamOut(PrintStream delegate, boolean forward) {
+	public LoggerOutputStreamStd(PrintStream delegate, boolean forward) {
 		super(delegate, forward);
 	}
 

@@ -82,6 +82,9 @@ public class JobInfo {
 	}
 	
 	public void setName(String jobName) {
+		if (jobName == null || jobName.trim().isEmpty()) {
+			throw new IllegalArgumentException("jobName cannot be null or empty");
+		}
 		this.name = jobName;
 	}
 	
@@ -122,6 +125,9 @@ public class JobInfo {
 	}
 	
 	public void setStartDate(Date startDate) {
+		if (startDate == null) {
+			throw new IllegalArgumentException("startDate cannot be null or empty");
+		}
 		this.startDate = startDate;
 	}
 	
@@ -130,6 +136,9 @@ public class JobInfo {
 	}
 	
 	public void setStopDate(Date stopDate) {
+		if (stopDate == null) {
+			throw new IllegalArgumentException("stopDate cannot be null or empty");
+		}
 		this.stopDate = stopDate;
 	}
 	
@@ -566,10 +575,15 @@ public class JobInfo {
 	}
 	
 	public boolean isRootJob() {
-		if (guid.equals(rootJobGuid)) {
+		if (rootJobGuid == null) {
+			// if there is no root guid the current job is root
 			return true;
 		} else {
-			return false;
+			if (guid.equals(rootJobGuid)) {
+				return true;
+			} else {
+				return false;
+			}
 		}
 	}
 

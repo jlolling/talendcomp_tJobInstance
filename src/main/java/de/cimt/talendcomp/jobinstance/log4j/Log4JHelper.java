@@ -425,7 +425,7 @@ public class Log4JHelper {
 			if (stdOutRedirected == false) {
 				System.out.println("Job: " + this.jobName + " [" + this.talendPid + "] redirects System out and err.");
 				stdOutRedirected = true;
-				System.setOut(new LoggerPrintStream(new LoggerOutputStreamOut(System.out, forwardToConsole))); // Info
+				System.setOut(new LoggerPrintStream(new LoggerOutputStreamStd(System.out, forwardToConsole))); // Info
 				System.setErr(new LoggerPrintStream(new LoggerOutputStreamErr(System.err, forwardToConsole))); // Error
 			}
 		}

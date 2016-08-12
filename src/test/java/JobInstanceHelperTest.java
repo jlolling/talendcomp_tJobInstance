@@ -18,24 +18,6 @@ public class JobInstanceHelperTest {
 	 */
 	public static void main(String[] args) {
 		//test_changeTimezone();
-//		try {
-//			Class.forName("org.postgresql.Driver");
-//			Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres?charSet=LATIN1", "postgres", "postgres");
-//			JobInstanceHelper helper = new JobInstanceHelper();
-//			helper.setConnection(conn);
-//			helper.setAutoIncrementColumn(false);
-//			helper.setSequenceExpression("nextval('JOB_INSTANCE_ID_SEQ')");
-//			helper.setJobName("nix");
-//			helper.setJobGuid(String.valueOf(System.currentTimeMillis()));
-//			helper.createEntry();
-//			helper.updateEntry();
-//			helper.retrievePreviousInstanceData(false, false);
-//			System.out.println(helper.getPrevJobInstanceId());
-//			System.out.println(helper.getJobInstanceIdListAfterPreviousJob(false, false, null));
-//			
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
 		//test_bundle();
 		String s1 = "57156502";
 		String s2 = "106399905";
