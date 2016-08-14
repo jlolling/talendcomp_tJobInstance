@@ -1094,6 +1094,12 @@ public class JobInstanceHelper {
 		}
 	}
 
+	public void setTimeRangeStart(Long timeRangeStart) {
+		if (timeRangeStart != null) {
+			currentJobInfo.setTimeRangeStart(new Date(timeRangeStart));
+		}
+	}
+
 	public void checkTimeRange(Date timeRangeDate) {
 		currentJobInfo.checkTimeRange(timeRangeDate);
 	}
@@ -1141,6 +1147,12 @@ public class JobInstanceHelper {
 	public void setTimeRangeEnd(Date timeRangeEnd) {
 		if (timeRangeEnd != null) {
 			currentJobInfo.setTimeRangeEnd(timeRangeEnd);
+		}
+	}
+
+	public void setTimeRangeEnd(Long timeRangeEnd) {
+		if (timeRangeEnd != null) {
+			currentJobInfo.setTimeRangeEnd(new Date(timeRangeEnd));
 		}
 	}
 
