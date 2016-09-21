@@ -75,6 +75,7 @@
 <% } %>	
     // set job data
 	globalMap.put("<%=cid%>", <%=cid%>);
+	globalMap.put("<%=cid%>_HOST_NAME", <%=cid%>.getHostName());
 	java.util.List<de.cimt.talendcomp.jobinstance.manage.JobInfo> listDiedInstances_<%=cid%> = new java.util.ArrayList<de.cimt.talendcomp.jobinstance.manage.JobInfo>();
 	try {
 		listDiedInstances_<%=cid%> = <%=cid%>.cleanupBrokenJobInstances();
@@ -96,6 +97,7 @@
 		<%=conn.getName()%>.JOB_INSTANCE_ID = instance.getJobInstanceId();
 		<%=conn.getName()%>.JOB_NAME = instance.getName();
 		<%=conn.getName()%>.JOB_TALEND_PID = instance.getGuid();
+		<%=conn.getName()%>.JOB_HOST_NAME = <%=cid%>.getHostName();
 		<%=conn.getName()%>.JOB_HOST_PID = instance.getHostPid();
 		<%=conn.getName()%>.JOB_WORK_ITEM = instance.getWorkItem();
 		<%=conn.getName()%>.JOB_STARTED_AT = instance.getStartDate();
