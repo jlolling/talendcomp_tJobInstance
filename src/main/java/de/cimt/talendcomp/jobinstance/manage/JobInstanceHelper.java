@@ -2005,11 +2005,11 @@ public class JobInstanceHelper {
 		this.useGeneratedKeys = useGeneratedKeys;
 	}
 	
-	private static boolean isDebug() {
+	public static boolean isDebug() {
 		return (logger != null && logger.isDebugEnabled()) || debug;
 	}
 
-	private static void debug(String message) {
+	public static void debug(String message) {
 		if (logger != null) {
 			if (logger.isDebugEnabled()) {
 				logger.debug(message);
@@ -2019,7 +2019,7 @@ public class JobInstanceHelper {
 		}
 	}
 	
-	private static void info(String message) {
+	public static void info(String message) {
 		if (logger != null) {
 			if (logger.isInfoEnabled()) {
 				logger.debug(message);
@@ -2029,7 +2029,7 @@ public class JobInstanceHelper {
 		}
 	}
 
-	private static void error(String message, Throwable t) {
+	public static void error(String message, Throwable t) {
 		if (logger != null) {
 			if (t != null) {
 				logger.error(message, t);

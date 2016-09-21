@@ -23,9 +23,11 @@
     if (node.getOutgoingConnections().size() > 0) {
     	conn = node.getOutgoingConnections().get(0);
     }
+    boolean debug = "true".equals(ElementParameterParser.getValue(node, "__DEBUG__"));
 %>
 	// instantiate the job instance helper
 	de.cimt.talendcomp.jobinstance.manage.JobInstanceHelper <%=cid%> = new de.cimt.talendcomp.jobinstance.manage.JobInstanceHelper();
+	<%=cid%>.setDebug(<%=debug%>);
 	// setup table meta data
 <%  if (tableName != null && tableName.trim().isEmpty() == false) { %>
 	<%=cid%>.setTableName(<%=tableName%>);
