@@ -97,7 +97,7 @@
 		<%=conn.getName()%>.JOB_INSTANCE_ID = instance.getJobInstanceId();
 		<%=conn.getName()%>.JOB_NAME = instance.getName();
 		<%=conn.getName()%>.JOB_TALEND_PID = instance.getGuid();
-		<%=conn.getName()%>.JOB_HOST_NAME = <%=cid%>.getHostName();
+		<%=conn.getName()%>.JOB_HOST_NAME = instance.getHostName();
 		<%=conn.getName()%>.JOB_HOST_PID = instance.getHostPid();
 		<%=conn.getName()%>.JOB_WORK_ITEM = instance.getWorkItem();
 		<%=conn.getName()%>.JOB_STARTED_AT = instance.getStartDate();

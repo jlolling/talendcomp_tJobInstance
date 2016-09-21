@@ -919,7 +919,7 @@ public class JobInstanceHelper {
 
 	public void setJobWorkItem(byte[] jobWorkItem, boolean emptyAsNull) {
 		if (jobWorkItem != null) {
-        	byte[] byteArray = (byte[]) jobWorkItem;
+        	byte[] byteArray = jobWorkItem;
         	if (byteArray.length > 0) {
             	StringBuilder sb = new StringBuilder(byteArray.length * 2);
             	sb.append("x'");
@@ -1678,7 +1678,9 @@ public class JobInstanceHelper {
 			updateInstanceLastStart.append(getColumn(JOB_STARTED_AT));
 			updateInstanceLastStart.append(" <= ?");
 			synchronized(startConnection) {
-				PreparedStatement ps = startConnection.prepareStatement(updateInstanceLastStart.toString());
+				String sql = updateInstanceLastStart.toString();
+				debug(sql);
+				PreparedStatement ps = startConnection.prepareStatement(sql);
 				ps.setTimestamp(1, new java.sql.Timestamp(lastSystemStart.getTime()));
 				ps.setTimestamp(2, new java.sql.Timestamp(lastSystemStart.getTime()));
 				countBrokenInstances = ps.executeUpdate();
@@ -1697,7 +1699,9 @@ public class JobInstanceHelper {
 		select.append(" is null");
 		synchronized(startConnection) {
 			Statement stat = startConnection.createStatement();
-			ResultSet rs = stat.executeQuery(select.toString());
+			String sql = select.toString();
+			debug(sql);
+			ResultSet rs = stat.executeQuery(sql);
 			while (rs.next()) {
 				runningProcessInstancesList.add(getBrokenJobInfoFromResultSet(rs));
 				countRunningJobInstances++;
@@ -1737,7 +1741,9 @@ public class JobInstanceHelper {
 		updateInstance.append(getColumn(JOB_INSTANCE_ID));
 		updateInstance.append("=?");
 		synchronized(startConnection) {
-			PreparedStatement psUpdate = startConnection.prepareStatement(updateInstance.toString());
+			String sql = updateInstance.toString();
+			debug(sql);
+			PreparedStatement psUpdate = startConnection.prepareStatement(sql);
 			for (JobInfo pi : diedProcessInstances) {
 				psUpdate.setTimestamp(1, endedAt);
 				psUpdate.setLong(2, pi.getJobInstanceId());
