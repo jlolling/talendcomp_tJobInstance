@@ -45,16 +45,15 @@
     }
     boolean returnLastInstanceData = "true".equals(ElementParameterParser.getValue(node, "__RETRIEVE_LAST_RUN_DATA__"));
 	String onlySuccessful = ElementParameterParser.getValue(node, "__RETRIEVE_LAST_RUN_DATA_SUCCESSFUL__");
+	String forWorkItem = ElementParameterParser.getValue(node, "__RETRIEVE_LAST_RUN_DATA_FOR_WORKITEM__");
 	String onlyWithData = ElementParameterParser.getValue(node, "__RETRIEVE_LAST_RUN_DATA_WITH_DATA__");
+	String onlyWithInput = ElementParameterParser.getValue(node, "__RETRIEVE_LAST_RUN_DATA_WITH_INPUT__");
 	boolean collectSourceInstanceIds = "true".equals(ElementParameterParser.getValue(node, "__COLLECT_SOURCE_INSTANCE_IDS__"));
 	boolean checkJobSingleton = "true".equals(ElementParameterParser.getValue(node, "__SINGLETON_JOB_INSTANCE__"));
 	boolean checkJobSingletonByWorkItem = "true".equals(ElementParameterParser.getValue(node, "__SINGLETON_JOB_INSTANCE_FOR_WORKITEM__"));
 	boolean preventEntryIfNotSingleton = "true".equals(ElementParameterParser.getValue(node, "__SINGLETON_JOB_INSTANCE_AVOID_JOB_STATUS__"));
 	@SuppressWarnings("unchecked")
     List<Map<String, String>> sourceJobList = (List<Map<String,String>>) ElementParameterParser.getObjectValue(node, "__SOURCE_JOB_NAMES__");
-	String listOnlySuccessful = ElementParameterParser.getValue(node, "__RETRIEVE_LAST_SOURCE_SUCCESSFUL__");
-	String listOnlyWithData = ElementParameterParser.getValue(node, "__RETRIEVE_LAST_SOURCE_WITH_DATA__");
-	String forWorkItem = ElementParameterParser.getValue(node, "__RETRIEVE_LAST_RUN_DATA_FOR_WORKITEM__");
 	String okResultCodes = ElementParameterParser.getValue(node, "__OK_RESULT_CODES__");
 	boolean doNotSavePasswords = "true".equals(ElementParameterParser.getValue(node, "__DO_NOT_SAVE_PASSWORDS__"));
 	String maxMessageLength = ElementParameterParser.getValue(node, "__MAX_MESSAGE_LENGTH__");
@@ -266,6 +265,7 @@
 		boolean <%=cid%>_PrevJobExists = <%=cid%>.retrievePreviousInstanceData(
 			<%=onlySuccessful%>, // onlySuccessful
 			<%=onlyWithData%>, // onlyWithData
+			<%=onlyWithInput%>, // onlyWithInput
 			<%=forWorkItem%>); // forWorkItem
 		globalMap.put("<%=cid%>_PREV_JOB_EXISTS", <%=cid%>_PrevJobExists);
 		if (<%=cid%>_PrevJobExists) {
@@ -334,7 +334,11 @@
 		if (firstLoop) {
 			listNames.append("(String[]) null");
 		} %>
-		String <%=cid%>_listJobInstanceIds = <%=cid%>.getJobInstanceIdListAfterPreviousJob(<%=listOnlySuccessful%>, <%=listOnlyWithData%>, <%=listNames.toString()%>);
+		String <%=cid%>_listJobInstanceIds = <%=cid%>.getJobInstanceIdListAfterPreviousJob(
+			<%=onlySuccessful%>, // onlySuccessful
+			<%=onlyWithData%>, // onlyWithData
+			<%=onlyWithInput%>, // onlyWithInput
+			<%=listNames.toString()%>);
 		globalMap.put("<%=cid%>_SOURCE_JOB_INSTANCE_ID_LIST", <%=cid%>_listJobInstanceIds); 
 <%  } %>
 	} catch (Exception e) {

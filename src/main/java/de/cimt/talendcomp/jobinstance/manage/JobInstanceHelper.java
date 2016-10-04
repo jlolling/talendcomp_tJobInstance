@@ -458,7 +458,7 @@ public class JobInstanceHelper {
 		}
 	}
 
-	public boolean retrievePreviousInstanceData(boolean successful, boolean withOutput, boolean forWorkItem) throws SQLException {
+	public boolean retrievePreviousInstanceData(boolean successful, boolean withOutput, boolean withInput, boolean forWorkItem) throws SQLException {
 		StringBuilder sb = new StringBuilder();
 		sb.append("select * from ");
 		sb.append(getTable(false));
@@ -497,6 +497,11 @@ public class JobInstanceHelper {
 			sb.append(" > 0 or ");
 			sb.append(getColumn(JOB_DELETED));
 			sb.append(" > 0)");
+		}
+		if (withInput) {
+			sb.append(" and (");
+			sb.append(getColumn(JOB_INPUT));
+			sb.append(" > 0 )");
 		}
 		sb.append(" order by ");
 		sb.append(getColumn(JOB_INSTANCE_ID));
@@ -558,71 +563,11 @@ public class JobInstanceHelper {
 		return jobRunning;
 	}
 
-	public List<JobInfo> getJobInfosAfter(int jobInstanceId, boolean successful, boolean withOutput, String ... jobNames) throws SQLException {
-		StringBuilder sb = new StringBuilder();
-		sb.append("select * from ");
-		sb.append(getTable(false));
-		sb.append(" where ");
-		sb.append(getColumn(JOB_INSTANCE_ID));
-		sb.append(" > ");
-		sb.append(jobInstanceId);
-		if (successful) {
-			sb.append(" and ");
-			sb.append(getColumn(JOB_RETURN_CODE));
-			if (okResultCodes != null) {
-				sb.append(" in (");
-				sb.append(okResultCodes);
-				sb.append(") ");
-			} else {
-				sb.append(" = 0 ");
-			}
-		}
-		if (withOutput) {
-			sb.append(" and (");
-			sb.append(getColumn(JOB_OUTPUT));
-			sb.append(" > 0 or ");
-			sb.append(getColumn(JOB_UPDATED));
-			sb.append(" > 0 or ");
-			sb.append(getColumn(JOB_DELETED));
-			sb.append(" > 0)");
-		}
-		if (jobNames != null && jobNames.length > 0) {
-			sb.append(" and ");
-			sb.append(getColumn(JOB_NAME));
-			sb.append(" in (");
-			boolean firstLoop = true;
-			for (String jobName : jobNames) {
-				if (firstLoop) {
-					firstLoop = false;
-				} else {
-					sb.append(",");
-				}
-				sb.append("'");
-				sb.append(jobName);
-				sb.append("'");
-			}
-			sb.append(")");
-		}
-		sb.append(" order by ");
-		sb.append(getColumn(JOB_INSTANCE_ID));
-		String sql = sb.toString();
-		debug(sql);
-		PreparedStatement psSelect = startConnection.prepareStatement(sql);
-		ResultSet rs = psSelect.executeQuery();
-		List<JobInfo> list = new ArrayList<JobInfo>();
-		while (rs.next()) {
-			list.add(getJobInfoFromResultSet(rs));
-		}
-		rs.close();
-		psSelect.close();
-		return list;
-	}
-	
 	public boolean isInitialRun() {
 		return hasPrevInstance == false;
 	}
 
-	public String getJobInstanceIdListAfterPreviousJob(boolean successful, boolean withOutput, String ... jobNames) throws SQLException {
+	public String getJobInstanceIdListAfterPreviousJob(boolean successful, boolean withOutput, boolean withInput, String ... jobNames) throws SQLException {
 		StringBuilder sb = new StringBuilder();
 		sb.append("select ");
 		sb.append(getColumn(JOB_INSTANCE_ID));
@@ -658,6 +603,11 @@ public class JobInstanceHelper {
 			sb.append(" > 0 or ");
 			sb.append(getColumn(JOB_DELETED));
 			sb.append(" > 0)");
+		}
+		if (withInput) {
+			sb.append(" and (");
+			sb.append(getColumn(JOB_INPUT));
+			sb.append(" > 0 )");
 		}
 		if (jobNames != null && jobNames.length > 0) {
 			sb.append(" and ");

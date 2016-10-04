@@ -201,9 +201,10 @@ public class Log4JHelper {
 		return fileAppender;
 	}
 	
-	public void printOutLoggers() {
+	public String printOutLoggers() {
 		synchronized (monitorConfig) {
-			System.out.println("######## PID: " + talendPid + " ############################");
+			StringBuilder sb = new StringBuilder();
+			sb.append("######## PID: " + talendPid + " ############################\n");
 			List<Logger> loggerList = new ArrayList<Logger>();
 	        Logger rootLogger = Logger.getRootLogger();
 	        LoggerRepository rep = rootLogger.getLoggerRepository();
@@ -213,6 +214,7 @@ public class Log4JHelper {
 	        }
 	        Collections.sort(loggerList, new Comparator<Logger>() {
 
+				@Override
 				public int compare(Logger o1, Logger o2) {
 					return o1.getName().compareTo(o2.getName());
 				}
@@ -220,14 +222,19 @@ public class Log4JHelper {
 			});
 	        loggerList.add(0, rootLogger);
 	        for (Logger l : loggerList) {
-	        	System.out.println(l.getName());
-	        	printOutAppenders(l);
+	        	sb.append(l.getName());
+	        	sb.append("\n");
+	        	sb.append(printOutAppenders(l));
 	        }
-			System.out.println("##########################################");
+	        sb.append("\n##########################################\n");
+	        String result = sb.toString();
+	        System.out.println(result);
+	        return result;
 		}
 	}
 	
-	private void printOutAppenders(Logger logger) {
+	private String printOutAppenders(Logger logger) {
+		StringBuilder sb = new StringBuilder();
 		@SuppressWarnings("unchecked")
 		Enumeration<Appender> en = logger.getAllAppenders();
 		while (en.hasMoreElements()) {
@@ -237,11 +244,14 @@ public class Log4JHelper {
 				name = "class:" + a.getClass().getName();
 			}
 			if (a instanceof FileAppender) {
-				System.out.println("    " + name + " file:" + ((FileAppender) a).getFile());
+				sb.append("    " + name + " file:" + ((FileAppender) a).getFile());
+	        	sb.append("\n");
 			} else {
-				System.out.println("    " + name);
+				sb.append("    " + name);
+	        	sb.append("\n");
 			}
 		}
+		return sb.toString();
 	}
 	
 	public Logger getJobLogger() {
