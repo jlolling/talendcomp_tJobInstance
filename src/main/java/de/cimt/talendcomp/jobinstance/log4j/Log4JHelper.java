@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Appender;
+import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.FileAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -56,6 +57,7 @@ public class Log4JHelper {
 	private String talendFatherPid;
 	private String talendRootPid;
 	private Logger jobLogger = null;
+	private Logger talendRoot = null;
 	private String loggerNamePattern = null;
 	private TalendJobFileAppender fileAppender;
 	private boolean debug = true;
@@ -90,6 +92,24 @@ public class Log4JHelper {
 		return log4jInitialized;
 	}
 	
+	public static void setupConsoleAppenderToRoot(String pattern) {
+		Enumeration<Appender> enumApp = Logger.getRootLogger().getAllAppenders();
+		boolean hasConsoleAppender = false;
+		while (enumApp.hasMoreElements()) {
+			Appender app = enumApp.nextElement();
+			if (app instanceof ConsoleAppender) {
+				hasConsoleAppender = true;
+			}
+		}
+		if (hasConsoleAppender == false) {
+			if (pattern != null && pattern.isEmpty() == false) {
+				Logger.getRootLogger().addAppender(new ConsoleAppender(new PatternLayout(pattern.trim())));
+			} else {
+				Logger.getRootLogger().addAppender(new ConsoleAppender());
+			}
+		}
+	}
+	
 	/**
 	 * file log4j.properties or log4j.xml or given file will be searched in:
 	 * in given logConfigFileDir
@@ -100,7 +120,7 @@ public class Log4JHelper {
 			if (log4jInitialized == false) {
 				log4jInitialized = true;
 				// create a minimum basic configuration to get the first logs
-				Logger.getRootLogger().setLevel(Level.ALL);
+				Logger.getRootLogger().setLevel(Level.INFO);
 				if (Logger.getRootLogger().getAllAppenders().hasMoreElements() == false) {
 					// root needs always an appender to avoid collecting messages
 					Logger.getRootLogger().addAppender(new NullAppender());
@@ -111,9 +131,9 @@ public class Log4JHelper {
 						File cf = new File(log4jConfigFile);
 						if (cf.exists()) {
 							if (log4jConfigFile.endsWith(".xml")) {
-								DOMConfigurator.configure(cf.getAbsolutePath());
+								DOMConfigurator.configureAndWatch(cf.getAbsolutePath(), 10000);
 							} else if (log4jConfigFile.endsWith(".properties")) {
-								PropertyConfigurator.configure(cf.getAbsolutePath());
+								PropertyConfigurator.configureAndWatch(cf.getAbsolutePath(), 10000);
 							} else {
 								log4jInitialized = false;
 								throw new Exception("Unknown log4j file format:" + log4jConfigFile);
@@ -132,10 +152,20 @@ public class Log4JHelper {
 	}
 	
 	public void initJobLogger() {
-		Logger talendRoot = Logger.getLogger(rootLoggerName);
+		if ("root".equals(rootLoggerName)) {
+			talendRoot = Logger.getRootLogger();
+		} else {
+			talendRoot = Logger.getLogger(rootLoggerName);
+		}
 		talendRoot.setAdditivity(true);
-		talendRoot.setLevel(Level.ALL);
+		talendRoot.setLevel(Level.INFO);
 		jobLogger = Logger.getLogger(getJobLoggerName());
+	}
+	
+	public void setJobLogger(Logger logger) {
+		if (logger != null) {
+			this.jobLogger = logger;
+		}
 	}
 	
 	private void retrieveProcessInfo() {
@@ -183,11 +213,16 @@ public class Log4JHelper {
 		appender.setEncoding("UTF-8");
 		appender.setLayout(new PatternLayout(patternLayout.trim()));
 		synchronized(monitorConfig) {
-			Logger talendRoot = Logger.getLogger(rootLoggerName);
+			if (talendRoot == null) {
+				throw new IllegalArgumentException("talendRoot logger not initialized. Please call initJobLogger() before!");
+			}
 			if (talendRoot.getAppender(appender.getName()) == null) {
 				appender.activateOptions();
+				if (jobLogger == null) {
+					throw new IllegalStateException("jobLogger not initialized. Please call initJobLogger() before or set the jobLogger!");
+				}
 				jobLogger.setAdditivity(true);
-				jobLogger.setLevel(Level.ALL);
+				jobLogger.setLevel(Level.INFO);
 				fileAppender = appender;
 				talendRoot.addAppender(fileAppender);
 			} else {
@@ -201,10 +236,10 @@ public class Log4JHelper {
 		return fileAppender;
 	}
 	
-	public String printOutLoggers() {
+	public static String printOutLoggers() {
 		synchronized (monitorConfig) {
 			StringBuilder sb = new StringBuilder();
-			sb.append("######## PID: " + talendPid + " ############################\n");
+			sb.append("###########################################\n");
 			List<Logger> loggerList = new ArrayList<Logger>();
 	        Logger rootLogger = Logger.getRootLogger();
 	        LoggerRepository rep = rootLogger.getLoggerRepository();
@@ -223,6 +258,9 @@ public class Log4JHelper {
 	        loggerList.add(0, rootLogger);
 	        for (Logger l : loggerList) {
 	        	sb.append(l.getName());
+	        	if (l == Logger.getRootLogger()) {
+	        		sb.append(" is root");
+	        	}
 	        	sb.append("\n");
 	        	sb.append(printOutAppenders(l));
 	        }
@@ -233,7 +271,7 @@ public class Log4JHelper {
 		}
 	}
 	
-	private String printOutAppenders(Logger logger) {
+	private static String printOutAppenders(Logger logger) {
 		StringBuilder sb = new StringBuilder();
 		@SuppressWarnings("unchecked")
 		Enumeration<Appender> en = logger.getAllAppenders();
@@ -443,8 +481,8 @@ public class Log4JHelper {
 	
 	public void addAppender(Appender appender) {
 		if (appender != null) {
-			if (Logger.getLogger(rootLoggerName).getAppender(appender.getName()) == null) {
-				Logger.getLogger(rootLoggerName).addAppender(appender);
+			if (talendRoot.getAppender(appender.getName()) == null) {
+				talendRoot.addAppender(appender);
 			}
 		}
 	}
@@ -452,7 +490,7 @@ public class Log4JHelper {
 	public void close() {
 		if (fileAppender != null) {
 			fileAppender.close();
-			Logger.getLogger(rootLoggerName).removeAppender(fileAppender);
+			talendRoot.removeAppender(fileAppender);
 		}
 	}
 

@@ -41,7 +41,12 @@ public class TalendJobFileAppender extends FileAppender {
 	}
 
 	private boolean filter(LoggingEvent event) {
-		return ((String) jobAttributes.get("talendPid")).equals(MDC.get("talendPid"));
+		String attrPid = (String) jobAttributes.get("talendPid");
+		if (attrPid != null) {
+			return attrPid.equals(MDC.get("talendPid"));
+		} else {
+			return true;
+		}
 	}
 	
 	@Override
@@ -49,9 +54,9 @@ public class TalendJobFileAppender extends FileAppender {
 		if (file == null || file.trim().isEmpty()) {
 			throw new IllegalArgumentException("file cannot be null or empty");
 		}
-		setBufferedIO(true);
-		setBufferSize(1000);
 		super.setFile(replacePlaceholders(file));
+		setBufferedIO(false);
+		setImmediateFlush(true);
 		setName(getFile());
 	}
 		

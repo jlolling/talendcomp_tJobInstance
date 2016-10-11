@@ -464,7 +464,7 @@
 				throw e; 
 			}
 		}
-   	lh.initJobLogger();
+   	    lh.initJobLogger();
 <%  	if (useJobLogFile && logFilePattern != null && logFilePattern.trim().isEmpty() == false) { %>
 		globalMap.put("<%=cid%>_LOG_FILE_PATH", lh.configureFileAppender(<%=logFilePattern%>, <%=logFileLayout%>));
 		Object fileAppender = lh.getFileAppender();
@@ -482,7 +482,7 @@
 		}
 <%  	} %>
 <%  	if (debug) { %>
-		lh.printOutLoggers();
+		de.cimt.talendcomp.jobinstance.log4j.Log4JHelper.printOutLoggers();
 <%  	} %>
 <%  	if (catchSysout) { %>
 		lh.catchStandardOut(<%=forwardToConsole%>);
