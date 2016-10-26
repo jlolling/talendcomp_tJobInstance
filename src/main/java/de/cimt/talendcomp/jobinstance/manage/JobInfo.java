@@ -16,6 +16,7 @@
 package de.cimt.talendcomp.jobinstance.manage;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -263,6 +264,18 @@ public class JobInfo {
 		}
 	}
 	
+	public void checkTimeRange(Long timeRangeLong) {
+		if (timeRangeLong != null) {
+			Date timeRangeDate = new Date(timeRangeLong);
+			if (this.timeRangeStart == null || this.timeRangeStart.after(timeRangeDate)) {
+				this.timeRangeStart = timeRangeDate;
+			}
+			if (this.timeRangeEnd == null || this.timeRangeEnd.before(timeRangeDate)) {
+				this.timeRangeEnd = timeRangeDate;
+			}
+		}
+	}
+
 	public void checkValueRange(String newValue) {
 		if (newValue != null && newValue.trim().isEmpty() == false) {
 			if (valueRangeStart == null) {
@@ -443,6 +456,27 @@ public class JobInfo {
 				valueRangeEnd = String.valueOf(newValue);
 			} else {
 				BigDecimal cv = new BigDecimal(valueRangeEnd);
+				if (cv.compareTo(newValue) < 0) {
+					valueRangeEnd = String.valueOf(newValue);
+				}
+			}
+		}
+	}
+
+	public void checkValueRange(BigInteger newValue) {
+		if (newValue != null) {
+			if (valueRangeStart == null || valueRangeStart.isEmpty()) {
+				valueRangeStart = String.valueOf(newValue);
+			} else {
+				BigInteger cv = new BigInteger(valueRangeStart);
+				if (cv.compareTo(newValue) > 0) {
+					valueRangeStart = String.valueOf(newValue);
+				}
+			}
+			if (valueRangeEnd == null || valueRangeEnd.isEmpty()) {
+				valueRangeEnd = String.valueOf(newValue);
+			} else {
+				BigInteger cv = new BigInteger(valueRangeEnd);
 				if (cv.compareTo(newValue) < 0) {
 					valueRangeEnd = String.valueOf(newValue);
 				}
