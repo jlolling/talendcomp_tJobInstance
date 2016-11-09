@@ -1,4 +1,4 @@
-create table job_instance_status (
+create table dwh_manage.job_instance_status (
    job_instance_id bigint identity primary key,
    process_instance_id integer,
    process_instance_name varchar(255),
@@ -27,19 +27,19 @@ create table job_instance_status (
    host_pid integer,
    host_user varchar(128) UTF8);
 
-create table job_instance_context (
+create table dwh_manage.job_instance_context (
     job_instance_id bigint not null,
     attribute_key varchar(255)  UTF8 not null,
     attribute_value varchar(1024) UTF8,
     attribute_type varchar(32) UTF8 not null,
     is_output_attr boolean not null);
 
-create table job_instance_counters (
+create table dwh_manage.job_instance_counters (
     job_instance_id bigint not null,
     counter_name varchar(128) not null,
     counter_value integer not null);
 
-create table job_instance_logs (
+create table dwh_manage.job_instance_logs (
    job_instance_id bigint not null,
    log_ts timestamp not null,
    log_name varchar(128) not null,
