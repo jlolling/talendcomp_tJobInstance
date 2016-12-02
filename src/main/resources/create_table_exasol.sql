@@ -1,8 +1,10 @@
+-- drop table dwh_manage.job_instance_status;
 create table dwh_manage.job_instance_status (
    job_instance_id bigint identity primary key,
    process_instance_id integer,
    process_instance_name varchar(255),
    job_name varchar(255) not null,
+   job_project varchar(512) UTF8,
    job_info varchar(512) UTF8,
    job_display_name varchar(255) UTF8,
    job_guid varchar(100) UTF8 not null,
