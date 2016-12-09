@@ -2,8 +2,8 @@
 
 <COMPONENT>
 	<HEADER AUTHOR="cimt AG" COMPATIBILITY="ALL"
-		DATA_AUTO_PROPAGATE="false" PLATEFORM="ALL" RELEASE_DATE="20161004"
-		SERIAL="" STARTABLE="true" STATUS="PROD" VERSION="5.3">
+		DATA_AUTO_PROPAGATE="false" PLATEFORM="ALL" RELEASE_DATE="20161209"
+		SERIAL="" STARTABLE="true" STATUS="PROD" VERSION="5.6">
 		<SIGNATURE />
 	</HEADER>
 	<FAMILIES>
@@ -256,7 +256,7 @@
 	</ADVANCED_PARAMETERS>
 	<CODEGENERATION>
 		<IMPORTS>
-			<IMPORT NAME="cimt.talendcomp.jobinstances" MODULE="cimt-talendcomp-jobinstance-5.5.jar" REQUIRED="true" />
+			<IMPORT NAME="cimt.talendcomp.jobinstances" MODULE="cimt-talendcomp-jobinstance-5.6.jar" REQUIRED="true" />
 			<IMPORT NAME="log4j" MODULE="log4j-1.2.17.jar" REQUIRED="true" />
 			<!-- the name part "user" must match to the value in parameter PROJECT_SPECIFIC_NAME_MAP_RESOURCE
 			<IMPORT NAME="custom_mapping_test" MODULE="mapping_user.properties.jar" REQUIRED="true" />

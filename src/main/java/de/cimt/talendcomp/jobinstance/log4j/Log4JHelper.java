@@ -236,7 +236,7 @@ public class Log4JHelper {
 		return fileAppender;
 	}
 	
-	public static String printOutLoggers() {
+	public String printOutLoggers() {
 		synchronized (monitorConfig) {
 			StringBuilder sb = new StringBuilder();
 			sb.append("###########################################\n");
@@ -257,9 +257,16 @@ public class Log4JHelper {
 			});
 	        loggerList.add(0, rootLogger);
 	        for (Logger l : loggerList) {
+	        	sb.append("Logger: ");
 	        	sb.append(l.getName());
 	        	if (l == Logger.getRootLogger()) {
 	        		sb.append(" is root");
+	        	}
+	        	sb.append(" [Level=");
+	        	sb.append(l.getLevel().toString());
+	        	sb.append("]");
+	        	if (l.equals(jobLogger)) {
+		        	sb.append("  <-- this is the logger for this talend job!");
 	        	}
 	        	sb.append("\n");
 	        	sb.append(printOutAppenders(l));
@@ -271,7 +278,7 @@ public class Log4JHelper {
 		}
 	}
 	
-	private static String printOutAppenders(Logger logger) {
+	private String printOutAppenders(Logger logger) {
 		StringBuilder sb = new StringBuilder();
 		@SuppressWarnings("unchecked")
 		Enumeration<Appender> en = logger.getAllAppenders();
@@ -282,10 +289,10 @@ public class Log4JHelper {
 				name = "class:" + a.getClass().getName();
 			}
 			if (a instanceof FileAppender) {
-				sb.append("    " + name + " file:" + ((FileAppender) a).getFile());
+				sb.append("    Appender name: " + name + " file:" + ((FileAppender) a).getFile());
 	        	sb.append("\n");
 			} else {
-				sb.append("    " + name);
+				sb.append("    Appender name: " + name);
 	        	sb.append("\n");
 			}
 		}
@@ -365,25 +372,37 @@ public class Log4JHelper {
 			}
 			switch (priority) {
 			case 6:  // fatal
-				jobLogger.fatal(message);
+				if (jobLogger.isEnabledFor(Level.FATAL)) {
+					jobLogger.fatal(message);
+				}
 				break;
 			case 5:  // error
-				jobLogger.error(message);
+				if (jobLogger.isEnabledFor(Level.ERROR)) {
+					jobLogger.error(message);
+				}
 				break;			
 			case 4:  // warn
-				jobLogger.warn(message);
+				if (jobLogger.isEnabledFor(Level.WARN)) {
+					jobLogger.warn(message);
+				}
 				break;
 			case 3:  // info
-				jobLogger.info(message);
+				if (jobLogger.isInfoEnabled()) {
+					jobLogger.info(message);
+				}
 				break;
 			case 2:  // debug
-				jobLogger.debug(message);
+				if (jobLogger.isDebugEnabled()) {
+					jobLogger.debug(message);
+				}
 				break;
 			case 1:  // trace
-				jobLogger.trace(message);
+				if (jobLogger.isTraceEnabled()) {
+					jobLogger.trace(message);
+				}
 				break;
 			default:
-				jobLogger.debug(message);
+				jobLogger.trace(message);
 			} 
 		}
 	}

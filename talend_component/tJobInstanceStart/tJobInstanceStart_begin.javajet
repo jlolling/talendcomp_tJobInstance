@@ -482,7 +482,7 @@
 		}
 <%  	} %>
 <%  	if (debug) { %>
-		de.cimt.talendcomp.jobinstance.log4j.Log4JHelper.printOutLoggers();
+		lh.printOutLoggers();
 <%  	} %>
 <%  	if (catchSysout) { %>
 		lh.catchStandardOut(<%=forwardToConsole%>);
