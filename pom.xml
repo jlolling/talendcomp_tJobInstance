@@ -43,35 +43,6 @@
 	<build>
 		<plugins>
 			<plugin>
-				<artifactId>maven-clean-plugin</artifactId>
-				<version>3.0.0</version>
-				<executions>
-					<execution>
-						<id>auto-clean</id>
-						<phase>initialize</phase>
-						<goals>
-							<goal>clean</goal>
-						</goals>
-						<configuration>
-						<filesets>
-						  <fileset>
-						    <directory>talend_component/tJobInstanceStart</directory>
-						    <includes>
-						      <include>*.jar</include>
-						    </includes>
-						  </fileset>
-						  <fileset>
-						    <directory>talend_component/tJobInstanceLiveCheck</directory>
-						    <includes>
-						      <include>*.jar</include>
-						    </includes>
-						  </fileset>
-						</filesets>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
 				<executions>
@@ -80,58 +51,58 @@
 						<goals>
 							<goal>jar</goal>
 						</goals>
-						<configuration>
-							<outputDirectory>talend_component/tJobInstanceStart/</outputDirectory>
-							<overWriteReleases>true</overWriteReleases>
-							<overWriteSnapshots>true</overWriteSnapshots>
-							<overWriteIfNewer>true</overWriteIfNewer>
-							<includeScope>runtime</includeScope>
-						</configuration>
 					</execution>
 				</executions>
 			</plugin>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-dependency-plugin</artifactId>
+				<groupId>de.cimt.talendcomp</groupId>
+				<artifactId>cimt-talendcomp-maven-plugin</artifactId>
+				<version>1.1</version>
 				<executions>
 					<execution>
-						<id>copy-dependencies</id>
-						<phase>prepare-package</phase>
+						<id>tJobInstanceStart</id>
+						<phase>install</phase>
 						<goals>
-							<goal>copy-dependencies</goal>
+							<goal>component</goal>
 						</goals>
 						<configuration>
-							<outputDirectory>${project.basedir}/talend_component/tJobInstanceStart</outputDirectory>
-							<overWriteReleases>true</overWriteReleases>
-							<overWriteSnapshots>true</overWriteSnapshots>
-							<overWriteIfNewer>true</overWriteIfNewer>
-							<includeScope>runtime</includeScope>
+							<componentName>tJobInstanceStart</componentName>
+						</configuration>
+					</execution>
+					<execution>
+						<id>tJobInstanceEnd</id>
+						<phase>install</phase>
+						<goals>
+							<goal>component</goal>
+						</goals>
+						<configuration>
+							<componentName>tJobInstanceEnd</componentName>
+							<noJars>true</noJars>
+						</configuration>
+					</execution>
+					<execution>
+						<id>tJobInstanceLiveCheck</id>
+						<phase>install</phase>
+						<goals>
+							<goal>component</goal>
+						</goals>
+						<configuration>
+							<componentName>tJobInstanceLiveCheck</componentName>
+						</configuration>
+					</execution>
+					<execution>
+						<id>tJobDataRangeScanner</id>
+						<phase>install</phase>
+						<goals>
+							<goal>component</goal>
+						</goals>
+						<configuration>
+							<componentName>tJobDataRangeScanner</componentName>
+							<noJars>true</noJars>
 						</configuration>
 					</execution>
 				</executions>
 			</plugin>
-            <plugin>
-                <groupId>com.coderplus.maven.plugins</groupId>
-                <artifactId>copy-rename-maven-plugin</artifactId>
-                <version>1.0</version>
-                <executions>
-                    <execution>
-                        <id>copy-file</id>
-                        <phase>install</phase>
-                        <goals>
-                            <goal>copy</goal>
-                        </goals>
-                        <configuration>
-                            <fileSets>
-                                <fileSet>
-                                    <sourceFile>talend_component/tJobInstanceStart/${project.artifactId}-${project.version}.jar</sourceFile>
-                                    <destinationFile>talend_component/tJobInstanceLiveCheck/${project.artifactId}-${project.version}.jar</destinationFile>
-                                </fileSet>                
-                            </fileSets>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
 		</plugins>
 	</build>
 </project>
