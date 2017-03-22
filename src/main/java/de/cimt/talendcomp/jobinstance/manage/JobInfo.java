@@ -137,9 +137,6 @@ public class JobInfo {
 	}
 	
 	public void setStopDate(Date stopDate) {
-		if (stopDate == null) {
-			throw new IllegalArgumentException("stopDate cannot be null or empty");
-		}
 		this.stopDate = stopDate;
 	}
 	
