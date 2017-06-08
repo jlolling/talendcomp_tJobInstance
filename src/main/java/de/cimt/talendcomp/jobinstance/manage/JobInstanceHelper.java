@@ -109,7 +109,7 @@ public class JobInstanceHelper {
 	private Map<String, Integer> scannerCounterMap = new HashMap<String, Integer>();
 	private boolean useViewToReadStatus = false;
 	private boolean useGeneratedJID = false;
-	private JID2 jid = new JID2(); 
+	private JID jid = new JID(); 
 	
 	public JobInstanceHelper() {
 		currentJobInfo = new JobInfo();
@@ -218,12 +218,7 @@ public class JobInstanceHelper {
 		}
 		String sql = sb.toString();
 		debug(sql);
-		PreparedStatement psInsert = null;
-		if (autoIncrementColumn && useGeneratedJID == false) {
-			psInsert = startConnection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-		} else {
-			psInsert = startConnection.prepareStatement(sql, Statement.NO_GENERATED_KEYS);
-		}
+		PreparedStatement psInsert = startConnection.prepareStatement(sql);
 		// start set parameters
 		if (useGeneratedJID) {
 			long genJid = jid.createJID();
@@ -679,7 +674,7 @@ public class JobInstanceHelper {
 			} else {
 				res.append(",");
 			}
-			res.append(rs.getInt(1));
+			res.append(rs.getLong(1));
 		}
 		if (firstLoop) {
 			// no jobs found, create dummy list
@@ -692,7 +687,7 @@ public class JobInstanceHelper {
 
 	private JobInfo getJobInfoFromResultSet(ResultSet rs) throws SQLException {
 		JobInfo ji = new JobInfo();
-		ji.setJobInstanceId(rs.getInt(getColumn(JOB_INSTANCE_ID)));
+		ji.setJobInstanceId(rs.getLong(getColumn(JOB_INSTANCE_ID)));
 		ji.setName(rs.getString(getColumn(JOB_NAME)));
 		ji.setJobInfo(rs.getString(getColumn(JOB_INFO)));
 		ji.setGuid(rs.getString(getColumn(JOB_GUID)));
@@ -704,7 +699,7 @@ public class JobInstanceHelper {
 		ji.setValueRangeStart(rs.getString(getColumn(JOB_VALUE_RANGE_START)));
 		ji.setValueRangeEnd(rs.getString(getColumn(JOB_VALUE_RANGE_END)));
 		ji.setDisplayName(rs.getString(getColumn(JOB_DISPLAY_NAME)));
-		ji.setProcessInstanceId(rs.getInt(getColumn(PROCESS_INSTANCE_ID)));
+		ji.setProcessInstanceId(rs.getLong(getColumn(PROCESS_INSTANCE_ID)));
 		ji.setJobResult(rs.getString(getColumn(JOB_RESULT_ITEM)));
 		ji.setCountInput(rs.getInt(getColumn(JOB_INPUT)));
 		ji.setCountOutput(rs.getInt(getColumn(JOB_OUTPUT)));
@@ -722,7 +717,7 @@ public class JobInstanceHelper {
 	
 	private JobInfo getBrokenJobInfoFromResultSet(ResultSet rs) throws SQLException {
 		JobInfo ji = new JobInfo();
-		ji.setJobInstanceId(rs.getInt(getColumn(JOB_INSTANCE_ID)));
+		ji.setJobInstanceId(rs.getLong(getColumn(JOB_INSTANCE_ID)));
 		ji.setName(rs.getString(getColumn(JOB_NAME)));
 		ji.setJobInfo(rs.getString(getColumn(JOB_INFO)));
 		ji.setGuid(rs.getString(getColumn(JOB_GUID)));
@@ -733,7 +728,7 @@ public class JobInstanceHelper {
 		ji.setValueRangeStart(rs.getString(getColumn(JOB_VALUE_RANGE_START)));
 		ji.setValueRangeEnd(rs.getString(getColumn(JOB_VALUE_RANGE_END)));
 		ji.setDisplayName(rs.getString(getColumn(JOB_DISPLAY_NAME)));
-		ji.setProcessInstanceId(rs.getInt(getColumn(PROCESS_INSTANCE_ID)));
+		ji.setProcessInstanceId(rs.getLong(getColumn(PROCESS_INSTANCE_ID)));
 		ji.setHostName(rs.getString(getColumn(JOB_HOST_NAME)));
 		ji.setHostPid(rs.getInt(getColumn(JOB_HOST_PID)));
 		ji.setExtJobId(rs.getString(getColumn(JOB_EXT_ID)));

@@ -2,37 +2,37 @@ package de.cimt.talendcomp.jobinstance.manage;
 
 /**
  * 64:    Das oberste Bit wird immer 0 gesetzt um eine positive Ganzzahl zu behalten
- * 63-17: die letzten 46 Bits der Unix Time in ms
- * 16-1:  Sequence innerhalb der Millisekunde mit zufälligem Offset im Bereich von 0-1000
+ * 63-13: die letzten 51 Bits der Unix Time in ms
+ * 12-1:  Sequence innerhalb der Millisekunde mit zufälligem Offset im Bereich von 0-1000
  * 
  * @author jan.lolling@gmail.com
  *
  */
-public class JID2 {
+public class JID {
 	
 	private Long startDate = null;
 	private long currentMillisecond = 0;
 	private long lastMillisecond = 0;
 	private long jid;
-	private int lastTalendPidSequenceValue = 1;
+	private int sequenceValue = 1;
 	
-	public static final long mask46 =  Long.parseLong("1111111111111111111111111111111111111111111111", 2);
-	public static final int mask16 = Integer.parseInt("1111111111111111", 2);
+	public static final long mask51 =  Long.parseLong("111111111111111111111111111111111111111111111111111", 2);
+	public static final int mask12 = Integer.parseInt("111111111111", 2);
 	
 	public long createJID() throws Exception {
 		currentMillisecond = retrieveTimeInMillis();
 		// 33  bit mask
-		lastTalendPidSequenceValue = setupSequenceWithingMilliSec();
-		lastTalendPidSequenceValue = lastTalendPidSequenceValue & mask16;
-		jid = currentMillisecond & mask46;
-		jid = jid << 16;
-		jid = jid | lastTalendPidSequenceValue;
+		sequenceValue = setupSequenceWithinMilliSec();
+		sequenceValue = sequenceValue & mask12;
+		jid = currentMillisecond & mask51;
+		jid = jid << 12;
+		jid = jid | sequenceValue;
 		lastMillisecond = currentMillisecond;
 		return jid;
 	}
 	
 	public long getTimePart(long jobInstanceId) {
-		return jobInstanceId >> 16;
+		return jobInstanceId >> 12;
 	}
 	
 	private long retrieveTimeInMillis() {
@@ -71,18 +71,26 @@ public class JID2 {
 		}
 	}
 
-	public synchronized int setupSequenceWithingMilliSec() throws InterruptedException {
+	public synchronized int setupSequenceWithinMilliSec() throws InterruptedException {
 		if (lastMillisecond < currentMillisecond) {
-			lastTalendPidSequenceValue = (int) (Math.random() * 1000);
+			sequenceValue = (int) (Math.random() * 100);
 		} else {
-			lastTalendPidSequenceValue = lastTalendPidSequenceValue + 1;
+			sequenceValue = sequenceValue + 1;
 		}
-		if (lastTalendPidSequenceValue >= mask16) {
+		if (sequenceValue >= mask12) {
 			Thread.sleep(1);
 			currentMillisecond = retrieveTimeInMillis();
-			lastTalendPidSequenceValue = 1;
+			sequenceValue = 1;
 		}
-		return lastTalendPidSequenceValue;
+		return sequenceValue;
+	}
+
+	public long getCurrentMillisecond() {
+		return currentMillisecond;
+	}
+
+	public int getSequenceValue() {
+		return sequenceValue;
 	}
 
 }
