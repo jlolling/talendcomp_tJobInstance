@@ -1,14 +1,9 @@
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Map;
 import java.util.TimeZone;
-
-import de.cimt.talendcomp.jobinstance.manage.JobInstanceContextHelper;
-import de.cimt.talendcomp.jobinstance.manage.JobInstanceHelper;
 
 
 public class JobInstanceHelperTest {
@@ -83,38 +78,4 @@ public class JobInstanceHelperTest {
 		return conn;
 	}
 	
-	private static void test_bundle() {
-		JobInstanceHelper helper = new JobInstanceHelper();
-		helper.setRootJobGuid("1234");
-		helper.setJobGuid("xxxxx");
-		helper.setJobName("test");
-		try {
-			if (helper.configure("test")) {
-				System.out.println("Bundle loaded successfully");
-				Map<String, String> columnMap = helper.getAlternativeColumnNames();
-				for (Map.Entry<String, String> entry : columnMap.entrySet()) {
-					System.out.println(entry.getKey() + "->" + entry.getValue());
-				}
-			} else {
-				throw new Exception("Configuration test not found!");
-			}
-			Connection connection = createMySQLConnection();
-			helper.setConnection(connection);
-			long jobInstanceId = helper.createEntry();
-			JobInstanceContextHelper contextHelper = new JobInstanceContextHelper();
-			contextHelper.setConnection(connection);
-			contextHelper.setAlternativeColumnNames(helper.getAlternativeColumnNames());
-			contextHelper.setJobInstanceId(jobInstanceId);
-			contextHelper.setAttribute("k1", "v1", false);
-			contextHelper.writeContext();
-			helper.addCountInput(999, "in1");
-			helper.setReturnCode(1);
-			helper.setReturnMessage("test");
-			helper.updateEntry();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
 }

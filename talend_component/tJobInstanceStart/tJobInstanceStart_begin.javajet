@@ -38,7 +38,6 @@
     String tableNameCounter = ElementParameterParser.getValue(node, "__TABLE_NAME_COUNTER__");
     String schemaName = ElementParameterParser.getValue(node, "__SCHEMA_NAME__");
     String isSerialPk = ElementParameterParser.getValue(node, "__IS_AUTO_INCREMENT__");
-    String readGeneratedKeys = ElementParameterParser.getValue(node, "__READ_GENERATED_KEYS__");
     String sequence = ElementParameterParser.getValue(node, "__SEQUENCE_EXPRESSION__");
     if (sequence == null || sequence.isEmpty()) {
     	sequence = "null";
@@ -48,6 +47,7 @@
 	String forWorkItem = ElementParameterParser.getValue(node, "__RETRIEVE_LAST_RUN_DATA_FOR_WORKITEM__");
 	String onlyWithData = ElementParameterParser.getValue(node, "__RETRIEVE_LAST_RUN_DATA_WITH_DATA__");
 	String onlyWithInput = ElementParameterParser.getValue(node, "__RETRIEVE_LAST_RUN_DATA_WITH_INPUT__");
+	String onlyWithinSameRoot = ElementParameterParser.getValue(node, "__RETRIEVE_LAST_RUN_DATA_WITHIN_SAME_ROOT__");
 	boolean collectSourceInstanceIds = "true".equals(ElementParameterParser.getValue(node, "__COLLECT_SOURCE_INSTANCE_IDS__"));
 	boolean checkJobSingleton = "true".equals(ElementParameterParser.getValue(node, "__SINGLETON_JOB_INSTANCE__"));
 	boolean checkJobSingletonByWorkItem = "true".equals(ElementParameterParser.getValue(node, "__SINGLETON_JOB_INSTANCE_FOR_WORKITEM__"));
@@ -60,8 +60,6 @@
 	boolean setUTCTimeZone = "true".equals(ElementParameterParser.getValue(node, "__SET_UTC_TIMEZONE__"));
 	boolean useDbAppender = "true".equals(ElementParameterParser.getValue(node, "__USE_DB_APPENDER__"));
 	String patternLayout = ElementParameterParser.getValue(node, "__PATTEN_LAYOUT__");
-	boolean useProjectSpecificNames = "true".equals(ElementParameterParser.getValue(node, "__USE_PROJECT_SPECIFIC_NAMES__"));
-	String bundleName = ElementParameterParser.getValue(node, "__PROJECT_SPECIFIC_NAME_MAP_RESOURCE__");
 	String batchMillis = ElementParameterParser.getValue(node, "__LOG_BATCH_UPDATE_MILLIS__");
 	String batchSize = ElementParameterParser.getValue(node, "__LOG_BATCH_SIZE__");
 	boolean memoryMonitoring = "true".equals(ElementParameterParser.getValue(node, "__MEASURE_MEMORY_USAGE__"));
@@ -89,6 +87,7 @@
     }
     boolean sysoutJobInstanceId = "true".equals(ElementParameterParser.getValue(node, "__SYSOUT_JOB_INSTANCE_ID__"));
     String sysoutJobInstanceIdExpression = ElementParameterParser.getValue(node, "__SYSOUT_JOB_INSTANCE_ID_EXPRESSION__");
+    boolean useGeneratedJID = "true".equals(ElementParameterParser.getValue(node, "__USE_GENERATED_JID__"));
 %>
 <%  if (setUTCTimeZone) { %>
     if ("UTC".equals(java.util.TimeZone.getDefault().getID()) == false) {
@@ -115,11 +114,6 @@
 	// external job instance id given
 	<%=cid%>.setExtJobId(<%=contextVarEJID%>);
 <%  } %>
-<% if (useProjectSpecificNames) { %>
-	if (<%=cid%>.configure(<%=bundleName%>) == false) {
-		throw new Exception("Configuration " + <%=bundleName%> + " could not found!");
-	}
-<% } else { %>	
 	// setup table meta data
 <%  if (tableName != null && tableName.trim().isEmpty() == false) { %>
 	<%=cid%>.setTableName(<%=tableName%>);
@@ -130,16 +124,19 @@
 <%  if (tableNameCounter != null && tableNameCounter.trim().isEmpty() == false) { %>
 	<%=cid%>.setCounterTableName(<%=tableNameCounter%>);
 <%  } %>
-<% if (maxMessageLength != null && maxMessageLength.trim().isEmpty() == false) { %>
+<%	if (maxMessageLength != null && maxMessageLength.trim().isEmpty() == false) { %>
 	<%=cid%>.setMaxMessageLength(<%=maxMessageLength%>);
 <%  } %>
 	// config if table contains serial column
+<%	if (useGeneratedJID) { %>
+	<%=cid%>.setUseGeneratedKeys(true);
+	<%=cid%>.setAutoIncrementColumn(false);
+<%	} else { %>
 	<%=cid%>.setAutoIncrementColumn(<%=isSerialPk%>);
-	<%=cid%>.setUseGeneratedKeys(<%=readGeneratedKeys%>);
-<%  if ("false".equals(isSerialPk)) { %>
+<%		if ("false".equals(isSerialPk)) { %>
 	<%=cid%>.setSequenceExpression(<%=sequence%>);
-<%  } %>
-<% } %>
+<%		} %>
+<% 	} %>
 <%  if (useDataSource) {%>
 	{
 		java.util.Map<String, routines.system.TalendDataSource> dataSources = (java.util.Map<String, routines.system.TalendDataSource>) globalMap.get(KEY_DB_DATASOURCES);
@@ -151,9 +148,9 @@
 		}
 		<%=cid%>.setConnection(dataSources.get(<%=dataSourceAlias%>).getConnection());
 	}
-<% } else { %>
+<%	} else { %>
 	<%=cid%>.setConnection((java.sql.Connection) globalMap.get("conn_<%=connectionComp%>"));
-<% } %>
+<%	} %>
 <%  if (schemaName != null && schemaName.trim().isEmpty() == false) { %>
 	<%=cid%>.setSchemaName(<%=schemaName%>);
 <%  } else if (useDataSource && useDataSourceAsDbName) {%>
@@ -230,34 +227,33 @@
 	   globalMap.put("<%=cid%>_JOB_RUNS_ALONE", true);
 	}
 <%  } %>
-   if (createEntry) {
-   
-	// create entry
-	long jobInstanceId_<%=cid%> = 0;
-	try {
-		jobInstanceId_<%=cid%> = <%=cid%>.createEntry();
-	} catch (Exception e) {
-		globalMap.put("<%=cid%>_ERROR_MESSAGE", e.getMessage());
-		throw e;
-	}
-	globalMap.put("<%=cid%>_JOB_INSTANCE_ID", jobInstanceId_<%=cid%>);
-	globalMap.put("JOB_INSTANCE_ID", jobInstanceId_<%=cid%>);
-	// keep this instance for the end part
-	globalMap.put("<%=cid%>", <%=cid%>);
+    if (createEntry) {
+		// create entry
+		long jobInstanceId_<%=cid%> = 0;
+		try {
+			jobInstanceId_<%=cid%> = <%=cid%>.createEntry();
+		} catch (Exception e) {
+			globalMap.put("<%=cid%>_ERROR_MESSAGE", e.getMessage());
+			throw e;
+		}
+		globalMap.put("<%=cid%>_JOB_INSTANCE_ID", jobInstanceId_<%=cid%>);
+		globalMap.put("JOB_INSTANCE_ID", jobInstanceId_<%=cid%>);
+		// keep this instance for the end part
+		globalMap.put("<%=cid%>", <%=cid%>);
 <%	if (contextVar != null && contextVar.isEmpty() == false) { %>
 	<%=contextVar%> = jobInstanceId_<%=cid%>;
 <%  } %>
 <%  if (useDbAppender) { %>
-    <%=cid%>.setLogLayoutPattern(<%=patternLayout%>);
+    	<%=cid%>.setLogLayoutPattern(<%=patternLayout%>);
 <%  	if (batchMillis != null && batchMillis.trim().isEmpty() == false) { %>
-    // submit messages in time interval
+    	// submit messages in time interval
 		<%=cid%>.setLogBatchPeriodMillis(<%=batchMillis%>);
 <%  	} %>
 <%  	if (batchSize != null && batchSize.trim().isEmpty() == false) { %>
-    // max messages in queue until submit 
-	<%=cid%>.setLogBatchSize(<%=batchSize%>);
+    	// max messages in queue until submit 
+		<%=cid%>.setLogBatchSize(<%=batchSize%>);
 <%  	} %>
-	globalMap.put("<%=cid%>_DB_APPENDER", <%=cid%>.getAppender());
+		globalMap.put("<%=cid%>_DB_APPENDER", <%=cid%>.getAppender());
 <%  } %>
 <%  if (returnLastInstanceData) { %>
     // retrieve last job run data
@@ -266,7 +262,8 @@
 			<%=onlySuccessful%>, // onlySuccessful
 			<%=onlyWithData%>, // onlyWithData
 			<%=onlyWithInput%>, // onlyWithInput
-			<%=forWorkItem%>); // forWorkItem
+			<%=forWorkItem%>,  // forWorkItem
+			<%=onlyWithinSameRoot%>); // within same root job
 		globalMap.put("<%=cid%>_PREV_JOB_EXISTS", <%=cid%>_PrevJobExists);
 		if (<%=cid%>_PrevJobExists) {
 			globalMap.put("<%=cid%>_PREV_JOB_INSTANCE_ID", <%=cid%>.getPrevJobInstanceId());

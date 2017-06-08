@@ -18,7 +18,7 @@ public class JobInstanceHelperTest extends TalendFakeJob {
 	
 	public void createConnection() throws Exception {
 		Class.forName("org.postgresql.Driver");
-		Connection conn = DriverManager.getConnection("jdbc:postgresql://debiandb.local:5432/postgres?charSet=LATIN1", "postgres", "postgres");
+		Connection conn = DriverManager.getConnection("jdbc:postgresql://debiandb.local:5432/postgres", "postgres", "postgres");
 		globalMap.put("connection", conn);
 	}
 	
@@ -46,8 +46,9 @@ public class JobInstanceHelperTest extends TalendFakeJob {
 			System.out.println("Run 1: Instantiate Helper...");
 			JobInstanceHelper helper = new JobInstanceHelper();
 			helper.setConnection((Connection) globalMap.get("connection"));
+			helper.setUseGeneratedKeys(true);
 			helper.setAutoIncrementColumn(false);
-			helper.setSequenceExpression("nextval('" + schema + ".seq_job_instance_id')");
+//			helper.setSequenceExpression("nextval('" + schema + ".seq_job_instance_id')");
 			helper.setJobName(jobName);
 			helper.setJobGuid(guid);
 			helper.setJobStartedAt(System.currentTimeMillis());
@@ -86,11 +87,12 @@ public class JobInstanceHelperTest extends TalendFakeJob {
 			tJobInstanceStart_1.createEntry();
 			long jobInstanceId = tJobInstanceStart_1.getJobInstanceId();
 			// check if we get a valid job_instance_id
-			assertTrue("JobInstanceId is not greater 0", jobInstanceId > expectedJobInstanceId);
+			assertTrue("JobInstanceId is not greater 0", jobInstanceId > 0);
 			boolean tJobInstanceStart_1_PrevJobExists = tJobInstanceStart_1
 					.retrievePreviousInstanceData(true, // onlySuccessful
 							true, // onlyOutputData
 							false, // only with input data
+							false,
 							false); // forWorkItem
 			globalMap.put("tJobInstanceStart_1_PREV_JOB_EXISTS",
 					tJobInstanceStart_1_PrevJobExists);

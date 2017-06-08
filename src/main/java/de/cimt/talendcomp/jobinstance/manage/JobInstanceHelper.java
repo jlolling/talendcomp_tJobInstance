@@ -15,8 +15,6 @@
  */
 package de.cimt.talendcomp.jobinstance.manage;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.management.ManagementFactory;
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -36,7 +34,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Properties;
 import java.util.TimeZone;
 
 import org.apache.log4j.Appender;
@@ -99,7 +96,6 @@ public class JobInstanceHelper {
 	private JobInstanceLogDBAppender logDbAppender = null;
 	private int messageMaxLength = 1000;
 	private Map<String, String> alternativeColumnNames = new HashMap<String, String>();
-	private static Map<String, Properties> bundleCache = new HashMap<String, Properties>();
 	private String logLayoutPattern = null;
 	private Integer logBatchPeriodMillis = null;
 	private Integer logBatchSize = null;
@@ -112,7 +108,8 @@ public class JobInstanceHelper {
 	private int returnCodeForDeadInstances = 999;
 	private Map<String, Integer> scannerCounterMap = new HashMap<String, Integer>();
 	private boolean useViewToReadStatus = false;
-	private boolean useGeneratedKeys = true;
+	private boolean useGeneratedJID = false;
+	private JID2 jid = new JID2(); 
 	
 	public JobInstanceHelper() {
 		currentJobInfo = new JobInfo();
@@ -162,7 +159,7 @@ public class JobInstanceHelper {
 		sb.append("insert into ");
 		sb.append(getTable(true));
 		sb.append(" (");
-		if (autoIncrementColumn == false) {
+		if (autoIncrementColumn == false || useGeneratedJID) {
 			sb.append(getColumn(JOB_INSTANCE_ID)); // 1
 			sb.append(",");
 		}
@@ -203,10 +200,15 @@ public class JobInstanceHelper {
 		sb.append(getColumn(JOB_PROJECT)); // 19
 		sb.append(")");
 		sb.append(" values (");
-		if (autoIncrementColumn == false) {
-			sb.append("("); // first field job_instance_id
-			sb.append(sequenceExpression);
-			sb.append("),");
+		int paramIndex = 1;
+		if (useGeneratedJID) {
+			sb.append("?,");
+		} else {
+			if (autoIncrementColumn == false) {
+				sb.append("("); // first field job_instance_id
+				sb.append(sequenceExpression);
+				sb.append("),");
+			}
 		}
 		// parameter 1-19
 		sb.append("?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
@@ -217,73 +219,84 @@ public class JobInstanceHelper {
 		String sql = sb.toString();
 		debug(sql);
 		PreparedStatement psInsert = null;
-		if (autoIncrementColumn) {
+		if (autoIncrementColumn && useGeneratedJID == false) {
 			psInsert = startConnection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 		} else {
 			psInsert = startConnection.prepareStatement(sql, Statement.NO_GENERATED_KEYS);
 		}
-		psInsert.setString(1, currentJobInfo.getName());
+		// start set parameters
+		if (useGeneratedJID) {
+			long genJid = jid.createJID();
+			if (isDebug()) {
+				debug("Use generated job_instance_id=" + genJid);
+			}
+			psInsert.setLong(paramIndex++, genJid);
+		}
+		psInsert.setString(paramIndex++, currentJobInfo.getName());
 		if (currentJobInfo.getGuid() == null) {
 			throw new IllegalStateException("Job guid is null. Please call setJobGuid(String) before!");
 		}
-		psInsert.setString(2, currentJobInfo.getGuid());
+		psInsert.setString(paramIndex++, currentJobInfo.getGuid());
 		if (currentJobInfo.getRootJobGuid() != null) {
-			psInsert.setString(3, currentJobInfo.getRootJobGuid());
+			psInsert.setString(paramIndex++, currentJobInfo.getRootJobGuid());
 		} else {
-			psInsert.setNull(3, Types.VARCHAR);
+			psInsert.setNull(paramIndex++, Types.VARCHAR);
 		}
 		if (currentJobInfo.getWorkItem() != null) {
-			psInsert.setString(4, currentJobInfo.getWorkItem());
+			psInsert.setString(paramIndex++, currentJobInfo.getWorkItem());
 		} else {
-			psInsert.setNull(4, Types.VARCHAR);
+			psInsert.setNull(paramIndex++, Types.VARCHAR);
 		}
 		if (currentJobInfo.getTimeRangeStart() != null) {
-			psInsert.setTimestamp(5, new Timestamp(currentJobInfo.getTimeRangeStart().getTime()));
+			psInsert.setTimestamp(paramIndex++, new Timestamp(currentJobInfo.getTimeRangeStart().getTime()));
 		} else {
-			psInsert.setNull(5, Types.TIMESTAMP);
+			psInsert.setNull(paramIndex++, Types.TIMESTAMP);
 		}
 		if (currentJobInfo.getTimeRangeEnd() != null) {
-			psInsert.setTimestamp(6, new Timestamp(currentJobInfo.getTimeRangeEnd().getTime()));
+			psInsert.setTimestamp(paramIndex++, new Timestamp(currentJobInfo.getTimeRangeEnd().getTime()));
 		} else {
-			psInsert.setNull(6, Types.TIMESTAMP);
+			psInsert.setNull(paramIndex++, Types.TIMESTAMP);
 		}
 		if (currentJobInfo.getValueRangeStart() != null) {
-			psInsert.setString(7, currentJobInfo.getValueRangeStart());
+			psInsert.setString(paramIndex++, currentJobInfo.getValueRangeStart());
 		} else {
-			psInsert.setNull(7, Types.VARCHAR);
+			psInsert.setNull(paramIndex++, Types.VARCHAR);
 		}
 		if (currentJobInfo.getValueRangeEnd() != null) {
-			psInsert.setString(8, currentJobInfo.getValueRangeEnd());
+			psInsert.setString(paramIndex++, currentJobInfo.getValueRangeEnd());
 		} else {
-			psInsert.setNull(8, Types.VARCHAR);
+			psInsert.setNull(paramIndex++, Types.VARCHAR);
 		}
 		if (currentJobInfo.getStartDate() == null) {
 			throw new IllegalArgumentException("Job start date is null. Please call setJobStartedAt(long) before!");
 		}
-		psInsert.setTimestamp(9, new Timestamp(currentJobInfo.getStartDate().getTime()));
-		psInsert.setLong(10, currentJobInfo.getProcessInstanceId());
+		psInsert.setTimestamp(paramIndex++, new Timestamp(currentJobInfo.getStartDate().getTime()));
+		psInsert.setLong(paramIndex++, currentJobInfo.getProcessInstanceId());
 		if (currentJobInfo.getProcessInstanceName() != null) {
-			psInsert.setString(11, currentJobInfo.getProcessInstanceName());
+			psInsert.setString(paramIndex++, currentJobInfo.getProcessInstanceName());
 		} else {
-			psInsert.setNull(11, Types.VARCHAR);
+			psInsert.setNull(paramIndex++, Types.VARCHAR);
 		}
 		if (currentJobInfo.getJobDisplayName() != null) {
-			psInsert.setString(12, currentJobInfo.getJobDisplayName());
+			psInsert.setString(paramIndex++, currentJobInfo.getJobDisplayName());
 		} else {
-			psInsert.setNull(12, Types.VARCHAR);
+			psInsert.setNull(paramIndex++, Types.VARCHAR);
 		}
-		psInsert.setString(13, currentJobInfo.getHostName());
-		psInsert.setInt(14, currentJobInfo.getHostPid());
-		psInsert.setString(15, currentJobInfo.getExtJobId());
-		psInsert.setString(16, currentJobInfo.getJobInfo());
-		psInsert.setString(17, currentJobInfo.getHostUser());
-		psInsert.setString(18, currentJobInfo.getProject());
+		psInsert.setString(paramIndex++, currentJobInfo.getHostName());
+		psInsert.setInt(paramIndex++, currentJobInfo.getHostPid());
+		psInsert.setString(paramIndex++, currentJobInfo.getExtJobId());
+		psInsert.setString(paramIndex++, currentJobInfo.getJobInfo());
+		psInsert.setString(paramIndex++, currentJobInfo.getHostUser());
+		psInsert.setString(paramIndex++, currentJobInfo.getProject());
 		int count = psInsert.executeUpdate();
 		if (count == 0) {
 			throw new SQLException("No dataset inserted!");
 		}
 		long currentJobInstanceId = -1;
-		if (autoIncrementColumn && useGeneratedKeys) {
+		if (useGeneratedJID) {
+			psInsert.close();
+			currentJobInstanceId = jid.getJID();
+		} else if (autoIncrementColumn) {
 			// sometimes this does not work
 			ResultSet rsKeys = psInsert.getGeneratedKeys();
 			if (rsKeys.next()) {
@@ -374,6 +387,26 @@ public class JobInstanceHelper {
 		return id;
 	}
 	
+	private long selectJobInstanceIdSequence() throws SQLException {
+		if (sequenceExpression == null || sequenceExpression.trim().isEmpty()) {
+			throw new IllegalArgumentException("sequenceExpression cannot be null or empty");
+		}
+		StringBuilder sb = new StringBuilder();
+		sb.append("select ");
+		sb.append(sequenceExpression);
+		String sql = sb.toString();
+		debug(sql);
+		Statement seqSelect = startConnection.createStatement();
+		ResultSet rs = seqSelect.executeQuery(sql);
+		long id = 0;
+		if (rs.next()) {
+			id = rs.getLong(1);
+		}
+		rs.close();
+		seqSelect.close();
+		return id;
+	}
+
 	public void updateEntry() throws Exception {
 		checkConnection(endConnection);
 		StringBuilder sb = new StringBuilder();
@@ -458,13 +491,13 @@ public class JobInstanceHelper {
 		}
 	}
 
-	public boolean retrievePreviousInstanceData(boolean successful, boolean withOutput, boolean withInput, boolean forWorkItem) throws SQLException {
+	public boolean retrievePreviousInstanceData(boolean successful, boolean withOutput, boolean withInput, boolean forWorkItem, boolean sameRoot) throws SQLException {
 		StringBuilder sb = new StringBuilder();
 		sb.append("select * from ");
 		sb.append(getTable(false));
 		sb.append(" where ");
 		sb.append(getColumn(JOB_NAME));
-		sb.append("=? and ");
+		sb.append("= ? and ");
 		sb.append(getColumn(JOB_INSTANCE_ID));
 		sb.append(" < ?");		
 		boolean searchForWorkItem = false;
@@ -502,6 +535,12 @@ public class JobInstanceHelper {
 			sb.append(" and (");
 			sb.append(getColumn(JOB_INPUT));
 			sb.append(" > 0 )");
+		}
+		if (sameRoot) {
+			sb.append(" and ");
+			sb.append(getColumn(PROCESS_INSTANCE_ID));
+			sb.append(" = ");
+			sb.append(currentJobInfo.getProcessInstanceId());
 		}
 		sb.append(" order by ");
 		sb.append(getColumn(JOB_INSTANCE_ID));
@@ -1486,62 +1525,6 @@ public class JobInstanceHelper {
 		logDbAppender = null; // to enable in closeConnection the close of the connection
 	}
 		
-	public boolean configure(String bundleName) throws IOException {
-		// check if we have already loaded the bundle
-		Properties props = bundleCache.get(bundleName);
-		if (props == null) {
-			// load the bundle from the classpath
-			String resourceName = "/mapping_" + bundleName.toLowerCase() + ".properties";
-			InputStream in = JobInstanceHelper.class.getClass().getResourceAsStream(resourceName);
-			if (in != null) {
-				// resource exists
-				props = new Properties();
-				props.load(in);
-				bundleCache.put(bundleName, props);
-				in.close();
-			}
-		}
-		if (props != null) {
-			// if we have a bundle configure the names and attributes
-			for (Map.Entry<Object, Object> entry : props.entrySet()) {
-				String key = entry.getKey().toString();
-				String value = entry.getValue().toString();
-				if (value != null && value.trim().isEmpty() == false) {
-					if (key.startsWith("column.")) { // 
-						String originalColumnName = key.substring(7);
-						alternativeColumnNames.put(originalColumnName, value);
-					} else if (key.startsWith("table.")) {
-						String originalTableName = key.substring(6);
-						if (TABLE_JOB_INSTANCE_STATUS.equalsIgnoreCase(originalTableName)) {
-							this.tableName = value;
-						} else if (JobInstanceContextHelper.JOB_INSTANCE_CONTEXT.equalsIgnoreCase(originalTableName)) {
-							this.contextTableName = value;
-						} else if (JobInstanceCounterHelper.JOB_INSTANCE_COUNTERS.equalsIgnoreCase(originalTableName)) {
-							ch.setTableName(value);
-						} else if (JobInstanceLogDBAppender.JOB_INSTANCE_LOGS.equalsIgnoreCase(originalTableName)) {
-							logTableName = value;
-						}
-					} else if (key.equalsIgnoreCase("maxMessageLength")) {
-						try {
-							int length = Integer.valueOf(value);
-							setMaxMessageLength(length);
-						} catch (Exception e) {
-							error("Attrubute " + key + " expects an integer value", null);
-						}
-					} else if (key.equalsIgnoreCase("autoIncrement")) {
-						setAutoIncrementColumn(Boolean.parseBoolean(value));
-					} else if (key.equalsIgnoreCase("sequenceExpression")) {
-						setSequenceExpression(value);
-					}
-				}
-			}
-			ch.setAlternativeColumnNames(alternativeColumnNames);
-			return true;
-		} else {
-			return false;
-		}
-	}
-
 	public Map<String, String> getAlternativeColumnNames() {
 		return alternativeColumnNames;
 	}
@@ -1948,11 +1931,11 @@ public class JobInstanceHelper {
 	}
 
 	public boolean isUseGeneratedKeys() {
-		return useGeneratedKeys;
+		return useGeneratedJID;
 	}
 
 	public void setUseGeneratedKeys(boolean useGeneratedKeys) {
-		this.useGeneratedKeys = useGeneratedKeys;
+		this.useGeneratedJID = useGeneratedKeys;
 	}
 	
 	public static boolean isDebug() {
