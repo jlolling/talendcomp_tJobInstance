@@ -1,7 +1,7 @@
 --drop table dwh_manage.job_instance_status;
 create table dwh_manage.job_instance_status (
    job_instance_id bigint not null,
-   process_instance_id integer,
+   process_instance_id bigint,
    process_instance_name varchar(255),
    job_name varchar(255) not null,
    job_project varchar(128),
