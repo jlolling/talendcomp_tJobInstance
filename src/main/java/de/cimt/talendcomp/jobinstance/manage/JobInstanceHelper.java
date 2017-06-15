@@ -109,7 +109,7 @@ public class JobInstanceHelper {
 	private Map<String, Integer> scannerCounterMap = new HashMap<String, Integer>();
 	private boolean useViewToReadStatus = false;
 	private boolean useGeneratedJID = false;
-	private JID jid = new JID(); 
+	private static JID jid = new JID();
 	
 	public JobInstanceHelper() {
 		currentJobInfo = new JobInfo();
