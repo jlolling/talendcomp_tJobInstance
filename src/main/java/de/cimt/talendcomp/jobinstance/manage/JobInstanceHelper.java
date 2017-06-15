@@ -381,7 +381,7 @@ public class JobInstanceHelper {
 		psSelect.close();
 		return id;
 	}
-	
+/*
 	private long selectJobInstanceIdSequence() throws SQLException {
 		if (sequenceExpression == null || sequenceExpression.trim().isEmpty()) {
 			throw new IllegalArgumentException("sequenceExpression cannot be null or empty");
@@ -401,7 +401,7 @@ public class JobInstanceHelper {
 		seqSelect.close();
 		return id;
 	}
-
+*/
 	public void updateEntry() throws Exception {
 		checkConnection(endConnection);
 		StringBuilder sb = new StringBuilder();

@@ -15,6 +15,7 @@ public class JID {
 	private long lastMillisecond = 0;
 	private long jid;
 	private int sequenceValue = 1;
+	private final long TIME_OFFSET = 946681200000l; // 2000-01-01 00:00:00
 	
 	public static final long mask51 =  Long.parseLong("111111111111111111111111111111111111111111111111111", 2);
 	public static final int mask12 = Integer.parseInt("111111111111", 2);
@@ -37,9 +38,9 @@ public class JID {
 	
 	private long retrieveTimeInMillis() {
 		if (startDate != null) {
-			return startDate;
+			return startDate - TIME_OFFSET;
 		} else {
-			return System.currentTimeMillis();
+			return System.currentTimeMillis() - TIME_OFFSET;
 		}
 	}
 
@@ -79,6 +80,7 @@ public class JID {
 		}
 		if (sequenceValue >= mask12) {
 			Thread.sleep(1);
+			// rerun getting the current time
 			currentMillisecond = retrieveTimeInMillis();
 			sequenceValue = 1;
 		}
@@ -86,7 +88,7 @@ public class JID {
 	}
 
 	public long getCurrentMillisecond() {
-		return currentMillisecond;
+		return currentMillisecond + TIME_OFFSET;
 	}
 
 	public int getSequenceValue() {
