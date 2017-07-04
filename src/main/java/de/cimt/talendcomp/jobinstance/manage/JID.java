@@ -20,7 +20,7 @@ public class JID {
 	public static final long mask51 =  Long.parseLong("111111111111111111111111111111111111111111111111111", 2);
 	public static final int mask12 = Integer.parseInt("111111111111", 2);
 	
-	public long createJID() throws Exception {
+	public synchronized long createJID() throws Exception {
 		currentMillisecond = retrieveTimeInMillis();
 		// 33  bit mask
 		sequenceValue = setupSequenceWithinMilliSec();

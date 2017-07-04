@@ -15,6 +15,7 @@
  */
 package de.cimt.talendcomp.jobinstance.log4j;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -54,7 +55,15 @@ public class TalendJobFileAppender extends FileAppender {
 		if (file == null || file.trim().isEmpty()) {
 			throw new IllegalArgumentException("file cannot be null or empty");
 		}
-		super.setFile(replacePlaceholders(file));
+		String logFilePath = replacePlaceholders(file);
+		File dir = new File(logFilePath).getParentFile();
+		if (dir.exists() == false) {
+			dir.mkdirs();
+		}
+		if (dir.exists() == false) {
+			throw new RuntimeException("Cannot create log dir: " + dir.getAbsolutePath());
+		}
+		super.setFile(logFilePath);
 		setBufferedIO(false);
 		setImmediateFlush(true);
 		setName(getFile());

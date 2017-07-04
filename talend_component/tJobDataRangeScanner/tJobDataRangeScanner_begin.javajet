@@ -17,3 +17,5 @@
 		<%=cid%>.incrementFlowCount("<%=cid%>");
 		<%=cid%>.resetNbLine("<%=cid%>");
 	}
+	globalMap.put("<%=cid%>_HAS_VALUES", false);
+	

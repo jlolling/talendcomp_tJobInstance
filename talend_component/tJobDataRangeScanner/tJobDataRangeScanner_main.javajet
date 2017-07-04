@@ -15,7 +15,8 @@
 	if (<%=cid%> != null) {
     	// increment for current flow
 	 	<%=cid%>.incrementNbLine("<%=cid%>");
-<%    IConnection conn = null;
+<%	
+	IConnection conn = null;
     if (node.getIncomingConnections().size() > 0) {
     	conn = node.getIncomingConnections().get(0);
     }
@@ -32,6 +33,8 @@
 			globalMap.put("<%=cid%>_ERROR_MESSAGE","check column <%=columnName%> for time range failed:" + e.getMessage());
 			throw e; 
 		}
+		globalMap.put("<%=cid%>_CURR_TIME_RANGE_START", <%=cid%>.getTimeRangeStart());
+		globalMap.put("<%=cid%>_CURR_TIME_RANGE_END", <%=cid%>.getTimeRangeEnd());
 <%			} else if ("value_range".equals(rangeTarget)) { %>
 		try {
 			<%=cid%>.checkValueRange(<%=conn.getName()%>.<%=columnName%>);
@@ -39,8 +42,11 @@
 			globalMap.put("<%=cid%>_ERROR_MESSAGE","check column <%=columnName%> for value range failed:" + e.getMessage());
 			throw e; 
 		}
+		globalMap.put("<%=cid%>_CURR_VALUE_RANGE_START", <%=cid%>.getValueRangeStart());
+		globalMap.put("<%=cid%>_CURR_VALUE_RANGE_END", <%=cid%>.getValueRangeEnd());
 <%			}
 		}
 	}
 %>
+		globalMap.put("<%=cid%>_HAS_VALUES", true);
 	 }
