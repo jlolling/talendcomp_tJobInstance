@@ -12,7 +12,6 @@ import de.cimt.talendcomp.jobinstance.manage.JID;
 public class TestJID {
 	
 	private long lastId = 0;
-	private JID jid = new JID();
 
 	@Test
 	public void testCreateJIDInBulk() throws Exception {
@@ -37,11 +36,12 @@ public class TestJID {
 	public void testParallel() throws Exception {
 		List<Thread> listProcesses = new ArrayList<Thread>();
 		for (int i = 0; i < 100; i++) {
+			final int hi = i;
 			Thread process = new Thread() {
 				@Override
 				public void run() {
 					try {
-						runDummyProcess();
+						runDummyProcess((byte) hi);
 					} catch (Exception e) {
 						throw new RuntimeException("Thread: " + Thread.currentThread().getName() + " failed: " + e.getMessage());
 					}
@@ -65,11 +65,11 @@ public class TestJID {
 		assertTrue(true);
 	}
 	
-	@Test
-	public void runDummyProcess() throws Exception {
+	private void runDummyProcess(byte hostIndex) throws Exception {
 		System.out.println("Thread: " + Thread.currentThread().getName() + " START");
 		JID jid = new JID();
-		for (int i = 0; i < 10; i++) {
+		jid.setHostIndex(hostIndex);
+		for (int i = 0; i < 1000; i++) {
 			long id = jid.createJID();
 			final long locLastId = lastId;
 			if (id == locLastId) {

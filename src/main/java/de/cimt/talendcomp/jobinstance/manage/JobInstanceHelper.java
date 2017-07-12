@@ -36,11 +36,15 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+
 import org.apache.log4j.Appender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 
+import de.cimt.talendcomp.jobinstance.jmx.TalendJobMBean;
 import de.cimt.talendcomp.jobinstance.log4j.JobInstanceLogDBAppender;
 import de.cimt.talendcomp.jobinstance.process.ProcessHelper;
 
@@ -381,27 +385,7 @@ public class JobInstanceHelper {
 		psSelect.close();
 		return id;
 	}
-/*
-	private long selectJobInstanceIdSequence() throws SQLException {
-		if (sequenceExpression == null || sequenceExpression.trim().isEmpty()) {
-			throw new IllegalArgumentException("sequenceExpression cannot be null or empty");
-		}
-		StringBuilder sb = new StringBuilder();
-		sb.append("select ");
-		sb.append(sequenceExpression);
-		String sql = sb.toString();
-		debug(sql);
-		Statement seqSelect = startConnection.createStatement();
-		ResultSet rs = seqSelect.executeQuery(sql);
-		long id = 0;
-		if (rs.next()) {
-			id = rs.getLong(1);
-		}
-		rs.close();
-		seqSelect.close();
-		return id;
-	}
-*/
+
 	public void updateEntry() throws Exception {
 		checkConnection(endConnection);
 		StringBuilder sb = new StringBuilder();
@@ -1967,6 +1951,24 @@ public class JobInstanceHelper {
 		} else {
 			System.err.println("ERROR:" + message);
 			t.printStackTrace(System.err);
+		}
+	}
+	
+	public void setHostIndex(Integer hostIndex) {
+		if (hostIndex != null) {
+			if (hostIndex > 255 || hostIndex < 0) {
+				throw new IllegalArgumentException("Host index must be within 0-255!");
+			} else {
+				jid.setHostIndex((byte) hostIndex.intValue());
+			}
+		}
+	}
+	
+	public void registerTalendJobMBean(TalendJobMBean mbean) throws Exception {
+		MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+		ObjectName beanName = new ObjectName(currentJobInfo.getProject() + "." + currentJobInfo.getName() + ":type="+TalendJobMBean.class.getSimpleName());
+		if (mbs.isRegistered(beanName) == false) {
+			mbs.registerMBean(mbean, beanName);
 		}
 	}
 

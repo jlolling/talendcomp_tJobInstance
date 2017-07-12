@@ -88,6 +88,8 @@
     boolean sysoutJobInstanceId = "true".equals(ElementParameterParser.getValue(node, "__SYSOUT_JOB_INSTANCE_ID__"));
     String sysoutJobInstanceIdExpression = ElementParameterParser.getValue(node, "__SYSOUT_JOB_INSTANCE_ID_EXPRESSION__");
     boolean useGeneratedJID = "true".equals(ElementParameterParser.getValue(node, "__USE_GENERATED_JID__"));
+    boolean activateJMX = "true".equals(ElementParameterParser.getValue(node, "__ACTIVATE_JMX__"));
+	boolean isLog4jEnabled = "true".equals(ElementParameterParser.getValue(node.getProcess(), "__LOG4J_ACTIVATE__"));
 %>
 <%  if (setUTCTimeZone) { %>
     if ("UTC".equals(java.util.TimeZone.getDefault().getID()) == false) {
@@ -441,7 +443,7 @@
 		lh.setRootPid(rootPid);
 		lh.setFatherPid(fatherPid);
 <%  	if (addContextToMDC) {
-    	List<IContextParameter> listCtxParams = node.getProcess().getContextManager().getDefaultContext().getContextParameterList();
+    		List<IContextParameter> listCtxParams = node.getProcess().getContextManager().getDefaultContext().getContextParameterList();
     		for (IContextParameter ctxParam : listCtxParams) { %>
 <%          	if (ctxParam.getName().toLowerCase().contains("passw") == false && "id_Password".equals(ctxParam.getType()) == false) { %>
 		lh.addContextVar("<%=ctxParam.getName()%>", context.<%=ctxParam.getName()%>);
@@ -564,6 +566,105 @@
 <%  if (memoryMonitoring) { %>
 	 de.cimt.talendcomp.jobinstance.manage.JobInstanceHelper.startMemoryMonitoring();
 <%  } %>
-
-
+<%	if (activateJMX) { %>
 	
+	class TalendJobImpl implements de.cimt.talendcomp.jobinstance.jmx.TalendJobMBean {
+	
+		@Override
+		public Integer getCounter(String component, String counterName) throws java.io.IOException {
+			return (Integer) globalMap.get(component + "_" + counterName);
+		}
+	
+		@Override
+		public String getGlobalMapVars() throws java.io.IOException {
+			StringBuilder vars = new StringBuilder();
+			for (java.util.Map.Entry<String, Object> entry : globalMap.entrySet()) {
+				vars.append(entry.getKey() + "=");
+				if (entry.getValue() instanceof String) {
+					vars.append((String) entry.getValue());
+					vars.append("\n");
+				} else if (entry.getValue() instanceof Number) {
+					vars.append((Number) entry.getValue());
+					vars.append("\n");
+				} else if (entry.getValue() != null) {
+					vars.append(entry.getValue().getClass().getName());
+					vars.append("\n");
+				}
+			}
+			return vars.toString();
+		}
+	
+		@Override
+		public String getContextVars() throws java.io.IOException {
+			StringBuilder sb = new StringBuilder();
+<%    		List<IContextParameter> listCtxParams = node.getProcess().getContextManager().getDefaultContext().getContextParameterList();
+    		for (IContextParameter ctxParam : listCtxParams) { %>
+<%          	if (ctxParam.getName().toLowerCase().contains("passw") == false && "id_Password".equals(ctxParam.getType()) == false) { %>
+			sb.append("<%=ctxParam.getName()%>=");
+			sb.append(context.<%=ctxParam.getName()%>);
+			sb.append("\n");
+<%          	} %>
+<%  		} // for %>
+			return sb.toString();
+		}
+	
+		@Override
+		public String getLogLevel() throws java.io.IOException {
+<%	if (isLog4jEnabled) { %>
+			if (log != null) {
+				return log.getLevel().toString();
+			}
+<%	} %>
+			return null;
+		}
+	
+		@Override
+		public void setLogLevel(String level) throws java.io.IOException {
+<%	if (isLog4jEnabled) { %>
+			if (log != null && level != null) {
+				if ("info".equalsIgnoreCase(level)) {
+					log.setLevel(org.apache.log4j.Level.INFO);
+				} else if ("debug".equalsIgnoreCase(level)) {
+					log.setLevel(org.apache.log4j.Level.DEBUG);
+				} else if ("warn".equalsIgnoreCase(level)) {
+					log.setLevel(org.apache.log4j.Level.WARN);
+				} else if ("error".equalsIgnoreCase(level)) {
+					log.setLevel(org.apache.log4j.Level.ERROR);
+				}
+			}
+<%	} %>
+		}
+	
+		@Override
+		public long getJobInstanceId() throws java.io.IOException {
+			return (Long) globalMap.get("<%=cid%>_JOB_INSTANCE_ID");
+		}
+	
+		@Override
+		public String getTalendPid() throws java.io.IOException {
+			return pid;
+		}
+	
+		@Override
+		public String getErrorMessages() throws java.io.IOException {
+			StringBuilder message = new StringBuilder();
+			for (java.util.Map.Entry<String, Object> entry : globalMap.entrySet()) {
+				String key = entry.getKey();
+				if (key.endsWith("ERROR_MESSAGE")) {
+					if (entry.getValue() instanceof String) {
+						message.append((String) entry.getValue());
+						message.append("\n");
+						break; 
+					}
+				}
+			}
+			if (message.length() > 0) {
+				return message.toString();
+			} else {
+				return null;
+			}
+		}
+	
+	}
+	<%=cid%>.registerTalendJobMBean(new TalendJobImpl());
+<%	} %>

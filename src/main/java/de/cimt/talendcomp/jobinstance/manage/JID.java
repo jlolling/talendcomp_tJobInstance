@@ -15,18 +15,22 @@ public class JID {
 	private long lastMillisecond = 0;
 	private long jid;
 	private int sequenceValue = 1;
+	private byte hostIndex = 0;
 	private final long TIME_OFFSET = 946681200000l; // 2000-01-01 00:00:00
 	
-	public static final long mask51 =  Long.parseLong("111111111111111111111111111111111111111111111111111", 2);
-	public static final int mask12 = Integer.parseInt("111111111111", 2);
+	public static final long mask47 =  Long.parseLong("11111111111111111111111111111111111111111111111", 2);
+	public static final int mask8 = Integer.parseInt("11111111", 2);
 	
 	public synchronized long createJID() throws Exception {
 		currentMillisecond = retrieveTimeInMillis();
 		// 33  bit mask
 		sequenceValue = setupSequenceWithinMilliSec();
-		sequenceValue = sequenceValue & mask12;
-		jid = currentMillisecond & mask51;
-		jid = jid << 12;
+		sequenceValue = sequenceValue & mask8;
+		jid = currentMillisecond & mask47;
+		jid = jid << 16;
+		int hi = hostIndex;
+		hi = hi << 8;
+		jid = jid | hi;
 		jid = jid | sequenceValue;
 		lastMillisecond = currentMillisecond;
 		return jid;
@@ -78,7 +82,7 @@ public class JID {
 		} else {
 			sequenceValue = sequenceValue + 1;
 		}
-		if (sequenceValue >= mask12) {
+		if (sequenceValue >= mask8) {
 			Thread.sleep(1);
 			// rerun getting the current time
 			currentMillisecond = retrieveTimeInMillis();
@@ -93,6 +97,14 @@ public class JID {
 
 	public int getSequenceValue() {
 		return sequenceValue;
+	}
+
+	public byte getHostIndex() {
+		return hostIndex;
+	}
+
+	public void setHostIndex(byte hostIndex) {
+		this.hostIndex = hostIndex;
 	}
 
 }
