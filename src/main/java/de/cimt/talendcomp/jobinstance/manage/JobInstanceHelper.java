@@ -44,7 +44,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 
-import de.cimt.talendcomp.jobinstance.jmx.TalendJobMBean;
+import de.cimt.talendcomp.jobinstance.jmx.TalendJobInfoMXBean;
 import de.cimt.talendcomp.jobinstance.log4j.JobInstanceLogDBAppender;
 import de.cimt.talendcomp.jobinstance.process.ProcessHelper;
 
@@ -1964,9 +1964,9 @@ public class JobInstanceHelper {
 		}
 	}
 	
-	public void registerTalendJobMBean(TalendJobMBean mbean) throws Exception {
+	public void registerTalendJobMBean(TalendJobInfoMXBean mbean) throws Exception {
 		MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-		ObjectName beanName = new ObjectName(currentJobInfo.getProject() + "." + currentJobInfo.getName() + ":type="+TalendJobMBean.class.getSimpleName());
+		ObjectName beanName = new ObjectName(currentJobInfo.getProject() + "." + currentJobInfo.getName() + ":type="+TalendJobInfoMXBean.class.getSimpleName());
 		if (mbs.isRegistered(beanName) == false) {
 			mbs.registerMBean(mbean, beanName);
 		}

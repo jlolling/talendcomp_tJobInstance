@@ -2,7 +2,7 @@ package de.cimt.talendcomp.jobinstance.jmx;
 
 import java.io.IOException;
 
-public interface TalendJobMBean {
+public interface TalendJobInfoMXBean {
 	
 	Integer getCounter(String component, String counterName) throws IOException;
 	

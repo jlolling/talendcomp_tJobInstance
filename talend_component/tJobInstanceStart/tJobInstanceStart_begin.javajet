@@ -568,7 +568,7 @@
 <%  } %>
 <%	if (activateJMX) { %>
 	
-	class TalendJobImpl implements de.cimt.talendcomp.jobinstance.jmx.TalendJobMBean {
+	class TalendJobInfo implements de.cimt.talendcomp.jobinstance.jmx.TalendJobInfoMXBean {
 	
 		@Override
 		public Integer getCounter(String component, String counterName) throws java.io.IOException {
@@ -666,5 +666,5 @@
 		}
 	
 	}
-	<%=cid%>.registerTalendJobMBean(new TalendJobImpl());
+	<%=cid%>.registerTalendJobMBean(new TalendJobInfo());
 <%	} %>
