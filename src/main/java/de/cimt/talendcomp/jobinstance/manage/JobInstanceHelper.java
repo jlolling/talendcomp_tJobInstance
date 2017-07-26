@@ -147,6 +147,7 @@ public class JobInstanceHelper {
 	}
 	
 	public long createEntry() throws Exception {
+		checkConnection(startConnection);
 		long id = 0;
 		if (currentJobInfo.isRootJob() == false && currentJobInfo.getProcessInstanceId() == 0) {
 			id = selectJobInstanceId(startConnection, currentJobInfo.getRootJobGuid());
@@ -216,10 +217,6 @@ public class JobInstanceHelper {
 		}
 		// parameter 1-19
 		sb.append("?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-		boolean wasAutoCommit = startConnection.getAutoCommit();
-		if (wasAutoCommit == false) {
-			startConnection.setAutoCommit(true);
-		}
 		String sql = sb.toString();
 		debug(sql);
 		PreparedStatement psInsert = startConnection.prepareStatement(sql);
@@ -308,9 +305,6 @@ public class JobInstanceHelper {
 			currentJobInstanceId = selectJobInstanceId(startConnection, currentJobInfo.getGuid());
 		}
 		currentJobInfo.setJobInstanceId(currentJobInstanceId);
-		if (wasAutoCommit == false) {
-			startConnection.setAutoCommit(false);
-		}
 		if (currentJobInfo.getJobInstanceId() == -1) {
 			throw new SQLException("No job_instances entry found for jobGuid=" + currentJobInfo.getGuid());
 		}
@@ -1564,6 +1558,7 @@ public class JobInstanceHelper {
 		if (countProcesses == 0) {
 			throw new Exception("No running OS processes detected, this is not a valid state, abort check!");
 		}
+		debug("Found " + countProcesses + " running processes on the server: " + hostName);
 		if (lastSystemStart != null) {
 			final StringBuilder updateInstanceLastStart = new StringBuilder();
 			updateInstanceLastStart.append("update ");
@@ -1627,6 +1622,7 @@ public class JobInstanceHelper {
 				diedProcessInstances.add(pi);
 			}
 		}
+		debug("Found " + runningProcessInstancesList.size() + " probably running Talend jobs and " + diedProcessInstances.size() + " dead job instances");
 		final List<JobInfo> diedJobInstanceIdList = new ArrayList<JobInfo>();
 		final StringBuilder updateInstance = new StringBuilder();
 		updateInstance.append("update ");
@@ -1700,6 +1696,9 @@ public class JobInstanceHelper {
 	private int maxCountCheckAttempts = 3;
 	
 	private void checkConnection(Connection conn) throws Exception {
+		if (conn.getAutoCommit() == false) {
+			conn.setAutoCommit(true);
+		}
 		checkConnection(conn, 0);
 	}
 	
