@@ -17,8 +17,6 @@
 	boolean closeConnection = useDataSource || "true".equals(ElementParameterParser.getValue(node, "__CLOSE_CONNECTION__"));
     String tableName = ElementParameterParser.getValue(node, "__TABLE_NAME__");
     String schemaName = ElementParameterParser.getValue(node, "__SCHEMA_NAME__");
-	boolean useProjectSpecificNames = "true".equals(ElementParameterParser.getValue(node, "__USE_PROJECT_SPECIFIC_NAMES__"));
-	String bundleName = ElementParameterParser.getValue(node, "__PROJECT_SPECIFIC_NAME_MAP_RESOURCE__");
     IConnection conn = null;
     if (node.getOutgoingConnections().size() > 0) {
     	conn = node.getOutgoingConnections().get(0);
@@ -70,11 +68,6 @@
 		}
 	}
 <% } %>
-<% if (useProjectSpecificNames) { %>
-	if (<%=cid%>.configure(<%=bundleName%>) == false) {
-		throw new Exception("Configuration " + <%=bundleName%> + " could not found!");
-	}
-<% } %>	
     // set job data
 	globalMap.put("<%=cid%>", <%=cid%>);
 	globalMap.put("<%=cid%>_HOST_NAME", <%=cid%>.getHostName());
