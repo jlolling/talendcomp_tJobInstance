@@ -6,9 +6,9 @@ public interface TalendJobInfoMXBean {
 	
 	Integer getCounter(String component, String counterName) throws IOException;
 	
-	String getGlobalMapVars() throws IOException;
+	String[] getGlobalMapVars() throws IOException;
 	
-	String getContextVars() throws IOException;
+	String[] getContextVars() throws IOException;
 
 	String getLogLevel() throws IOException;
 	
@@ -18,6 +18,6 @@ public interface TalendJobInfoMXBean {
 	
 	String getTalendPid() throws IOException;
 	
-	String getErrorMessages() throws IOException;
+	String[] getErrorMessages() throws IOException;
 
 }

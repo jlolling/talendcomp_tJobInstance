@@ -576,36 +576,36 @@
 		}
 	
 		@Override
-		public String getGlobalMapVars() throws java.io.IOException {
-			StringBuilder vars = new StringBuilder();
+		public String[] getGlobalMapVars() throws java.io.IOException {
+			String[] vars = new String[globalMap.size()];
+			int i = 0;
 			for (java.util.Map.Entry<String, Object> entry : globalMap.entrySet()) {
-				vars.append(entry.getKey() + "=");
+				String var = entry.getKey() + "=";
 				if (entry.getValue() instanceof String) {
-					vars.append((String) entry.getValue());
-					vars.append("\n");
+					var = var + entry.getValue();
 				} else if (entry.getValue() instanceof Number) {
-					vars.append((Number) entry.getValue());
-					vars.append("\n");
+					var = var + entry.getValue();
 				} else if (entry.getValue() != null) {
-					vars.append(entry.getValue().getClass().getName());
-					vars.append("\n");
+					var = var + entry.getValue().getClass().getName();
 				}
+				vars[i++] = var;
 			}
-			return vars.toString();
+			java.util.Arrays.sort(vars);
+			return vars;
 		}
 	
 		@Override
-		public String getContextVars() throws java.io.IOException {
-			StringBuilder sb = new StringBuilder();
-<%    		List<IContextParameter> listCtxParams = node.getProcess().getContextManager().getDefaultContext().getContextParameterList();
-    		for (IContextParameter ctxParam : listCtxParams) { %>
+		public String[] getContextVars() throws java.io.IOException {
+<%    		List<IContextParameter> listCtxParams = node.getProcess().getContextManager().getDefaultContext().getContextParameterList(); %>
+			java.util.List<String> list = new java.util.ArrayList<String>();
+<%    		for (IContextParameter ctxParam : listCtxParams) { %>
 <%          	if (ctxParam.getName().toLowerCase().contains("passw") == false && "id_Password".equals(ctxParam.getType()) == false) { %>
-			sb.append("<%=ctxParam.getName()%>=");
-			sb.append(context.<%=ctxParam.getName()%>);
-			sb.append("\n");
+			list.add("<%=ctxParam.getName()%>=" + context.<%=ctxParam.getName()%>); 
 <%          	} %>
 <%  		} // for %>
-			return sb.toString();
+			String[] arr = list.toArray(new String[list.size()]);
+			java.util.Arrays.sort(arr); 
+			return arr;
 		}
 	
 		@Override
@@ -646,23 +646,19 @@
 		}
 	
 		@Override
-		public String getErrorMessages() throws java.io.IOException {
-			StringBuilder message = new StringBuilder();
+		public String[] getErrorMessages() throws java.io.IOException {
+			java.util.List<String> list = new java.util.ArrayList<String>();
 			for (java.util.Map.Entry<String, Object> entry : globalMap.entrySet()) {
 				String key = entry.getKey();
 				if (key.endsWith("ERROR_MESSAGE")) {
 					if (entry.getValue() instanceof String) {
-						message.append((String) entry.getValue());
-						message.append("\n");
-						break; 
+						list.add((String) entry.getValue());
 					}
 				}
 			}
-			if (message.length() > 0) {
-				return message.toString();
-			} else {
-				return null;
-			}
+			String[] arr = list.toArray(new String[list.size()]);
+			java.util.Arrays.sort(arr); 
+			return arr;
 		}
 	
 	}
