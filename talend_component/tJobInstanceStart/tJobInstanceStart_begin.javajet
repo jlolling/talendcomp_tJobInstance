@@ -554,17 +554,17 @@
 		public void addLog(String type, String partName, String parentPart, String threadId, String logPriority, String errorCode,
 	            String message, String stackTrace, String dynamicData) {
 			if ("CHECKPOINT".equals(type) == false && "NODE".equals(type) == false && "JOB_STARTED".equals(type) == false && "JOB_ENDED".equals(type) == false) {
-	        try {
-		        super.addLog(type, partName, parentPart, threadId, logPriority, errorCode, message, stackTrace, dynamicData);
-	        } catch (Throwable t) {}
+	        	try {
+		        	super.addLog(type, partName, parentPart, threadId, logPriority, errorCode, message, stackTrace, dynamicData);
+	        	} catch (Throwable t) {}
 			}
 	    }
 		
-	 }
-	 resumeUtil = new ResumeUtilRed();
+	}
+	resumeUtil = new ResumeUtilRed();
 <%  } %>
 <%  if (memoryMonitoring) { %>
-	 de.cimt.talendcomp.jobinstance.manage.JobInstanceHelper.startMemoryMonitoring();
+	de.cimt.talendcomp.jobinstance.manage.JobInstanceHelper.startMemoryMonitoring();
 <%  } %>
 <%	if (activateJMX) { %>
 	
