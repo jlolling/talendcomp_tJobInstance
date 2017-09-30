@@ -148,9 +148,8 @@ public class JobInstanceHelper {
 	
 	public long createEntry() throws Exception {
 		checkConnection(startConnection);
-		long id = 0;
 		if (currentJobInfo.isRootJob() == false && currentJobInfo.getProcessInstanceId() == 0) {
-			id = selectJobInstanceId(startConnection, currentJobInfo.getRootJobGuid());
+			long id = selectJobInstanceId(startConnection, currentJobInfo.getRootJobGuid());
 			if (id > 0) {
 				currentJobInfo.setProcessInstanceId(id);
 			} else if (currentJobInfo.getParentJobGuid() != null && currentJobInfo.getParentJobGuid().isEmpty() == false) {
@@ -219,7 +218,7 @@ public class JobInstanceHelper {
 		sb.append("?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
 		String sql = sb.toString();
 		debug(sql);
-		PreparedStatement psInsert = startConnection.prepareStatement(sql);
+		PreparedStatement psInsert = startConnection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 		// start set parameters
 		if (useGeneratedJID) {
 			long genJid = jid.createJID();
