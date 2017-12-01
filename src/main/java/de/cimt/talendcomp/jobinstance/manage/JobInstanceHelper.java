@@ -919,6 +919,10 @@ public class JobInstanceHelper {
 		}
 	}
 
+	public int getCountOutput() {
+		return currentJobInfo.getCountOutput();
+	}
+
 	public void addCountOutput(Number out, String name) {
 		currentJobInfo.addCountOutput(out);
 		if (isNotEmpty(name)) {

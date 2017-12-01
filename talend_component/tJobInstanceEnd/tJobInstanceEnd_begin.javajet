@@ -168,6 +168,11 @@
         	}
 		}
 	} %>
+	globalMap.put("<%=cid%>_INPUT_COUNTER", <%=cid%>.getCountInput());
+	globalMap.put("<%=cid%>_OUTPUT_COUNTER", <%=cid%>.getCountOutput());
+	globalMap.put("<%=cid%>_UPDATE_COUNTER", <%=cid%>.getCountInput());
+	globalMap.put("<%=cid%>_REJECT_COUNTER", <%=cid%>.getCountRejected());
+	globalMap.put("<%=cid%>_DELETE_COUNTER", <%=cid%>.getCountDeleted());
 <%  if (saveContextAtEnd) { %>
 	{   // saving context at the end
 		// configure context helper
