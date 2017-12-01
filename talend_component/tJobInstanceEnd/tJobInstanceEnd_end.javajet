@@ -12,6 +12,9 @@
     boolean cleanupByWorkItem = "true".equals(ElementParameterParser.getValue(node, "__CLEANUP_BY_WORKITEM__"));
     boolean closeConnection = "true".equals(ElementParameterParser.getValue(node, "__CLOSE_CONNECTION__"));
     boolean enableOkHashCheck = "true".equals(ElementParameterParser.getValue(node, "__CHECK_ALL_COMPONENTS_FINISHED__"));
+    String startComp = ElementParameterParser.getValue(node, "__JOB_START_COMP__");
+	INode startCompNode = NodeUtil.getNodeByUniqueName(node.getProcess(), startComp);
+    boolean activateJMX = "true".equals(ElementParameterParser.getValue(startCompNode, "__ACTIVATE_JMX__"));
 %>
 	// extract return codes and messages from globalMap
 	de.cimt.talendcomp.jobinstance.manage.JobExit exit = de.cimt.talendcomp.jobinstance.manage.JobInstanceHelper.retrieveJobReturn(globalMap, errorCode); 
@@ -73,5 +76,7 @@
 			throw e;
 		}
 	} // if (<%=cid%> != null)
-	
+<%	if (activateJMX) { %>
+	<%=cid%>.unregisterTalendJobMBean();
+<%	} %>
 	

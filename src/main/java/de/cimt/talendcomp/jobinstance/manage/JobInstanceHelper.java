@@ -1966,11 +1966,24 @@ public class JobInstanceHelper {
 		}
 	}
 	
+	private ObjectName beanName = null;
+	
 	public void registerTalendJobMBean(TalendJobInfoMXBean mbean) throws Exception {
 		MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-		ObjectName beanName = new ObjectName(currentJobInfo.getProject() + "." + currentJobInfo.getName() + ":type="+TalendJobInfoMXBean.class.getSimpleName());
+		beanName = new ObjectName(currentJobInfo.getProject() + "." + currentJobInfo.getName() + ":type="+TalendJobInfoMXBean.class.getSimpleName());
 		if (mbs.isRegistered(beanName) == false) {
 			mbs.registerMBean(mbean, beanName);
+		}
+	}
+	
+	public void unregisterTalendJobMBean() {
+		if (beanName != null) {
+			MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+			try {
+				mbs.unregisterMBean(beanName);
+			} catch (Exception e) {
+				System.err.println("Unable to unregister mbean: " + e.getMessage());
+			}
 		}
 	}
 
