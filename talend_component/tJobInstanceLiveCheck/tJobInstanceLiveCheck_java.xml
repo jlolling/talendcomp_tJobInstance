@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <COMPONENT> 
-  <HEADER AUTHOR="cimt AG" COMPATIBILITY="ALL" DATA_AUTO_PROPAGATE="true" PLATEFORM="ALL" RELEASE_DATE="20171201" SERIAL="" STARTABLE="true" STATUS="PROD" VERSION="6.4"> 
+  <HEADER AUTHOR="cimt AG" COMPATIBILITY="ALL" DATA_AUTO_PROPAGATE="true" PLATEFORM="ALL" RELEASE_DATE="20171204" SERIAL="" STARTABLE="true" STATUS="PROD" VERSION="6.5"> 
     <SIGNATURE/> 
   </HEADER>  
   <FAMILIES> 
@@ -56,14 +56,14 @@
     <PARAMETER FIELD="TEXT" NAME="TABLE_NAME" NUM_ROW="20" SHOW_IF="USE_PROJECT_SPECIFIC_NAMES == 'false'"> 
       <DEFAULT/> 
     </PARAMETER>  
-    <PARAMETER NAME="RELEASE_LABEL_20171201" FIELD="LABEL" COLOR="0;0;0" NUM_ROW="900">
-      <DEFAULT>Release: 6.4 build at: 20171201</DEFAULT>
+    <PARAMETER NAME="RELEASE_LABEL_20171204" FIELD="LABEL" COLOR="0;0;0" NUM_ROW="900">
+      <DEFAULT>Release: 6.5 build at: 20171204</DEFAULT>
     </PARAMETER>
   </ADVANCED_PARAMETERS>  
   <CODEGENERATION> 
     <IMPORTS> 
       <!-- the name part "user" must match to the value in parameter PROJECT_SPECIFIC_NAME_MAP_RESOURCE			<IMPORT NAME="custom_mapping_test" MODULE="mapping_user.properties.jar" REQUIRED="true" />			 -->  
-      <IMPORT NAME="cimt-talendcomp-jobinstance" MODULE="cimt-talendcomp-jobinstance-6.4.jar" REQUIRED="true"/>
+      <IMPORT NAME="cimt-talendcomp-jobinstance" MODULE="cimt-talendcomp-jobinstance-6.5.jar" REQUIRED="true"/>
     </IMPORTS> 
   </CODEGENERATION>  
   <RETURNS> 

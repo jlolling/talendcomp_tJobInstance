@@ -218,7 +218,8 @@ public class JobInstanceHelper {
 		sb.append("?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
 		String sql = sb.toString();
 		debug(sql);
-		PreparedStatement psInsert = startConnection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+		PreparedStatement psInsert = startConnection.prepareStatement(sql, 
+				(autoIncrementColumn ? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS));
 		// start set parameters
 		if (useGeneratedJID) {
 			long genJid = jid.createJID();
