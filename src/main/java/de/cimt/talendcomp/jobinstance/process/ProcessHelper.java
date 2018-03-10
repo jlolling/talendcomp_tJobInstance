@@ -66,14 +66,14 @@ public class ProcessHelper {
 	
 	public List<Integer> retrieveProcessListForUnix() throws Exception {
 		List<Integer> pids = new ArrayList<Integer>();
-		ProcessBuilder pb = new ProcessBuilder("ps", "-eo", "pid");
+		ProcessBuilder pb = new ProcessBuilder("ps", "-eo", "pid,cmd");
 		Process process = pb.start();
 		BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
 		String line = null;
-		Pattern pattern = Pattern.compile("[0-9]{1,6}");
+		Pattern patternPid = Pattern.compile("[0-9]{1,6}");
 		while ((line = br.readLine()) != null) {
 			line = line.trim();
-			Matcher m = pattern.matcher(line);
+			Matcher m = patternPid.matcher(line);
 			if (m.matches()) {
 				int pid = Integer.parseInt(line);
 				if (pid > 1) {
