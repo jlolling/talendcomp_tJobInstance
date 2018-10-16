@@ -15,39 +15,28 @@
  */
 package de.cimt.talendcomp.jobinstance.manage;
 
-import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Timestamp;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
+
 public class JobInstanceContextHelper {
 
+	private final static Logger logger = null;
 	private Connection connection;
-	private long jobInstanceId = 0;
-	public static final String JOB_INSTANCE_CONTEXT = "JOB_INSTANCE_CONTEXT";
-	private static final String ATTRIBUTE_KEY = "ATTRIBUTE_KEY";
-	private static final String ATTRIBUTE_VALUE = "ATTRIBUTE_VALUE";
-	private static final String ATTRIBUTE_TYPE = "ATTRIBUTE_TYPE";
-	private static final String IS_OUTPUT_ATTR = "IS_OUTPUT_ATTR";
-	private Map<String, Object> attributeMap = new HashMap<String, Object>();
-	private Map<String, String> attributeClassMap = new HashMap<String, String>();
+	private Map<String, String> attributeMap = new HashMap<String, String>();
 	private NumberFormat numberFormat = null;
 	private SimpleDateFormat dateFormat = null;
-	private String tableName = null;
 	private String schemaName = null;
-	private boolean isOutput = false;
-	private Map<String, String> alternativeColumnNames = new HashMap<String, String>();
 	
 	public JobInstanceContextHelper() {
 		numberFormat = NumberFormat.getInstance(Locale.ENGLISH);
@@ -55,24 +44,15 @@ public class JobInstanceContextHelper {
 		dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); // this is compatible to the Talend way
 	}
 
-	private String getTable() {
-		if (tableName == null) {
-			tableName = JOB_INSTANCE_CONTEXT;
-		}
-		if (schemaName != null) {
-			return schemaName + "." + tableName;
-		} else {
-			return tableName;
-		}
-	}
-	
-	public void setAttribute(String key, Object value, boolean keepLastValue) {
+	public void setAttribute(String key, String value, boolean keepLastValue) {
 		if (key == null || key.trim().isEmpty()) {
 			throw new IllegalArgumentException("key cannot be null or empty");
 		}
 		if (value != null) {
+			if (isDebug()) {
+				debug("   add context variable " + key + "=" + value);
+			}
 			attributeMap.put(key.trim(), value);
-			attributeClassMap.put(key.trim(), value.getClass().getName());
 		} else {
 			if (keepLastValue == false) {
 				attributeMap.remove(key);
@@ -84,146 +64,47 @@ public class JobInstanceContextHelper {
 		return attributeMap.keySet();
 	}
 	
-	public Object getAttribute(String key) {
+	public Object getAttribute(String key, String clazz) throws Exception {
 		if (key == null || key.trim().isEmpty()) {
 			throw new IllegalArgumentException("key cannot be null or empty");
 		}
-		return attributeMap.get(key);
+		return getValueObject(attributeMap.get(key), clazz);
 	}
 	
-	public String getAttributeClassName(String key) {
-		if (key == null || key.trim().isEmpty()) {
-			throw new IllegalArgumentException("key cannot be null or empty");
+	private Object getValueObject(String value, String clazz) throws Exception {
+		if (value == null) {
+			return null;
 		}
-		return attributeClassMap.get(key);
-	}
-
-	public void writeContext() throws Exception {
-		if (attributeMap.isEmpty() == false) {
-			StringBuilder sb = new StringBuilder();
-			sb.append("insert into ");
-			sb.append(getTable());
-			sb.append(" ("); 
-		    sb.append(getColumn(JobInstanceHelper.JOB_INSTANCE_ID));
-		    sb.append(",");
-		    sb.append(ATTRIBUTE_KEY);
-		    sb.append(",");
-		    sb.append(ATTRIBUTE_VALUE);
-		    sb.append(",");
-		    sb.append(ATTRIBUTE_TYPE);
-		    sb.append(",");
-		    sb.append(IS_OUTPUT_ATTR);
-		    sb.append(") values (?,?,?,?,?)");
-			boolean hasValues = false;
-			try {
-				PreparedStatement ps = connection.prepareStatement(sb.toString());
-				for (Map.Entry<String, Object> entry : attributeMap.entrySet()) {
-					Object value = entry.getValue();
-					if (value != null) {
-						ps.setLong(1, jobInstanceId);
-						ps.setString(2, entry.getKey());
-						ps.setString(3, getValueString(value));
-						ps.setString(4, getValueClass(value));
-						ps.setBoolean(5, isOutput);
-						ps.addBatch();
-						hasValues = true;
-					}
-				}
-				if (hasValues) {
-					ps.executeBatch();
-					if (connection.getAutoCommit() == false) {
-						connection.commit();
-					}
-					ps.close();
-				}
-			} catch (SQLException sqle) {
-				SQLException ne = sqle.getNextException();
-				if (ne != null) {
-					throw new Exception(sqle.getMessage() + ", Next Exception:" + ne.getMessage(), sqle);
+		try {
+			if (clazz != null) {
+				if (clazz.contains("String")) {
+					return value;
+				} else if (clazz.contains("Boolean")) {
+					return Boolean.parseBoolean(value);
+				} else if (clazz.contains("Short")) {
+					return Short.parseShort(value);
+				} else if (clazz.contains("Integer")) {
+					return Integer.parseInt(value);
+				} else if (clazz.contains("Long")) {
+					return Long.parseLong(value);
+				} else if (clazz.contains("Double")) {
+					return numberFormat.parse(value);
+				} else if (clazz.contains("Float")) {
+					return numberFormat.parse(value);
+				} else if (clazz.contains("BigDecimal")) {
+					return numberFormat.parse(value);
+				} else if (clazz.contains("Date")) {
+					return GenericDateUtil.parseDate(value, "yyyy-MM-dd HH:mm:ss");
+				} else if (clazz.contains("Timestamp")) {
+					return new Timestamp(GenericDateUtil.parseDate(value, "yyyy-MM-dd HH:mm:ss").getTime());
 				} else {
-					throw sqle;
+					return value;
 				}
+			} else {
+				return value;
 			}
-		}
-	}
-	
-	private String getValueString(Object value) {
-		if (value instanceof String) {
-			return (String) value;
-		} else if (value instanceof Boolean) {
-			return Boolean.toString((Boolean) value);
-		} else if (value instanceof Integer) {
-			return Integer.toString((Integer) value);
-		} else if (value instanceof Long) {
-			return Long.toString((Long) value);
-		} else if (value instanceof Double) {
-			return numberFormat.format((Double) value);
-		} else if (value instanceof Float) {
-			return numberFormat.format((Float) value);
-		} else if (value instanceof BigDecimal) {
-			return numberFormat.format((BigDecimal) value);
-		} else if (value instanceof Date) {
-			return dateFormat.format((Date) value);
-		}
-		return value.toString();
-	}
-	
-	private String getValueClass(Object value) {
-		return value.getClass().getSimpleName();
-	}
-	
-	public void readContext(Long jobInstanceId) throws Exception {
-		if (jobInstanceId != null) {
-			StringBuilder sb = new StringBuilder();
-			sb.append("select ");
-			sb.append(ATTRIBUTE_KEY);
-			sb.append(",");
-			sb.append(ATTRIBUTE_VALUE);
-			sb.append(",");
-			sb.append(ATTRIBUTE_TYPE);
-			sb.append(" from ");
-			sb.append(getTable());
-			sb.append(" where ");
-			sb.append(getColumn(JobInstanceHelper.JOB_INSTANCE_ID));
-			sb.append("=");
-			sb.append(jobInstanceId);
-			Statement stat = connection.createStatement();
-			ResultSet rs = stat.executeQuery(sb.toString());
-			attributeMap.clear();
-			while (rs.next()) {
-				String key = rs.getString(1);
-				String value = rs.getString(2);
-				String clazz = rs.getString(3);
-				setAttribute(key, getValueObject(value, clazz), false);
-			}
-			rs.close();
-			stat.close();
-		}
-	}
-	
-	private Object getValueObject(String value, String clazz) throws ParseException {
-		if ("String".equals(clazz)) {
-			return value;
-		} else if ("Boolean".equals(clazz)) {
-			return Boolean.parseBoolean(value);
-		} else if ("Short".equals(clazz)) {
-			return Short.parseShort(value);
-		} else if ("Integer".equals(clazz)) {
-			return Integer.parseInt(value);
-		} else if ("Long".equals(clazz)) {
-			return Long.parseLong(value);
-		} else if ("Double".equals(clazz)) {
-			return (Double) numberFormat.parse(value);
-		} else if ("Float".equals(clazz)) {
-			return (Float) numberFormat.parse(value);
-		} else if ("BigDecimal".equals(clazz)) {
-			return (BigDecimal) numberFormat.parse(value);
-		} else if ("Date".equals(clazz)) {
-			return dateFormat.parse(value);
-		} else if ("Timestamp".equals(clazz)) {
-			return new Timestamp(dateFormat.parse(value).getTime());
-		} else {
-			return value;
+		} catch (ParseException pe) {
+			throw new Exception("Parse context value string: " + value + " to class: " + clazz + " failed: " + pe.getMessage(), pe);
 		}
 	}
 	
@@ -238,52 +119,60 @@ public class JobInstanceContextHelper {
 		this.connection = connection;
 	}
 	
-	public long getJobInstanceId() {
-		return jobInstanceId;
-	}
-	
-	public void setJobInstanceId(long jobInstanceId) {
-		this.jobInstanceId = jobInstanceId;
-	}
-
 	public void setSchemaName(String schemaName) {
 		this.schemaName = schemaName;
 	}
 
-	public void setTableName(String tableName) {
-		this.tableName = tableName;
-	}
-
-	public boolean isOutput() {
-		return isOutput;
-	}
-
-	public void setOutput(boolean isOutput) {
-		this.isOutput = isOutput;
-	}
-	
 	public void clear() {
 		attributeMap.clear();
 	}
 
-	public Map<String, String> getAlternativeColumnNames() {
-		return alternativeColumnNames;
-	}
-
-	public void setAlternativeColumnNames(Map<String, String> alternativeColumnNames) {
-		this.alternativeColumnNames = alternativeColumnNames;
-	}
-
-	private String getColumn(String originalName) {
-		if (originalName == null || originalName.trim().isEmpty()) {
-			throw new IllegalArgumentException("originalName cannot be null or empty");
-		}
-		String newName = alternativeColumnNames.get(originalName.toLowerCase());
-		if (newName != null) {
-			return newName;
+	private String getSchemaPrefix() {
+		if (schemaName != null && schemaName.trim().isEmpty() == false) {
+			return schemaName + ".";
 		} else {
-			return originalName;
+			return "";
 		}
+	}
+
+	public void loadContext(String taskName) throws Exception {
+		if (taskName == null || taskName.trim().isEmpty()) {
+			throw new IllegalArgumentException("taskName cannot be null or empty");
+		}
+		String sql = "select\n"
+			    + "    parameter_name,\n"
+			    + "    parameter_value\n"
+			    + "from " + getSchemaPrefix() + "job_parameters p\n"
+			    + "inner join " + getSchemaPrefix() + "job_parameter_values v on v.parameter_id = p.parameter_id\n"
+			    + "where task_name = ?";
+		debug(sql);
+		PreparedStatement query = connection.prepareStatement(sql);
+		query.setString(1, taskName);
+		ResultSet rs = query.executeQuery();
+		while (rs.next()) {
+			String key = rs.getString(1);
+			String value = rs.getString(2);
+			setAttribute(key, value, false);	
+		}
+		rs.close();
+		query.close();
+		if (connection.getAutoCommit() == false) {
+			connection.commit();
+		}
+	}
+
+	public static void debug(String message) {
+		if (logger != null) {
+			if (logger.isDebugEnabled()) {
+				logger.debug(message);
+			}
+		} else if (isDebug()) {
+			System.out.println("DEBUG:" + message);
+		}
+	}
+	
+	public static boolean isDebug() {
+		return (logger != null && logger.isDebugEnabled()) || JobInstanceHelper.debug;
 	}
 
 }

@@ -3,7 +3,6 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>de.cimt.talendcomp</groupId>
 	<artifactId>cimt-talendcomp-jobinstance</artifactId>
-	<version>6.5</version>
 	<organization>
 		<name>cimt AG</name>
 	</organization>
@@ -22,9 +21,9 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>de.cimt.talendcomp.test</groupId>
-			<artifactId>talend-fake-job</artifactId>
-			<version>0.9</version>
+			<groupId>de.cimt.talend.mock</groupId>
+			<artifactId>talend-job-mock</artifactId>
+			<version>1.0</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -89,4 +88,5 @@
 			</plugin>
 		</plugins>
 	</build>
+	<version>7.0</version>
 </project>

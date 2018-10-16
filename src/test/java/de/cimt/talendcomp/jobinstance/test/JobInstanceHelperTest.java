@@ -10,11 +10,11 @@ import java.util.Date;
 import org.junit.After;
 import org.junit.Test;
 
+import de.cimt.talend.mock.TalendJobMock;
 import de.cimt.talendcomp.jobinstance.manage.JobInstanceHelper;
-import de.cimt.talendcomp.test.TalendFakeJob;
 import routines.TalendDate;
 
-public class JobInstanceHelperTest extends TalendFakeJob {
+public class JobInstanceHelperTest extends TalendJobMock {
 	
 	public void createConnection() throws Exception {
 		Class.forName("org.postgresql.Driver");

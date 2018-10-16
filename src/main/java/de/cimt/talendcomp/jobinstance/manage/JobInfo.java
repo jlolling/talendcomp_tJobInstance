@@ -25,7 +25,6 @@ public class JobInfo {
 	
 	private long jobInstanceId = 0l;
 	private long processInstanceId = 0;
-	private String processInstanceName;
 	private String guid;
 	private String name;
 	private String project;
@@ -33,7 +32,6 @@ public class JobInfo {
 	private String parentJobGuid;
 	private String jobInfo;
 	private String extJobId;
-	private String jobDisplayName;
 	private String workItem;
 	private String jobResult;
 	private Date startDate;
@@ -95,14 +93,6 @@ public class JobInfo {
 	
 	public void setRootJobGuid(String rootJobGuid) {
 		this.rootJobGuid = rootJobGuid;
-	}
-	
-	public String getDisplayName() {
-		return jobDisplayName;
-	}
-	
-	public void setDisplayName(String jobDisplayName) {
-		this.jobDisplayName = jobDisplayName;
 	}
 	
 	public String getWorkItem() {
@@ -224,14 +214,6 @@ public class JobInfo {
 		if (returnMessage != null && returnMessage.trim().isEmpty() == false) {
 			this.returnMessage = returnMessage.trim();
 		}
-	}
-	
-	public String getJobDisplayName() {
-		return jobDisplayName;
-	}
-	
-	public void setJobDisplayName(String jobDisplayName) {
-		this.jobDisplayName = jobDisplayName;
 	}
 	
 	public String getValueRangeStart() {
@@ -489,14 +471,6 @@ public class JobInfo {
 		}
 	}
 	
-	public String getProcessInstanceName() {
-		return processInstanceName;
-	}
-	
-	public void setProcessInstanceName(String processInstanceName) {
-		this.processInstanceName = processInstanceName;
-	}
-
 	public void addCountInput(Number in) {
 		if (in != null) {
 			countInput = countInput + in.intValue();

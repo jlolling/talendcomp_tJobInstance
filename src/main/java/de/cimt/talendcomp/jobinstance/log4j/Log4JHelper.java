@@ -93,6 +93,7 @@ public class Log4JHelper {
 	}
 	
 	public static void setupConsoleAppenderToRoot(String pattern) {
+		@SuppressWarnings("unchecked")
 		Enumeration<Appender> enumApp = Logger.getRootLogger().getAllAppenders();
 		boolean hasConsoleAppender = false;
 		while (enumApp.hasMoreElements()) {

@@ -39,6 +39,7 @@ create table dwh_manage.job_instance_context (
 create table dwh_manage.job_instance_counters (
     job_instance_id bigint not null,
     counter_name varchar(128) not null,
+    counter_type varchar(10),
     counter_value integer not null);
 
 create table dwh_manage.job_instance_logs (

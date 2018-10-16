@@ -27,18 +27,15 @@ public class JobInstanceCounterHelper {
 	private Connection connection;
 	private String schemaName = null;
 	private Map<String, Integer> counters = new HashMap<String, Integer>();
+	private Map<String, String> counterTypes = new HashMap<String, String>();
 	public static final String JOB_INSTANCE_COUNTERS = "JOB_INSTANCE_COUNTERS";
 	private static final String COUNTER_NAME = "COUNTER_NAME";
+	private static final String COUNTER_TYPE = "COUNTER_TYPE";
 	private static final String COUNTER_VALUE = "COUNTER_VALUE";
 	private String tableName = JOB_INSTANCE_COUNTERS;
-	private Map<String, String> alternativeColumnNames = new HashMap<String, String>();
 
 	private String getTable() {
 		return schemaName != null ? schemaName + "." + tableName : tableName;
-	}
-	
-	public void setTableName(String tableName) {
-		this.tableName = tableName;
 	}
 	
 	public void setSchemaName(String schemaName) {
@@ -47,23 +44,25 @@ public class JobInstanceCounterHelper {
 		}
 	}
 
-	public void addToCounter(String key, Number value) {
+	public void addToCounter(String key, Number value, String type) {
 		if (key != null && value != null) {
 			Integer pv = counters.get(key);
 			if (pv != null) {
 				value = value.intValue() + pv.intValue();
 			}
 			counters.put(key, value.intValue());
+			counterTypes.put(key, type);
 		}
 	}
 
-	public void subToCounter(String key, Number value) {
+	public void subToCounter(String key, Number value, String type) {
 		if (key != null && value != null) {
 			Integer pv = counters.get(key);
 			if (pv != null) {
 				value = pv.intValue() - value.intValue();
 			}
 			counters.put(key, value.intValue());
+			counterTypes.put(key, type);
 		}
 	}
 
@@ -92,12 +91,14 @@ public class JobInstanceCounterHelper {
 			sb.append("insert into ");
 			sb.append(getTable());
 			sb.append(" (");
-			sb.append(getColumn(JobInstanceHelper.JOB_INSTANCE_ID));
+			sb.append(JobInstanceHelper.JOB_INSTANCE_ID);
 			sb.append(",");
 			sb.append(COUNTER_NAME);
 			sb.append(",");
+			sb.append(COUNTER_TYPE);
+			sb.append(",");
 			sb.append(COUNTER_VALUE);
-			sb.append(") values (?,?,?)");
+			sb.append(") values (?,?,?,?)");
 			boolean hasValues = false;
 			try {
 				PreparedStatement ps = connection.prepareStatement(sb.toString());
@@ -106,7 +107,8 @@ public class JobInstanceCounterHelper {
 					if (value != null) {
 						ps.setLong(1, jobInstanceId);
 						ps.setString(2, entry.getKey());
-						ps.setInt(3, value);
+						ps.setString(3, counterTypes.get(entry.getKey()));
+						ps.setInt(4, value);
 						ps.addBatch();
 						hasValues = true;
 					}
@@ -129,21 +131,4 @@ public class JobInstanceCounterHelper {
 		}
 	}
 
-	private String getColumn(String originalName) {
-		String newName = alternativeColumnNames.get(originalName.toLowerCase());
-		if (newName != null) {
-			return newName;
-		} else {
-			return originalName;
-		}
-	}
-
-	public Map<String, String> getAlternativeColumnNames() {
-		return alternativeColumnNames;
-	}
-
-	public void setAlternativeColumnNames(Map<String, String> alternativeColumnNames) {
-		this.alternativeColumnNames = alternativeColumnNames;
-	}
-	
 }

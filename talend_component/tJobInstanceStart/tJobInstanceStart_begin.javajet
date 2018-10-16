@@ -20,18 +20,17 @@
     String timeRangeEnd = ElementParameterParser.getValue(node, "__TIME_RANGE_END__");
     String valueRangeStart = ElementParameterParser.getValue(node, "__VALUE_RANGE_START__");
     String valueRangeEnd = ElementParameterParser.getValue(node, "__VALUE_RANGE_END__");
-    boolean saveContext = "true".equals(ElementParameterParser.getValue(node, "__SAVE_CONTEXT_AT_START__"));
+    boolean readContext = "true".equals(ElementParameterParser.getValue(node, "__READ_CONTEXT_PARAMETERS__"));
     String processInstanceName = ElementParameterParser.getValue(node, "__PROCESS_INSTANCE_NAME__");
     String contextVarProcess = ElementParameterParser.getValue(node, "__CONTEXT_VAR_PROCESS_INSTANCE_ID__");
     String contextVar = ElementParameterParser.getValue(node, "__CONTEXT_VAR_JOB_INSTANCE_ID__");
-    String contextVarEJID = ElementParameterParser.getValue(node, "__CONTEXT_VAR_EXT_JOB_INSTANCE_ID__");
-    String restartFromInstanceId = ElementParameterParser.getValue(node, "__RESTART_FROM_JOB_INSTANCE_ID__");
     boolean useDataSource = "true".equals(ElementParameterParser.getValue(node, "__USE_DATA_SOURCE__"));
     boolean useDataSourceAsDbName = "true".equals(ElementParameterParser.getValue(node, "__USE_DATA_SOURCE_ALIAS_AS_DBNAME__"));
     String dataSourceAlias = ElementParameterParser.getValue(node, "__DATA_SOURCE_ALIAS__");
     String connectionComp = ElementParameterParser.getValue(node, "__CONNECTION__");
     boolean closeConnection = useDataSource || "true".equals(ElementParameterParser.getValue(node, "__CLOSE_CONNECTION__"));
     String jobName = ElementParameterParser.getValue(node, "__JOB_NAME__");
+    String taskName = ElementParameterParser.getValue(node, "__TASK_NAME__");
     String jobDisplayName = ElementParameterParser.getValue(node, "__JOB_DISPLAY_NAME__");
     String tableName = ElementParameterParser.getValue(node, "__TABLE_NAME__");
     String tableNameContext = ElementParameterParser.getValue(node, "__TABLE_NAME_CONTEXT__");
@@ -112,10 +111,6 @@
 	// job info
 	<%=cid%>.setJobInfo(projectName + "/" + jobName + "-" + jobVersion + ":" + contextStr);
 	<%=cid%>.setProject(projectName);
-<%  if (contextVarEJID != null && contextVarEJID.isEmpty() == false) { %>
-	// external job instance id given
-	<%=cid%>.setExtJobId(<%=contextVarEJID%>);
-<%  } %>
 	// setup table meta data
 <%  if (tableName != null && tableName.trim().isEmpty() == false) { %>
 	<%=cid%>.setTableName(<%=tableName%>);
@@ -177,16 +172,44 @@
 		}
 	}
 <%  } %>
+
+<%  if (readContext) { %>
+	{   // load context start
+		// configure context helper
+		de.cimt.talendcomp.jobinstance.manage.JobInstanceContextHelper contextHelper = new de.cimt.talendcomp.jobinstance.manage.JobInstanceContextHelper();
+		// setup table meta data
+		contextHelper.setSchemaName(<%=cid%>.getSchemaName());
+		contextHelper.setConnection(<%=cid%>.getConnection());
+		contextHelper.loadContext(<%=taskName%>);
+<%  	List<IContextParameter> listCtxParams = node.getProcess().getContextManager().getDefaultContext().getContextParameterList();
+    	for (IContextParameter ctxParam : listCtxParams) {
+			String javaClass = null;
+			if ("id_List Of Value".equals(ctxParam.getType()) || "id_File".equals(ctxParam.getType()) || "id_Directory".equals(ctxParam.getType())) {
+				javaClass = "java.lang.String";	
+			} else {
+				try { 
+					JavaType javaType = JavaTypesManager.getJavaTypeFromId(ctxParam.getType());
+					if (javaType != null && javaType.getNullableClass() != null) {
+						javaClass = javaType.getNullableClass().getName();
+					}
+				} catch (Throwable t) {} 
+			}				
+			if (javaClass != null) { %>
+		{
+			Object value = contextHelper.getAttribute("<%=ctxParam.getName()%>", "<%=javaClass%>");
+			if (value != null) {
+				context.<%=ctxParam.getName()%> = (<%=javaClass%>) value;
+			}
+		}
+<%			} %>
+<%  	} // for %>
+	} // load context end
+<%  } // if (readContext) %>
+
     // set job data
 	<%=cid%>.setJobName(<%=jobName%>);
-<%  if (jobDisplayName != null && jobDisplayName.isEmpty() == false) { %>
-	<%=cid%>.setJobDisplayName(<%=jobDisplayName%>);
-<%  } %>
 <%  if (contextVarProcess != null && contextVarProcess.isEmpty() == false) { %>
 	<%=cid%>.setProcessInstanceId(<%=contextVarProcess%>);
-<%  } %>
-<%  if (processInstanceName != null && processInstanceName.isEmpty() == false) { %>
-	<%=cid%>.setProcessInstanceName(<%=processInstanceName%>);
 <%  } %>
 	<%=cid%>.setJobGuid(pid);
 	<%=cid%>.setRootJobGuid(rootPid);
@@ -243,7 +266,7 @@
 		// keep this instance for the end part
 		globalMap.put("<%=cid%>", <%=cid%>);
 <%	if (contextVar != null && contextVar.isEmpty() == false) { %>
-	<%=contextVar%> = jobInstanceId_<%=cid%>;
+		<%=contextVar%> = jobInstanceId_<%=cid%>;
 <%  } %>
 <%  if (useDbAppender) { %>
     	<%=cid%>.setLogLayoutPattern(<%=patternLayout%>);
@@ -345,72 +368,6 @@
 		throw e;
 	}
 <%  } %>
-<%  if (saveContext) { %>
-	{   // saving context start
-		// configure context helper
-		de.cimt.talendcomp.jobinstance.manage.JobInstanceContextHelper contextHelper = new de.cimt.talendcomp.jobinstance.manage.JobInstanceContextHelper();
-		// setup table meta data
-		contextHelper.setTableName(<%=cid%>.getContextTableName());
-		contextHelper.setAlternativeColumnNames(<%=cid%>.getAlternativeColumnNames());
-		contextHelper.setSchemaName(<%=cid%>.getSchemaName());
-		contextHelper.setConnection(<%=cid%>.getConnection());
-		contextHelper.setJobInstanceId(<%=cid%>.getJobInstanceId());
-		contextHelper.setOutput(false);
-		boolean isRestart = false;
-<%		if (restartFromInstanceId != null && restartFromInstanceId.isEmpty() == false) { %>
-		// reload context from job instance
-		if (<%=restartFromInstanceId%> != null && <%=restartFromInstanceId%> > 0) {
-			isRestart = true;
-			System.out.println("restart job instance:" + <%=restartFromInstanceId%>);
-			contextHelper.readContext(<%=restartFromInstanceId%>);
-		}
-<%		} %>
-<%  	List<IContextParameter> listCtxParams = node.getProcess().getContextManager().getDefaultContext().getContextParameterList();
-    	for (IContextParameter ctxParam : listCtxParams) {
-			if (("context." + ctxParam.getName()).equals(contextVar) == false && 
-			    ("context." + ctxParam.getName()).equals(contextVarEJID) == false) {
-				if (restartFromInstanceId != null && restartFromInstanceId.isEmpty() == false) { 
-					String javaClass = null;
-					if ("id_List Of Value".equals(ctxParam.getType()) || "id_File".equals(ctxParam.getType()) || "id_Directory".equals(ctxParam.getType())) {
-						javaClass = "java.lang.String";	
-					} else {
-						try { 
-							JavaType javaType = JavaTypesManager.getJavaTypeFromId(ctxParam.getType());
-							if (javaType != null && javaType.getNullableClass() != null) {
-								javaClass = javaType.getNullableClass().getName();
-							}
-						} catch (Throwable t) {} 
-					}				
-					if (javaClass != null) { %>
-<%                      if (doNotSavePasswords == false || (ctxParam.getName().toLowerCase().contains("passw") == false && "id_Password".equals(ctxParam.getType()) == false)) { %>
-		if (isRestart) {
-			context.<%=ctxParam.getName()%> = (<%=javaClass%>) contextHelper.getAttribute("<%=ctxParam.getName()%>");
-		} else {
-			contextHelper.setAttribute("<%=ctxParam.getName()%>", context.<%=ctxParam.getName()%>, false);
-		}
-<%                      } else { %>
-		// leaf out password attribute <%=ctxParam.getName()%>
-<%                      } %>
-<%  				} else { %>
-		// ignore attribute <%=ctxParam.getName()%> with type <%=ctxParam.getType()%> because unknown java type or no nullable class
-<%					} %>
-<%				} else { %>
-<%                  if (doNotSavePasswords == false || (ctxParam.getName().toLowerCase().contains("passw") == false && "id_Password".equals(ctxParam.getType()) == false)) { %>
-		contextHelper.setAttribute("<%=ctxParam.getName()%>", context.<%=ctxParam.getName()%>, false);
-<%                  } else { %>
-		// leaf out password attribute <%=ctxParam.getName()%>
-<%                  } %>
-<%				} %>
-<%			} %>
-<%  	} // for %>
-<%		if (restartFromInstanceId != null && restartFromInstanceId.isEmpty() == false) { %>
-		<%=restartFromInstanceId%> = null; // to avoid restart next job also!
-<%		} %>
-		// write Context snapshot for current job instance
-		contextHelper.writeContext();
-	} // saving context end
-<%  } // if (saveContext) %>
-
 <%  
 	boolean useLog4j = "true".equals(ElementParameterParser.getValue(node, "__USE_LOG4J__"));
     String log4jConfigFile = ElementParameterParser.getValue(node, "__LOG4J_CONFIG_FILE__");

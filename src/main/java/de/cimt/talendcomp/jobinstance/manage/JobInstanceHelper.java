@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 Jan Lolling jan.lolling@gmail.com
+ * Copyright 2018 Jan Lolling jan.lolling@gmail.com
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,10 +55,8 @@ public class JobInstanceHelper {
 	public static final String VIEW_JOB_INSTANCE_STATUS = "JOB_INSTANCE_STATUS_VIEW";
 	public static final String JOB_INSTANCE_ID = "JOB_INSTANCE_ID";
 	public static final String PROCESS_INSTANCE_ID = "PROCESS_INSTANCE_ID";
-	public static final String PROCESS_INSTANCE_NAME = "PROCESS_INSTANCE_NAME";
 	public static final String JOB_NAME = "JOB_NAME";
 	public static final String JOB_PROJECT = "JOB_PROJECT";
-	public static final String JOB_DISPLAY_NAME = "JOB_DISPLAY_NAME";
 	public static final String JOB_GUID = "JOB_GUID";
 	public static final String JOB_EXT_ID = "JOB_EXT_ID";
 	public static final String JOB_INFO = "JOB_INFO";
@@ -86,8 +84,6 @@ public class JobInstanceHelper {
 	private Connection endConnection = null;
 	private String tableName = TABLE_JOB_INSTANCE_STATUS;
 	private String viewName = VIEW_JOB_INSTANCE_STATUS;
-	private String contextTableName = null;
-	private String logTableName = null;
 	private String schemaName = null;
 	private String sequenceExpression = null;
 	private boolean autoIncrementColumn = true;
@@ -99,7 +95,6 @@ public class JobInstanceHelper {
 	private boolean hasPrevInstance = false;
 	private JobInstanceLogDBAppender logDbAppender = null;
 	private int messageMaxLength = 1000;
-	private Map<String, String> alternativeColumnNames = new HashMap<String, String>();
 	private String logLayoutPattern = null;
 	private Integer logBatchPeriodMillis = null;
 	private Integer logBatchSize = null;
@@ -108,7 +103,7 @@ public class JobInstanceHelper {
 	private static long maxTotalMemory = 0;
 	private static long maxMemory = 0;
 	private static Thread memoryMonitor = null;
-	private static boolean debug = false;
+	protected static boolean debug = false;
 	private int returnCodeForDeadInstances = 999;
 	private Map<String, Integer> scannerCounterMap = new HashMap<String, Integer>();
 	private boolean useViewToReadStatus = false;
@@ -123,9 +118,7 @@ public class JobInstanceHelper {
 	public Appender getAppender() {
 		if (logDbAppender == null) {
 			logDbAppender = new JobInstanceLogDBAppender(startConnection, currentJobInfo.getJobInstanceId());
-			logDbAppender.setTableName(logTableName);
 			logDbAppender.setSchemaName(schemaName);
-			logDbAppender.setAlternativeColumnNames(alternativeColumnNames);
 			logDbAppender.setBatchPeriodMillis(logBatchPeriodMillis);
 			if (logLayoutPattern != null) {
 				logDbAppender.setLayout(new PatternLayout(logLayoutPattern));
@@ -164,44 +157,40 @@ public class JobInstanceHelper {
 		sb.append(getTable(true));
 		sb.append(" (");
 		if (autoIncrementColumn == false || useGeneratedJID) {
-			sb.append(getColumn(JOB_INSTANCE_ID)); // 1
+			sb.append(JOB_INSTANCE_ID); // 1
 			sb.append(",");
 		}
-		sb.append(getColumn(JOB_NAME)); // 2
+		sb.append(JOB_NAME); // 2
 		sb.append(",");
-		sb.append(getColumn(JOB_GUID)); // 3
+		sb.append(JOB_GUID); // 3
 		sb.append(",");
-		sb.append(getColumn(ROOT_JOB_GUID)); // 4
+		sb.append(ROOT_JOB_GUID); // 4
 		sb.append(",");
-		sb.append(getColumn(JOB_WORK_ITEM)); // 5
+		sb.append(JOB_WORK_ITEM); // 5
 		sb.append(",");
-		sb.append(getColumn(JOB_TIME_RANGE_START)); // 6
+		sb.append(JOB_TIME_RANGE_START); // 6
 		sb.append(",");
-		sb.append(getColumn(JOB_TIME_RANGE_END)); // 7
+		sb.append(JOB_TIME_RANGE_END); // 7
 		sb.append(",");
-		sb.append(getColumn(JOB_VALUE_RANGE_START)); // 8
+		sb.append(JOB_VALUE_RANGE_START); // 8
 		sb.append(",");
-		sb.append(getColumn(JOB_VALUE_RANGE_END)); // 9
+		sb.append(JOB_VALUE_RANGE_END); // 9
 		sb.append(",");
-		sb.append(getColumn(JOB_STARTED_AT)); // 10
+		sb.append(JOB_STARTED_AT); // 10
 		sb.append(",");
-		sb.append(getColumn(PROCESS_INSTANCE_ID)); // 11
+		sb.append(PROCESS_INSTANCE_ID); // 11
 		sb.append(",");
-		sb.append(PROCESS_INSTANCE_NAME); // 12
+		sb.append(JOB_HOST_NAME); // 12
 		sb.append(",");
-		sb.append(getColumn(JOB_DISPLAY_NAME)); // 13
+		sb.append(JOB_HOST_PID); // 13
 		sb.append(",");
-		sb.append(getColumn(JOB_HOST_NAME)); // 14
+		sb.append(JOB_EXT_ID); // 14
 		sb.append(",");
-		sb.append(getColumn(JOB_HOST_PID)); // 15
+		sb.append(JOB_INFO); // 15
 		sb.append(",");
-		sb.append(getColumn(JOB_EXT_ID)); // 16
+		sb.append(JOB_HOST_USER); // 16
 		sb.append(",");
-		sb.append(getColumn(JOB_INFO)); // 17
-		sb.append(",");
-		sb.append(getColumn(JOB_HOST_USER)); // 18
-		sb.append(",");
-		sb.append(getColumn(JOB_PROJECT)); // 19
+		sb.append(JOB_PROJECT); // 17
 		sb.append(")");
 		sb.append(" values (");
 		int paramIndex = 1;
@@ -214,8 +203,8 @@ public class JobInstanceHelper {
 				sb.append("),");
 			}
 		}
-		// parameter 1-19
-		sb.append("?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+		// parameter 1-16 or 2-17
+		sb.append("?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
 		String sql = sb.toString();
 		debug(sql);
 		PreparedStatement psInsert = startConnection.prepareStatement(sql, 
@@ -268,16 +257,6 @@ public class JobInstanceHelper {
 		}
 		psInsert.setTimestamp(paramIndex++, new Timestamp(currentJobInfo.getStartDate().getTime()));
 		psInsert.setLong(paramIndex++, currentJobInfo.getProcessInstanceId());
-		if (currentJobInfo.getProcessInstanceName() != null) {
-			psInsert.setString(paramIndex++, currentJobInfo.getProcessInstanceName());
-		} else {
-			psInsert.setNull(paramIndex++, Types.VARCHAR);
-		}
-		if (currentJobInfo.getJobDisplayName() != null) {
-			psInsert.setString(paramIndex++, currentJobInfo.getJobDisplayName());
-		} else {
-			psInsert.setNull(paramIndex++, Types.VARCHAR);
-		}
 		psInsert.setString(paramIndex++, currentJobInfo.getHostName());
 		psInsert.setInt(paramIndex++, currentJobInfo.getHostPid());
 		psInsert.setString(paramIndex++, currentJobInfo.getExtJobId());
@@ -317,15 +296,15 @@ public class JobInstanceHelper {
 			sb.append("delete from ");
 			sb.append(getTable(true));
 			sb.append(" where ");
-			sb.append(getColumn(JOB_NAME));
+			sb.append(JOB_NAME);
 			sb.append(" = ?/*#1*/ and ");
-			sb.append(getColumn(JOB_WORK_ITEM));
+			sb.append(JOB_WORK_ITEM);
 			sb.append(" = ?/*#2*/ and ");
-			sb.append(getColumn(JOB_WORK_ITEM));
+			sb.append(JOB_WORK_ITEM);
 			sb.append(" is not null and ");
-			sb.append(getColumn(JOB_INSTANCE_ID));
+			sb.append(JOB_INSTANCE_ID);
 			sb.append(" < ?/*#3*/ and ");
-			sb.append(getColumn(JOB_RETURN_CODE));
+			sb.append(JOB_RETURN_CODE);
 			if (okResultCodes != null) {
 				sb.append(" in (");
 				sb.append(okResultCodes);
@@ -334,7 +313,7 @@ public class JobInstanceHelper {
 				sb.append(" = 0 ");
 			}
 			sb.append(" and ");
-			sb.append(getColumn(JOB_ENDED_AT));
+			sb.append(JOB_ENDED_AT);
 			sb.append(" is not null");  // do not delete running entries
 			String sql = sb.toString();
 			debug(sql);
@@ -358,13 +337,13 @@ public class JobInstanceHelper {
 		}
 		StringBuilder sb = new StringBuilder();
 		sb.append("select ");
-		sb.append(getColumn(JOB_INSTANCE_ID));
+		sb.append(JOB_INSTANCE_ID);
 		sb.append(" from ");
 		sb.append(getTable(false));
 		sb.append(" where ");
-		sb.append(getColumn(JOB_GUID));
+		sb.append(JOB_GUID);
 		sb.append("=? order by ");
-		sb.append(getColumn(JOB_INSTANCE_ID));
+		sb.append(JOB_INSTANCE_ID);
 		sb.append(" desc");
 		String sql = sb.toString();
 		debug(sql);
@@ -386,75 +365,73 @@ public class JobInstanceHelper {
 		sb.append("update ");
 		sb.append(getTable(false));
 		sb.append(" set ");
-		sb.append(getColumn(JOB_ENDED_AT)); // 1
+		sb.append(JOB_ENDED_AT); // 1
 		sb.append("=?,");
-		sb.append(getColumn(JOB_RESULT_ITEM)); // 2
+		sb.append(JOB_RESULT_ITEM); // 2
 		sb.append("=?,");
-		sb.append(getColumn(JOB_TIME_RANGE_START)); // 3
+		sb.append(JOB_TIME_RANGE_START); // 3
 		sb.append("=?,");
-		sb.append(getColumn(JOB_TIME_RANGE_END)); // 4
+		sb.append(JOB_TIME_RANGE_END); // 4
 		sb.append("=?,");
-		sb.append(getColumn(JOB_INPUT)); // 5
+		sb.append(JOB_INPUT); // 5
 		sb.append("=?,");
-		sb.append(getColumn(JOB_OUTPUT)); // 6
+		sb.append(JOB_OUTPUT); // 6
 		sb.append("=?,");
-		sb.append(getColumn(JOB_REJECTED)); // 7
+		sb.append(JOB_REJECTED); // 7
 		sb.append("=?,");
-		sb.append(getColumn(JOB_DELETED)); // 8
+		sb.append(JOB_DELETED); // 8
 		sb.append("=?,");
-		sb.append(getColumn(JOB_RETURN_CODE)); // 9
+		sb.append(JOB_RETURN_CODE); // 9
 		sb.append("=?,");
-		sb.append(PROCESS_INSTANCE_NAME); // 10
+		sb.append(JOB_RETURN_MESSAGE); // 10
 		sb.append("=?,");
-		sb.append(getColumn(JOB_RETURN_MESSAGE)); // 11
+		sb.append(JOB_VALUE_RANGE_START); // 11
 		sb.append("=?,");
-		sb.append(getColumn(JOB_VALUE_RANGE_START)); // 12
+		sb.append(JOB_VALUE_RANGE_END); // 12
 		sb.append("=?,");
-		sb.append(getColumn(JOB_VALUE_RANGE_END)); // 13
-		sb.append("=?,");
-		sb.append(getColumn(JOB_UPDATED)); // 14
+		sb.append(JOB_UPDATED); // 13
 		sb.append("=? ");
 		sb.append("where ");
-		sb.append(getColumn(JOB_INSTANCE_ID)); // 15
+		sb.append(JOB_INSTANCE_ID); // 14
 		sb.append("=?");
 		String sql = sb.toString();
 		debug(sql);
 		PreparedStatement psUpdate = endConnection.prepareStatement(sql);
-		psUpdate.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
+		int paramIndex = 1;
+		psUpdate.setTimestamp(paramIndex++, new Timestamp(System.currentTimeMillis()));
 		if (currentJobInfo.getJobResult() != null) {
-			psUpdate.setString(2, currentJobInfo.getJobResult());
+			psUpdate.setString(paramIndex++, currentJobInfo.getJobResult());
 		} else {
-			psUpdate.setNull(2, Types.VARCHAR);
+			psUpdate.setNull(paramIndex++, Types.VARCHAR);
 		}
 		if (currentJobInfo.getTimeRangeStart() != null) {
-			psUpdate.setTimestamp(3, new Timestamp(currentJobInfo.getTimeRangeStart().getTime()));
+			psUpdate.setTimestamp(paramIndex++, new Timestamp(currentJobInfo.getTimeRangeStart().getTime()));
 		} else {
-			psUpdate.setNull(3, Types.TIMESTAMP);
+			psUpdate.setNull(paramIndex++, Types.TIMESTAMP);
 		}
 		if (currentJobInfo.getTimeRangeEnd() != null) {
-			psUpdate.setTimestamp(4, new Timestamp(currentJobInfo.getTimeRangeEnd().getTime()));
+			psUpdate.setTimestamp(paramIndex++, new Timestamp(currentJobInfo.getTimeRangeEnd().getTime()));
 		} else {
-			psUpdate.setNull(4, Types.TIMESTAMP);
+			psUpdate.setNull(paramIndex++, Types.TIMESTAMP);
 		}
-		psUpdate.setInt(5, currentJobInfo.getCountInput());
-		psUpdate.setInt(6, currentJobInfo.getCountOutput());
-		psUpdate.setInt(7, currentJobInfo.getCountReject());
-		psUpdate.setInt(8, currentJobInfo.getCountDelete());
-		psUpdate.setInt(9, currentJobInfo.getReturnCode());
-		psUpdate.setString(10, currentJobInfo.getProcessInstanceName());
-		psUpdate.setString(11, enforceTextLength(currentJobInfo.getReturnMessage(), messageMaxLength, 1));
+		psUpdate.setInt(paramIndex++, currentJobInfo.getCountInput());
+		psUpdate.setInt(paramIndex++, currentJobInfo.getCountOutput());
+		psUpdate.setInt(paramIndex++, currentJobInfo.getCountReject());
+		psUpdate.setInt(paramIndex++, currentJobInfo.getCountDelete());
+		psUpdate.setInt(paramIndex++, currentJobInfo.getReturnCode());
+		psUpdate.setString(paramIndex++, enforceTextLength(currentJobInfo.getReturnMessage(), messageMaxLength, 1));
 		if (currentJobInfo.getValueRangeStart() != null) {
-			psUpdate.setString(12, currentJobInfo.getValueRangeStart());
+			psUpdate.setString(paramIndex++, currentJobInfo.getValueRangeStart());
 		} else {
-			psUpdate.setNull(12, Types.VARCHAR);
+			psUpdate.setNull(paramIndex++, Types.VARCHAR);
 		}
 		if (currentJobInfo.getValueRangeEnd() != null) {
-			psUpdate.setString(13, currentJobInfo.getValueRangeEnd());
+			psUpdate.setString(paramIndex++, currentJobInfo.getValueRangeEnd());
 		} else {
-			psUpdate.setNull(13, Types.VARCHAR);
+			psUpdate.setNull(paramIndex++, Types.VARCHAR);
 		}
-		psUpdate.setInt(14, currentJobInfo.getCountUpdate());
-		psUpdate.setLong(15, currentJobInfo.getJobInstanceId());
+		psUpdate.setInt(paramIndex++, currentJobInfo.getCountUpdate());
+		psUpdate.setLong(paramIndex++, currentJobInfo.getJobInstanceId());
 		int count = psUpdate.executeUpdate();
 		psUpdate.close();
 		ch.setJobInstanceId(currentJobInfo.getJobInstanceId());
@@ -469,14 +446,14 @@ public class JobInstanceHelper {
 		sb.append("select * from ");
 		sb.append(getTable(false));
 		sb.append(" where ");
-		sb.append(getColumn(JOB_NAME));
+		sb.append(JOB_NAME);
 		sb.append("= ? and ");
-		sb.append(getColumn(JOB_INSTANCE_ID));
+		sb.append(JOB_INSTANCE_ID);
 		sb.append(" < ?");		
 		boolean searchForWorkItem = false;
 		if (forWorkItem) {
 			sb.append(" and ");
-			sb.append(getColumn(JOB_WORK_ITEM));
+			sb.append(JOB_WORK_ITEM);
 			if (currentJobInfo.getWorkItem() != null) {
 				sb.append(" = ?");
 				searchForWorkItem = true;
@@ -486,7 +463,7 @@ public class JobInstanceHelper {
 		}
 		if (successful) {
 			sb.append(" and ");
-			sb.append(getColumn(JOB_RETURN_CODE));
+			sb.append(JOB_RETURN_CODE);
 			if (okResultCodes != null) {
 				sb.append(" in (");
 				sb.append(okResultCodes);
@@ -497,26 +474,26 @@ public class JobInstanceHelper {
 		}
 		if (withOutput) {
 			sb.append(" and (");
-			sb.append(getColumn(JOB_OUTPUT));
+			sb.append(JOB_OUTPUT);
 			sb.append(" > 0 or ");
-			sb.append(getColumn(JOB_UPDATED));
+			sb.append(JOB_UPDATED);
 			sb.append(" > 0 or ");
-			sb.append(getColumn(JOB_DELETED));
+			sb.append(JOB_DELETED);
 			sb.append(" > 0)");
 		}
 		if (withInput) {
 			sb.append(" and (");
-			sb.append(getColumn(JOB_INPUT));
+			sb.append(JOB_INPUT);
 			sb.append(" > 0 )");
 		}
 		if (sameRoot) {
 			sb.append(" and ");
-			sb.append(getColumn(PROCESS_INSTANCE_ID));
+			sb.append(PROCESS_INSTANCE_ID);
 			sb.append(" = ");
 			sb.append(currentJobInfo.getProcessInstanceId());
 		}
 		sb.append(" order by ");
-		sb.append(getColumn(JOB_INSTANCE_ID));
+		sb.append(JOB_INSTANCE_ID);
 		sb.append(" desc");
 		String sql = sb.toString();
 		debug(sql);
@@ -541,12 +518,12 @@ public class JobInstanceHelper {
 		sb.append("select * from ");
 		sb.append(getTable(false));
 		sb.append(" where ");
-		sb.append(getColumn(JOB_NAME));
+		sb.append(JOB_NAME);
 		sb.append(" = ? ");
 		boolean searchForWorkItem = false;
 		if (forWorkItem) {
 			sb.append(" and ");
-			sb.append(getColumn(JOB_WORK_ITEM));
+			sb.append(JOB_WORK_ITEM);
 			if (currentJobInfo.getWorkItem() != null) {
 				sb.append(" = ?");
 				searchForWorkItem = true;
@@ -556,7 +533,7 @@ public class JobInstanceHelper {
 		}
 		sb.append(" and JOB_ENDED_AT is null");
 		sb.append(" order by ");
-		sb.append(getColumn(JOB_INSTANCE_ID));
+		sb.append(JOB_INSTANCE_ID);
 		sb.append(" desc");
 		String sql = sb.toString();
 		debug(sql);
@@ -582,23 +559,23 @@ public class JobInstanceHelper {
 	public String getJobInstanceIdListAfterPreviousJob(boolean successful, boolean withOutput, boolean withInput, String ... jobNames) throws SQLException {
 		StringBuilder sb = new StringBuilder();
 		sb.append("select ");
-		sb.append(getColumn(JOB_INSTANCE_ID));
+		sb.append(JOB_INSTANCE_ID);
 		sb.append(" from ");
 		sb.append(getTable(false));
 		sb.append(" where ");
-		sb.append(getColumn(JOB_NAME));
+		sb.append(JOB_NAME);
 		sb.append(" <> '");
 		sb.append(currentJobInfo.getName());
 		sb.append("'");
 		if (hasPrevInstance) {
 			sb.append(" and ");
-			sb.append(getColumn(JOB_INSTANCE_ID));
+			sb.append(JOB_INSTANCE_ID);
 			sb.append(" > ");
 			sb.append(getPrevJobInstanceId());
 		} 
 		if (successful) {
 			sb.append(" and ");
-			sb.append(getColumn(JOB_RETURN_CODE));
+			sb.append(JOB_RETURN_CODE);
 			if (okResultCodes != null) {
 				sb.append(" in (");
 				sb.append(okResultCodes);
@@ -609,21 +586,21 @@ public class JobInstanceHelper {
 		}
 		if (withOutput) {
 			sb.append(" and (");
-			sb.append(getColumn(JOB_OUTPUT));
+			sb.append(JOB_OUTPUT);
 			sb.append(" > 0 or ");
-			sb.append(getColumn(JOB_UPDATED));
+			sb.append(JOB_UPDATED);
 			sb.append(" > 0 or ");
-			sb.append(getColumn(JOB_DELETED));
+			sb.append(JOB_DELETED);
 			sb.append(" > 0)");
 		}
 		if (withInput) {
 			sb.append(" and (");
-			sb.append(getColumn(JOB_INPUT));
+			sb.append(JOB_INPUT);
 			sb.append(" > 0 )");
 		}
 		if (jobNames != null && jobNames.length > 0) {
 			sb.append(" and ");
-			sb.append(getColumn(JOB_NAME));
+			sb.append(JOB_NAME);
 			sb.append(" in (");
 			boolean firstLoop = true;
 			for (String jobName : jobNames) {
@@ -639,7 +616,7 @@ public class JobInstanceHelper {
 			sb.append(")");
 		}
 		sb.append(" order by ");
-		sb.append(getColumn(JOB_INSTANCE_ID));
+		sb.append(JOB_INSTANCE_ID);
 		String sql = sb.toString();
 		debug(sql);
 		PreparedStatement psSelect = startConnection.prepareStatement(sql);
@@ -665,52 +642,50 @@ public class JobInstanceHelper {
 
 	private JobInfo getJobInfoFromResultSet(ResultSet rs) throws SQLException {
 		JobInfo ji = new JobInfo();
-		ji.setJobInstanceId(rs.getLong(getColumn(JOB_INSTANCE_ID)));
-		ji.setName(rs.getString(getColumn(JOB_NAME)));
-		ji.setJobInfo(rs.getString(getColumn(JOB_INFO)));
-		ji.setGuid(rs.getString(getColumn(JOB_GUID)));
-		ji.setStartDate(rs.getTimestamp(getColumn(JOB_STARTED_AT)));
-		ji.setStopDate(rs.getTimestamp(getColumn(JOB_ENDED_AT)));
-		ji.setWorkItem(rs.getString(getColumn(JOB_WORK_ITEM)));
-		ji.setTimeRangeStart(rs.getTimestamp(getColumn(JOB_TIME_RANGE_START)));
-		ji.setTimeRangeEnd(rs.getTimestamp(getColumn(JOB_TIME_RANGE_END)));
-		ji.setValueRangeStart(rs.getString(getColumn(JOB_VALUE_RANGE_START)));
-		ji.setValueRangeEnd(rs.getString(getColumn(JOB_VALUE_RANGE_END)));
-		ji.setDisplayName(rs.getString(getColumn(JOB_DISPLAY_NAME)));
-		ji.setProcessInstanceId(rs.getLong(getColumn(PROCESS_INSTANCE_ID)));
-		ji.setJobResult(rs.getString(getColumn(JOB_RESULT_ITEM)));
-		ji.setCountInput(rs.getInt(getColumn(JOB_INPUT)));
-		ji.setCountOutput(rs.getInt(getColumn(JOB_OUTPUT)));
-		ji.setCountUpdate(rs.getInt(getColumn(JOB_UPDATED)));
-		ji.setCountReject(rs.getInt(getColumn(JOB_REJECTED)));
-		ji.setCountDelete(rs.getInt(getColumn(JOB_DELETED)));
-		ji.setHostName(rs.getString(getColumn(JOB_HOST_NAME)));
-		ji.setHostPid(rs.getInt(getColumn(JOB_HOST_PID)));
-		ji.setReturnCode(rs.getInt(getColumn(JOB_RETURN_CODE)));
-		ji.setReturnMessage(rs.getString(getColumn(JOB_RETURN_MESSAGE)));
-		ji.setExtJobId(rs.getString(getColumn(JOB_EXT_ID)));
-		ji.setProject(rs.getString(getColumn(JOB_PROJECT)));
+		ji.setJobInstanceId(rs.getLong(JOB_INSTANCE_ID));
+		ji.setName(rs.getString(JOB_NAME));
+		ji.setJobInfo(rs.getString(JOB_INFO));
+		ji.setGuid(rs.getString(JOB_GUID));
+		ji.setStartDate(rs.getTimestamp(JOB_STARTED_AT));
+		ji.setStopDate(rs.getTimestamp(JOB_ENDED_AT));
+		ji.setWorkItem(rs.getString(JOB_WORK_ITEM));
+		ji.setTimeRangeStart(rs.getTimestamp(JOB_TIME_RANGE_START));
+		ji.setTimeRangeEnd(rs.getTimestamp(JOB_TIME_RANGE_END));
+		ji.setValueRangeStart(rs.getString(JOB_VALUE_RANGE_START));
+		ji.setValueRangeEnd(rs.getString(JOB_VALUE_RANGE_END));
+		ji.setProcessInstanceId(rs.getLong(PROCESS_INSTANCE_ID));
+		ji.setJobResult(rs.getString(JOB_RESULT_ITEM));
+		ji.setCountInput(rs.getInt(JOB_INPUT));
+		ji.setCountOutput(rs.getInt(JOB_OUTPUT));
+		ji.setCountUpdate(rs.getInt(JOB_UPDATED));
+		ji.setCountReject(rs.getInt(JOB_REJECTED));
+		ji.setCountDelete(rs.getInt(JOB_DELETED));
+		ji.setHostName(rs.getString(JOB_HOST_NAME));
+		ji.setHostPid(rs.getInt(JOB_HOST_PID));
+		ji.setReturnCode(rs.getInt(JOB_RETURN_CODE));
+		ji.setReturnMessage(rs.getString(JOB_RETURN_MESSAGE));
+		ji.setExtJobId(rs.getString(JOB_EXT_ID));
+		ji.setProject(rs.getString(JOB_PROJECT));
 		return ji;
 	}
 	
 	private JobInfo getBrokenJobInfoFromResultSet(ResultSet rs) throws SQLException {
 		JobInfo ji = new JobInfo();
-		ji.setJobInstanceId(rs.getLong(getColumn(JOB_INSTANCE_ID)));
-		ji.setName(rs.getString(getColumn(JOB_NAME)));
-		ji.setJobInfo(rs.getString(getColumn(JOB_INFO)));
-		ji.setGuid(rs.getString(getColumn(JOB_GUID)));
-		ji.setStartDate(rs.getTimestamp(getColumn(JOB_STARTED_AT)));
-		ji.setWorkItem(rs.getString(getColumn(JOB_WORK_ITEM)));
-		ji.setTimeRangeStart(rs.getTimestamp(getColumn(JOB_TIME_RANGE_START)));
-		ji.setTimeRangeEnd(rs.getTimestamp(getColumn(JOB_TIME_RANGE_END)));
-		ji.setValueRangeStart(rs.getString(getColumn(JOB_VALUE_RANGE_START)));
-		ji.setValueRangeEnd(rs.getString(getColumn(JOB_VALUE_RANGE_END)));
-		ji.setDisplayName(rs.getString(getColumn(JOB_DISPLAY_NAME)));
-		ji.setProcessInstanceId(rs.getLong(getColumn(PROCESS_INSTANCE_ID)));
-		ji.setHostName(rs.getString(getColumn(JOB_HOST_NAME)));
-		ji.setHostPid(rs.getInt(getColumn(JOB_HOST_PID)));
-		ji.setExtJobId(rs.getString(getColumn(JOB_EXT_ID)));
-		ji.setProject(rs.getString(getColumn(JOB_PROJECT)));
+		ji.setJobInstanceId(rs.getLong(JOB_INSTANCE_ID));
+		ji.setName(rs.getString(JOB_NAME));
+		ji.setJobInfo(rs.getString(JOB_INFO));
+		ji.setGuid(rs.getString(JOB_GUID));
+		ji.setStartDate(rs.getTimestamp(JOB_STARTED_AT));
+		ji.setWorkItem(rs.getString(JOB_WORK_ITEM));
+		ji.setTimeRangeStart(rs.getTimestamp(JOB_TIME_RANGE_START));
+		ji.setTimeRangeEnd(rs.getTimestamp(JOB_TIME_RANGE_END));
+		ji.setValueRangeStart(rs.getString(JOB_VALUE_RANGE_START));
+		ji.setValueRangeEnd(rs.getString(JOB_VALUE_RANGE_END));
+		ji.setProcessInstanceId(rs.getLong(PROCESS_INSTANCE_ID));
+		ji.setHostName(rs.getString(JOB_HOST_NAME));
+		ji.setHostPid(rs.getInt(JOB_HOST_PID));
+		ji.setExtJobId(rs.getString(JOB_EXT_ID));
+		ji.setProject(rs.getString(JOB_PROJECT));
 		return ji;
 	}
 
@@ -789,7 +764,6 @@ public class JobInstanceHelper {
 	public void setJobGuid(String jobGuid) {
 		this.currentJobInfo.setGuid(jobGuid != null ? jobGuid.trim() : null);
 	}
-
 
 	public String getExtJobId() {
 		return currentJobInfo.getExtJobId();
@@ -909,14 +883,14 @@ public class JobInstanceHelper {
 	public void addCountInput(Number in, String name) {
 		currentJobInfo.addCountInput(in);
 		if (isNotEmpty(name)) {
-			ch.addToCounter(name, in);
+			ch.addToCounter(name, in, "input");
 		}
 	}
 	
 	public void subCountInput(Number in, String name) {
 		currentJobInfo.subCountInput(in);
 		if (isNotEmpty(name)) {
-			ch.addToCounter(name, in);
+			ch.addToCounter(name, in, "input");
 		}
 	}
 
@@ -927,42 +901,42 @@ public class JobInstanceHelper {
 	public void addCountOutput(Number out, String name) {
 		currentJobInfo.addCountOutput(out);
 		if (isNotEmpty(name)) {
-			ch.addToCounter(name, out);
+			ch.addToCounter(name, out, "output");
 		}
 	}
 	
 	public void subCountOutput(Number out, String name) {
 		currentJobInfo.subCountOutput(out);
 		if (isNotEmpty(name)) {
-			ch.addToCounter(name, out);
+			ch.addToCounter(name, out, "output");
 		}
 	}
 
 	public void addCountUpdate(Number out, String name) {
 		currentJobInfo.addCountUpdate(out);
 		if (isNotEmpty(name)) {
-			ch.addToCounter(name, out);
+			ch.addToCounter(name, out, "update");
 		}
 	}
 
 	public void subCountUpdate(Number out, String name) {
 		currentJobInfo.subCountUpdate(out);
 		if (isNotEmpty(name)) {
-			ch.addToCounter(name, out);
+			ch.addToCounter(name, out, "update");
 		}
 	}
 
 	public void addCountReject(Number rej, String name) {
 		currentJobInfo.addCountReject(rej);
 		if (isNotEmpty(name)) {
-			ch.addToCounter(name, rej);
+			ch.addToCounter(name, rej, "reject");
 		}
 	}
 	
 	public void subCountReject(Number rej, String name) {
 		currentJobInfo.subCountReject(rej);
 		if (isNotEmpty(name)) {
-			ch.addToCounter(name, rej);
+			ch.addToCounter(name, rej, "reject");
 		}
 	}
 
@@ -970,7 +944,7 @@ public class JobInstanceHelper {
 		if (in != null) {
 			currentJobInfo.addCountDelete(in.intValue());
 			if (isNotEmpty(name)) {
-				ch.addToCounter(name, in.intValue());
+				ch.addToCounter(name, in.intValue(), "delete");
 			}
 		}
 	}
@@ -978,7 +952,7 @@ public class JobInstanceHelper {
 	public void subCountDelete(Number c, String name) {
 		currentJobInfo.subCountDelete(c);
 		if (isNotEmpty(name)) {
-			ch.addToCounter(name, c);
+			ch.addToCounter(name, c, "delete");
 		}
 	}
 
@@ -1197,16 +1171,6 @@ public class JobInstanceHelper {
 		currentJobInfo.setProcessInstanceId(processInstanceId);
 	}
 
-	public String getProcessInstanceName() {
-		return currentJobInfo.getProcessInstanceName();
-	}
-
-	public void setProcessInstanceName(String processInstanceName) {
-		if (processInstanceName != null && processInstanceName.trim().isEmpty() == false) {
-			currentJobInfo.setProcessInstanceName(processInstanceName.trim());
-		}
-	}
-
 	public void setProject(String projectName) {
 		if (projectName != null && projectName.trim().isEmpty() == false) {
 			currentJobInfo.setProject(projectName.trim());
@@ -1229,14 +1193,6 @@ public class JobInstanceHelper {
 		currentJobInfo.setParentJobGuid(parentJobGuid != null ? parentJobGuid.trim() : null);
 	}
 
-	public String getJobDisplayName() {
-		return currentJobInfo.getDisplayName();
-	}
-
-	public void setJobDisplayName(String jobDisplayName) {
-		currentJobInfo.setDisplayName(jobDisplayName != null ? jobDisplayName.trim() : null);
-	}
-	
 	public int getOSPid() {
 		return currentJobInfo.getHostPid();
 	}
@@ -1408,20 +1364,6 @@ public class JobInstanceHelper {
 		}
 	}
 	
-	public String getContextTableName() {
-		return contextTableName;
-	}
-
-	public void setContextTableName(String contextTableName) {
-		this.contextTableName = contextTableName;
-	}
-
-	public void setCounterTableName(String counterTableName) {
-		if (ch != null) {
-			ch.setTableName(counterTableName);
-		}
-	}
-
 	public String getOkResultCodes() {
 		return okResultCodes;
 	}
@@ -1468,32 +1410,6 @@ public class JobInstanceHelper {
 		this.messageMaxLength = messageMaxLength;
 	}
 	
-	/**
-	 * set alternative names for columns
-	 * @param originalName see the constants
-	 * @param newName the new name
-	 */
-	public void setAlternativeColumnName(String originalName, String newName) {
-		if (originalName == null || originalName.trim().isEmpty()) {
-			error("originalName cannot be null or empty", null);
-			throw new IllegalArgumentException("originalName cannot be null or empty");
-		}
-		if (newName != null && newName.trim().isEmpty() == false) {
-			alternativeColumnNames.put(originalName.trim(), newName.trim());
-		} else {
-			alternativeColumnNames.remove(originalName.trim());
-		}
-	}
-	
-	private String getColumn(String originalName) {
-		String newName = alternativeColumnNames.get(originalName.toLowerCase());
-		if (newName != null) {
-			return newName;
-		} else {
-			return originalName;
-		}
-	}
-	
 	public void closeDbAppender() {
 		if (logDbAppender != null) {
 			logDbAppender.close();
@@ -1502,10 +1418,6 @@ public class JobInstanceHelper {
 		logDbAppender = null; // to enable in closeConnection the close of the connection
 	}
 		
-	public Map<String, String> getAlternativeColumnNames() {
-		return alternativeColumnNames;
-	}
-
 	public String getLogLayoutPattern() {
 		return logLayoutPattern;
 	}
@@ -1568,25 +1480,25 @@ public class JobInstanceHelper {
 			updateInstanceLastStart.append("update ");
 			updateInstanceLastStart.append(getTable(true));
 			updateInstanceLastStart.append(" set ");
-			updateInstanceLastStart.append(getColumn(JOB_ENDED_AT));
+			updateInstanceLastStart.append(JOB_ENDED_AT);
 			updateInstanceLastStart.append("=?, ");
-			updateInstanceLastStart.append(getColumn(JOB_INPUT));
+			updateInstanceLastStart.append(JOB_INPUT);
 			updateInstanceLastStart.append("=0,");
-			updateInstanceLastStart.append(getColumn(JOB_OUTPUT));
+			updateInstanceLastStart.append(JOB_OUTPUT);
 			updateInstanceLastStart.append("=0,");
-			updateInstanceLastStart.append(getColumn(JOB_UPDATED));
+			updateInstanceLastStart.append(JOB_UPDATED);
 			updateInstanceLastStart.append("=0,");
-			updateInstanceLastStart.append(getColumn(JOB_REJECTED));
+			updateInstanceLastStart.append(JOB_REJECTED);
 			updateInstanceLastStart.append("=0,");
-			updateInstanceLastStart.append(getColumn(JOB_DELETED));
+			updateInstanceLastStart.append(JOB_DELETED);
 			updateInstanceLastStart.append("=0,");
-			updateInstanceLastStart.append(getColumn(JOB_RETURN_CODE));
+			updateInstanceLastStart.append(JOB_RETURN_CODE);
 			updateInstanceLastStart.append("=" + returnCodeForDeadInstances + ",");
-			updateInstanceLastStart.append(getColumn(JOB_RETURN_MESSAGE));
+			updateInstanceLastStart.append(JOB_RETURN_MESSAGE);
 			updateInstanceLastStart.append("='Process died' where ");
-			updateInstanceLastStart.append(getColumn(JOB_ENDED_AT));
+			updateInstanceLastStart.append(JOB_ENDED_AT);
 			updateInstanceLastStart.append(" is null and ");
-			updateInstanceLastStart.append(getColumn(JOB_STARTED_AT));
+			updateInstanceLastStart.append(JOB_STARTED_AT);
 			updateInstanceLastStart.append(" <= ?");
 			synchronized(startConnection) {
 				String sql = updateInstanceLastStart.toString();
@@ -1602,11 +1514,11 @@ public class JobInstanceHelper {
 		select.append("select * from ");
 		select.append(getTable(false));
 		select.append(" where ");
-		select.append(getColumn(JOB_HOST_NAME));
+		select.append(JOB_HOST_NAME);
 		select.append("='");
 		select.append(hostName);
 		select.append("' and ");
-		select.append(getColumn(JOB_ENDED_AT));
+		select.append(JOB_ENDED_AT);
 		select.append(" is null");
 		synchronized(startConnection) {
 			Statement stat = startConnection.createStatement();
@@ -1632,25 +1544,25 @@ public class JobInstanceHelper {
 		updateInstance.append("update ");
 		updateInstance.append(getTable(true));
 		updateInstance.append(" set ");
-		updateInstance.append(getColumn(JOB_ENDED_AT));
+		updateInstance.append(JOB_ENDED_AT);
 		updateInstance.append("=?, ");
-		updateInstance.append(getColumn(JOB_INPUT));
+		updateInstance.append(JOB_INPUT);
 		updateInstance.append("=0,");
-		updateInstance.append(getColumn(JOB_OUTPUT));
+		updateInstance.append(JOB_OUTPUT);
 		updateInstance.append("=0,");
-		updateInstance.append(getColumn(JOB_UPDATED));
+		updateInstance.append(JOB_UPDATED);
 		updateInstance.append("=0,");
-		updateInstance.append(getColumn(JOB_REJECTED));
+		updateInstance.append(JOB_REJECTED);
 		updateInstance.append("=0,");
-		updateInstance.append(getColumn(JOB_DELETED));
+		updateInstance.append(JOB_DELETED);
 		updateInstance.append("=0,");
-		updateInstance.append(getColumn(JOB_RETURN_CODE));
+		updateInstance.append(JOB_RETURN_CODE);
 		updateInstance.append("=" + returnCodeForDeadInstances + ",");
-		updateInstance.append(getColumn(JOB_RETURN_MESSAGE));
+		updateInstance.append(JOB_RETURN_MESSAGE);
 		updateInstance.append("='Process died' where ");
-		updateInstance.append(getColumn(JOB_ENDED_AT));
+		updateInstance.append(JOB_ENDED_AT);
 		updateInstance.append(" is null and ");
-		updateInstance.append(getColumn(JOB_INSTANCE_ID));
+		updateInstance.append(JOB_INSTANCE_ID);
 		updateInstance.append("=?");
 		synchronized(startConnection) {
 			String sql = updateInstance.toString();
@@ -1711,7 +1623,7 @@ public class JobInstanceHelper {
 		synchronized (conn) {
 			Statement stat = null;
 			try {
-				String testSQL = "select " + getColumn(JOB_INSTANCE_ID) + " from " + getTable(false) + " where " + getColumn(JOB_INSTANCE_ID) + "=0";
+				String testSQL = "select " + JOB_INSTANCE_ID + " from " + getTable(false) + " where " + JOB_INSTANCE_ID + "=0";
 				stat = conn.createStatement();
 				// this will fail if there is something wrong with the connection
 				ResultSet rs = stat.executeQuery(testSQL);

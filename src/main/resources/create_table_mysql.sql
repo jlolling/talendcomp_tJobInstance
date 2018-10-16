@@ -45,6 +45,7 @@ CREATE INDEX JOB_INSTANCE_CONTEXT_IDX ON JOB_INSTANCE_CONTEXT(JOB_INSTANCE_ID, A
 CREATE TABLE JOB_INSTANCE_COUNTERS (
     JOB_INSTANCE_ID BIGINT NOT NULL,     -- reference to the job instance
     COUNTER_NAME VARCHAR(128) NOT NULL,  -- name of the counter set in tJobInstanceEnd for a counter
+    COUNTER_TYPE VARCHAR(20),            -- type of the counter
     COUNTER_VALUE INTEGER,               -- value of the counter
     CONSTRAINT PK_JOB_INSTANCE_COUNTERS PRIMARY KEY (JOB_INSTANCE_ID, COUNTER_NAME));
     
