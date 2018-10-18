@@ -21,6 +21,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.sql.Types;
@@ -207,8 +208,15 @@ public class JobInstanceHelper {
 		sb.append("?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
 		String sql = sb.toString();
 		debug(sql);
-		PreparedStatement psInsert = startConnection.prepareStatement(sql, 
-				(autoIncrementColumn ? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS));
+		PreparedStatement psInsert = null;
+		try {
+			psInsert = startConnection.prepareStatement(sql,
+					(autoIncrementColumn ? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS));
+		} catch (SQLFeatureNotSupportedException nse) {
+			// Snowflake database does not support the return of generated keys
+			psInsert = startConnection.prepareStatement(sql);
+			autoIncrementColumn = false;
+		}
 		// start set parameters
 		if (useGeneratedJID) {
 			long genJid = jid.createJID();
