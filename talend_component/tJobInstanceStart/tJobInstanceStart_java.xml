@@ -122,13 +122,13 @@
       <DEFAULT>false</DEFAULT> 
     </PARAMETER>  
     <PARAMETER NAME="USE_LOG4J" FIELD="CHECK" NUM_ROW="100" GROUP="LOG4J"> 
-      <DEFAULT>false</DEFAULT> 
+      <DEFAULT>true</DEFAULT> 
     </PARAMETER>  
     <PARAMETER NAME="LOG4J_CONFIG_FILE" FIELD="FILE" NUM_ROW="120" SHOW_IF="USE_LOG4J == 'true'" GROUP="LOG4J"> 
       <DEFAULT>"/var/log/talend/log4j.xml"</DEFAULT> 
     </PARAMETER>  
     <PARAMETER NAME="USE_LOG_FILE" FIELD="CHECK" NUM_ROW="130" SHOW_IF="USE_LOG4J == 'true'" GROUP="LOG4J"> 
-      <DEFAULT>true</DEFAULT> 
+      <DEFAULT>false</DEFAULT> 
     </PARAMETER>  
     <PARAMETER NAME="LOG_FILE_PATH" FIELD="FILE" NUM_ROW="140" REQUIRED="true" SHOW_IF="(USE_LOG4J == 'true') and (USE_LOG_FILE == 'true')" GROUP="LOG4J"> 
       <DEFAULT>"/var/log/talend/jobs/{project}/{jobName}_{jobInstanceId}.log"</DEFAULT> 

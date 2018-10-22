@@ -187,7 +187,7 @@ public class Log4JHelper {
 	
 	public String configureFileAppender(String logFileNamePattern, String patternLayout) {
 		if (logFileNamePattern == null || logFileNamePattern.trim().isEmpty()) {
-			throw new IllegalArgumentException("logFileNamePattern cannot be null or empty");
+			return null;
 		}
 		if (patternLayout == null || patternLayout.trim().isEmpty()) {
 			throw new IllegalArgumentException("logFileNamePattern cannot be null or empty");
