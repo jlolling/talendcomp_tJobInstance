@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <COMPONENT> 
-  <HEADER AUTHOR="cimt AG" COMPATIBILITY="ALL" DATA_AUTO_PROPAGATE="false" PLATEFORM="ALL" RELEASE_DATE="20181018" SERIAL="" STARTABLE="true" STATUS="PROD" VERSION="7.0"> 
+  <HEADER AUTHOR="cimt AG" COMPATIBILITY="ALL" DATA_AUTO_PROPAGATE="false" PLATEFORM="ALL" RELEASE_DATE="20181022" SERIAL="" STARTABLE="true" STATUS="PROD" VERSION="7.0"> 
     <SIGNATURE/> 
   </HEADER>  
   <FAMILIES> 
@@ -48,7 +48,7 @@
     <PARAMETER FIELD="TEXT" NAME="VALUE_RANGE_START" NUM_ROW="23"/>  
     <PARAMETER FIELD="TEXT" NAME="VALUE_RANGE_END" NUM_ROW="23"/>  
     <PARAMETER FIELD="CHECK" NAME="READ_CONTEXT_PARAMETERS" NUM_ROW="29" GROUP="CONTEXT_VARS"> 
-      <DEFAULT>true</DEFAULT> 
+      <DEFAULT>false</DEFAULT> 
     </PARAMETER>  
     <PARAMETER FIELD="TEXT" NAME="CONTEXT_VAR_JOB_INSTANCE_ID" NUM_ROW="30" GROUP="CONTEXT_VARS"> 
       <DEFAULT/> 
@@ -125,10 +125,10 @@
       <DEFAULT>false</DEFAULT> 
     </PARAMETER>  
     <PARAMETER NAME="LOG4J_CONFIG_FILE" FIELD="FILE" NUM_ROW="120" SHOW_IF="USE_LOG4J == 'true'" GROUP="LOG4J"> 
-      <DEFAULT>"/path/to/log4j.xml"</DEFAULT> 
+      <DEFAULT>"/var/log/talend/log4j.xml"</DEFAULT> 
     </PARAMETER>  
     <PARAMETER NAME="USE_LOG_FILE" FIELD="CHECK" NUM_ROW="130" SHOW_IF="USE_LOG4J == 'true'" GROUP="LOG4J"> 
-      <DEFAULT>false</DEFAULT> 
+      <DEFAULT>true</DEFAULT> 
     </PARAMETER>  
     <PARAMETER NAME="LOG_FILE_PATH" FIELD="FILE" NUM_ROW="140" REQUIRED="true" SHOW_IF="(USE_LOG4J == 'true') and (USE_LOG_FILE == 'true')" GROUP="LOG4J"> 
       <DEFAULT>"/var/log/talend/jobs/{project}/{jobName}_{jobInstanceId}.log"</DEFAULT> 
@@ -137,7 +137,7 @@
       <DEFAULT>"%-6r [%15.15t] %-5p %30.30c %x - [%X{origin}] %m%n"</DEFAULT> 
     </PARAMETER>  
     <PARAMETER NAME="ADD_CONTEXT_TO_MDC" FIELD="CHECK" NUM_ROW="170" SHOW_IF="USE_LOG4J == 'true'" GROUP="LOG4J"> 
-      <DEFAULT>false</DEFAULT> 
+      <DEFAULT>true</DEFAULT> 
     </PARAMETER>  
     <PARAMETER FIELD="TEXT" NAME="HELPER_NAME" NUM_ROW="180" SHOW_IF="USE_LOG4J == 'true'" GROUP="LOG4J"> 
       <DEFAULT/> 
@@ -188,7 +188,7 @@
       <DEFAULT>false</DEFAULT> 
     </PARAMETER>  
     <PARAMETER FIELD="TEXT" NAME="SEQUENCE_EXPRESSION" NUM_ROW="60" REQUIRED="true" SHOW_IF="(USE_GENERATED_JID == 'false') and (IS_AUTO_INCREMENT == 'false')"> 
-      <DEFAULT>"nextval('b17_management.seq_job_instance_id') /*PostgreSQL example*/"</DEFAULT> 
+      <DEFAULT>"nextval('b17_management.seq_job_instance_id')"</DEFAULT> 
     </PARAMETER>  
     <PARAMETER FIELD="CHECK" NAME="REDUCE_RESUME_LOGS" NUM_ROW="70"> 
       <DEFAULT>true</DEFAULT> 
@@ -196,13 +196,15 @@
     <PARAMETER FIELD="CHECK" NAME="ACTIVATE_JMX" NUM_ROW="80"> 
       <DEFAULT>false</DEFAULT> 
     </PARAMETER>  
-    <PARAMETER NAME="RELEASE_LABEL_20181018" FIELD="LABEL" COLOR="0;0;0" NUM_ROW="900">
-      <DEFAULT>Release: 7.0 build at: 20181018</DEFAULT>
+    <PARAMETER NAME="RELEASE_LABEL_20181022" FIELD="LABEL" COLOR="0;0;0" NUM_ROW="900">
+      <DEFAULT>Release: 7.0 build at: 20181022</DEFAULT>
     </PARAMETER>
   </ADVANCED_PARAMETERS>  
   <CODEGENERATION> 
     <IMPORTS> 
       <IMPORT NAME="cimt-talendcomp-jobinstance" MODULE="cimt-talendcomp-jobinstance-7.0.jar" REQUIRED="true"/>
+      <IMPORT NAME="gelfj" MODULE="gelfj-1.1.16.jar" REQUIRED="true"/>
+      <IMPORT NAME="json-simple" MODULE="json-simple-1.1.jar" REQUIRED="true"/>
     </IMPORTS> 
   </CODEGENERATION>  
   <RETURNS> 
