@@ -139,7 +139,7 @@ public class JobInstanceContextHelper {
 		String sql = "select\n"
 			    + "    parameter_name,\n"
 			    + "    parameter_value\n"
-			    + "from " + getSchemaPrefix() + "job_parameter_values"
+			    + "from " + getSchemaPrefix() + "job_parameter_values\n"
 			    + "where task_name = ?";
 		debug(sql);
 		PreparedStatement query = connection.prepareStatement(sql);
