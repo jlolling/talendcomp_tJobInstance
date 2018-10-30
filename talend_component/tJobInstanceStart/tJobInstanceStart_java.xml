@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <COMPONENT> 
-  <HEADER AUTHOR="cimt AG" COMPATIBILITY="ALL" DATA_AUTO_PROPAGATE="false" PLATEFORM="ALL" RELEASE_DATE="20181022" SERIAL="" STARTABLE="true" STATUS="PROD" VERSION="7.0"> 
+  <HEADER AUTHOR="cimt AG" COMPATIBILITY="ALL" DATA_AUTO_PROPAGATE="false" PLATEFORM="ALL" RELEASE_DATE="20181030" SERIAL="" STARTABLE="true" STATUS="PROD" VERSION="7.1"> 
     <SIGNATURE/> 
   </HEADER>  
   <FAMILIES> 
@@ -196,13 +196,13 @@
     <PARAMETER FIELD="CHECK" NAME="ACTIVATE_JMX" NUM_ROW="80"> 
       <DEFAULT>false</DEFAULT> 
     </PARAMETER>  
-    <PARAMETER NAME="RELEASE_LABEL_20181022" FIELD="LABEL" COLOR="0;0;0" NUM_ROW="900">
-      <DEFAULT>Release: 7.0 build at: 20181022</DEFAULT>
+    <PARAMETER NAME="RELEASE_LABEL_20181030" FIELD="LABEL" COLOR="0;0;0" NUM_ROW="900">
+      <DEFAULT>Release: 7.1 build at: 20181030</DEFAULT>
     </PARAMETER>
   </ADVANCED_PARAMETERS>  
   <CODEGENERATION> 
     <IMPORTS> 
-      <IMPORT NAME="cimt-talendcomp-jobinstance" MODULE="cimt-talendcomp-jobinstance-7.0.jar" REQUIRED="true"/>
+      <IMPORT NAME="cimt-talendcomp-jobinstance" MODULE="cimt-talendcomp-jobinstance-7.1.jar" REQUIRED="true"/>
       <IMPORT NAME="gelfj" MODULE="gelfj-1.1.16.jar" REQUIRED="true"/>
       <IMPORT NAME="json-simple" MODULE="json-simple-1.1.jar" REQUIRED="true"/>
     </IMPORTS> 

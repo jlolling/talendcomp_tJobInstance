@@ -21,7 +21,6 @@ import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.text.NumberFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -35,13 +34,11 @@ public class JobInstanceContextHelper {
 	private Connection connection;
 	private Map<String, String> attributeMap = new HashMap<String, String>();
 	private NumberFormat numberFormat = null;
-	private SimpleDateFormat dateFormat = null;
 	private String schemaName = null;
 	
 	public JobInstanceContextHelper() {
 		numberFormat = NumberFormat.getInstance(Locale.ENGLISH);
 		numberFormat.setGroupingUsed(false);
-		dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); // this is compatible to the Talend way
 	}
 
 	public void setAttribute(String key, String value, boolean keepLastValue) {
@@ -138,12 +135,11 @@ public class JobInstanceContextHelper {
 	public void loadContext(String taskName) throws Exception {
 		if (taskName == null || taskName.trim().isEmpty()) {
 			throw new IllegalArgumentException("taskName cannot be null or empty");
-		}
+ 		}
 		String sql = "select\n"
 			    + "    parameter_name,\n"
 			    + "    parameter_value\n"
-			    + "from " + getSchemaPrefix() + "job_parameters p\n"
-			    + "inner join " + getSchemaPrefix() + "job_parameter_values v on v.parameter_id = p.parameter_id\n"
+			    + "from " + getSchemaPrefix() + "job_parameter_values"
 			    + "where task_name = ?";
 		debug(sql);
 		PreparedStatement query = connection.prepareStatement(sql);
