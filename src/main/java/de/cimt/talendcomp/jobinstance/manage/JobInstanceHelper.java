@@ -56,8 +56,10 @@ public class JobInstanceHelper {
 	public static final String VIEW_JOB_INSTANCE_STATUS = "JOB_INSTANCE_STATUS_VIEW";
 	public static final String JOB_INSTANCE_ID = "JOB_INSTANCE_ID";
 	public static final String PROCESS_INSTANCE_ID = "PROCESS_INSTANCE_ID";
+	public static final String PROCESS_INSTANCE_NAME = "PROCESS_INSTANCE_NAME";
 	public static final String JOB_NAME = "JOB_NAME";
 	public static final String JOB_PROJECT = "JOB_PROJECT";
+	public static final String JOB_DISPLAY_NAME = "JOB_DISPLAY_NAME";
 	public static final String JOB_GUID = "JOB_GUID";
 	public static final String JOB_EXT_ID = "JOB_EXT_ID";
 	public static final String JOB_INFO = "JOB_INFO";
@@ -192,6 +194,10 @@ public class JobInstanceHelper {
 		sb.append(JOB_HOST_USER); // 16
 		sb.append(",");
 		sb.append(JOB_PROJECT); // 17
+		sb.append(",");
+		sb.append(JOB_DISPLAY_NAME); // 18
+		sb.append(",");
+		sb.append(PROCESS_INSTANCE_NAME); // 19
 		sb.append(")");
 		sb.append(" values (");
 		int paramIndex = 1;
@@ -204,8 +210,8 @@ public class JobInstanceHelper {
 				sb.append("),");
 			}
 		}
-		// parameter 1-16 or 2-17
-		sb.append("?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+		// parameter 1-18 or 2-19
+		sb.append("?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
 		String sql = sb.toString();
 		debug(sql);
 		PreparedStatement psInsert = null;
@@ -271,6 +277,16 @@ public class JobInstanceHelper {
 		psInsert.setString(paramIndex++, currentJobInfo.getJobInfo());
 		psInsert.setString(paramIndex++, currentJobInfo.getHostUser());
 		psInsert.setString(paramIndex++, currentJobInfo.getProject());
+		if (currentJobInfo.getProcessInstanceName() != null) {
+			psInsert.setString(paramIndex++, currentJobInfo.getProcessInstanceName());
+		} else {
+			psInsert.setNull(paramIndex++, Types.VARCHAR);
+		}
+		if (currentJobInfo.getJobDisplayName() != null) {
+			psInsert.setString(paramIndex++, currentJobInfo.getJobDisplayName());
+		} else {
+			psInsert.setNull(paramIndex++, Types.VARCHAR);
+		}
 		int count = psInsert.executeUpdate();
 		if (count == 0) {
 			throw new SQLException("No dataset inserted!");
@@ -662,6 +678,8 @@ public class JobInstanceHelper {
 		ji.setValueRangeStart(rs.getString(JOB_VALUE_RANGE_START));
 		ji.setValueRangeEnd(rs.getString(JOB_VALUE_RANGE_END));
 		ji.setProcessInstanceId(rs.getLong(PROCESS_INSTANCE_ID));
+		ji.setDisplayName(rs.getString(JOB_DISPLAY_NAME));
+		ji.setProcessInstanceId(rs.getLong(PROCESS_INSTANCE_ID));		
 		ji.setJobResult(rs.getString(JOB_RESULT_ITEM));
 		ji.setCountInput(rs.getInt(JOB_INPUT));
 		ji.setCountOutput(rs.getInt(JOB_OUTPUT));
@@ -1179,6 +1197,16 @@ public class JobInstanceHelper {
 		currentJobInfo.setProcessInstanceId(processInstanceId);
 	}
 
+	public String getProcessInstanceName() {
+		return currentJobInfo.getProcessInstanceName();
+	}
+
+	public void setProcessInstanceName(String processInstanceName) {
+		if (processInstanceName != null && processInstanceName.trim().isEmpty() == false) {
+			currentJobInfo.setProcessInstanceName(processInstanceName.trim());
+		}
+	}
+
 	public void setProject(String projectName) {
 		if (projectName != null && projectName.trim().isEmpty() == false) {
 			currentJobInfo.setProject(projectName.trim());
@@ -1201,6 +1229,14 @@ public class JobInstanceHelper {
 		currentJobInfo.setParentJobGuid(parentJobGuid != null ? parentJobGuid.trim() : null);
 	}
 
+	public String getJobDisplayName() {
+		return currentJobInfo.getDisplayName();
+	}
+
+	public void setJobDisplayName(String jobDisplayName) {
+		currentJobInfo.setDisplayName(jobDisplayName != null ? jobDisplayName.trim() : null);
+	}
+	
 	public int getOSPid() {
 		return currentJobInfo.getHostPid();
 	}
@@ -1344,6 +1380,20 @@ public class JobInstanceHelper {
 			throw new IllegalStateException("prev job info not retrieved!");
 		}
 		return prevJobInfo.getReturnMessage();
+	}
+
+	public String getPrevJobDisplayName() {
+		if (prevJobInfo == null) {
+			throw new IllegalStateException("prev job info not retrieved!");
+		}
+		return prevJobInfo.getJobDisplayName();
+	}
+
+	public String getPrevProcessInstanceName() {
+		if (prevJobInfo == null) {
+			throw new IllegalStateException("prev job info not retrieved!");
+		}
+		return prevJobInfo.getProcessInstanceName();
 	}
 
 	public String getValueRangeStart() {

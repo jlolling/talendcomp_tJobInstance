@@ -214,6 +214,12 @@
 	<%=cid%>.setJobGuid(pid);
 	<%=cid%>.setRootJobGuid(rootPid);
 	<%=cid%>.setParentJobGuid(fatherPid);
+<%  if (jobDisplayName != null && jobDisplayName.isEmpty() == false) { %>
+	<%=cid%>.setJobDisplayName(<%=jobDisplayName%>);
+<%  } %>
+<%  if (processInstanceName != null && processInstanceName.isEmpty() == false) { %>
+	<%=cid%>.setProcessInstanceName(<%=processInstanceName%>);
+<%  } %>
 <%  if (jobWorkItem != null && jobWorkItem.trim().isEmpty() == false) { %>
 	<%=cid%>.setJobWorkItem(<%=jobWorkItem%>, <%=emptyWorkItemAsNull%>);
 	globalMap.put("<%=cid%>_WORK_ITEM", <%=cid%>.getJobWorkItem());
@@ -297,6 +303,8 @@
 			globalMap.put("<%=cid%>_PREV_JOB_TALEND_PID", <%=cid%>.getPrevJobGuid());
 			globalMap.put("<%=cid%>_PREV_JOB_HOST_PID", <%=cid%>.getPrevHostPid());
 			globalMap.put("<%=cid%>_PREV_JOB_HOST_NAME", <%=cid%>.getPrevHostName());
+			globalMap.put("<%=cid%>_PREV_JOB_DISPLAY_NAME", <%=cid%>.getPrevJobDisplayName());
+			globalMap.put("<%=cid%>_PREV_PROCESS_INSTANCE_NAME", <%=cid%>.getPrevProcessInstanceName());
 			globalMap.put("<%=cid%>_PREV_TIME_RANGE_START", <%=cid%>.getPrevTimeRangeStart());
 			java.util.Date prevTimeRangeEnd = <%=cid%>.getPrevTimeRangeEnd();
 			if (prevTimeRangeEnd == null) {
@@ -328,6 +336,8 @@
 			globalMap.remove("<%=cid%>_PREV_JOB_TALEND_PID");
 			globalMap.remove("<%=cid%>_PREV_JOB_HOST_PID");
 			globalMap.remove("<%=cid%>_PREV_JOB_HOST_NAME");
+			globalMap.remove("<%=cid%>_PREV_JOB_DISPLAY_NAME");
+			globalMap.remove("<%=cid%>_PREV_PROCESS_INSTANCE_NAME");
 			globalMap.remove("<%=cid%>_PREV_TIME_RANGE_START");
 			globalMap.put("<%=cid%>_PREV_TIME_RANGE_END", <%=initialPrevTimeRangeEnd%>);
 			globalMap.remove("<%=cid%>_PREV_VALUE_RANGE_START");
