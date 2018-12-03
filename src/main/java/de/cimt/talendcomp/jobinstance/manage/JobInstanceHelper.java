@@ -1941,7 +1941,7 @@ public class JobInstanceHelper {
 	
 	public void registerTalendJobMBean(TalendJobInfoMXBean mbean) throws Exception {
 		MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-		beanName = new ObjectName(currentJobInfo.getProject() + "." + currentJobInfo.getName() + ":type="+TalendJobInfoMXBean.class.getSimpleName());
+		beanName = new ObjectName("de.cimt.talendcomp.management:type=" + TalendJobInfoMXBean.class.getSimpleName()+",project=" + currentJobInfo.getProject() + ",job=" + currentJobInfo.getName() + ",job_instance_id=" + currentJobInfo.getJobInstanceId());
 		if (mbs.isRegistered(beanName) == false) {
 			mbs.registerMBean(mbean, beanName);
 		}
