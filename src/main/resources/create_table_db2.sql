@@ -50,7 +50,7 @@ create index job_instances_context_idx on dwh_manage.job_instance_context(job_in
 create table dwh_manage.job_instance_counters (
     job_instance_id bigint not null,
     counter_name varchar(128) not null,
-    counter_type varchar(10),
+    counter_type varchar(20),
     counter_value integer not null);
     
 create index job_instance_counters_idx on dwh_manage.job_instance_counters(job_instance_id, counter_name);
