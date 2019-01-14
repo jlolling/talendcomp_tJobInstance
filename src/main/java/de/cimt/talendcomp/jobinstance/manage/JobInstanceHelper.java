@@ -355,6 +355,49 @@ public class JobInstanceHelper {
 		}
 	}
 	
+	public int cleanupByTimerange(int hoursToKeep) throws SQLException {
+		if (currentJobInfo.getWorkItem() != null && currentJobInfo.getReturnCode() == 0) {
+			StringBuilder sb = new StringBuilder();
+			sb.append("delete from ");
+			sb.append(getTable(true));
+			sb.append(" where ");
+			sb.append(JOB_NAME);
+			sb.append(" = ?/*#1*/ and ");
+			sb.append(JOB_INSTANCE_ID);
+			sb.append(" < ?/*#2*/ and ");
+			sb.append(JOB_RETURN_CODE);
+			if (okResultCodes != null) {
+				sb.append(" in (");
+				sb.append(okResultCodes);
+				sb.append(") ");
+			} else {
+				sb.append(" = 0 ");
+			}
+			sb.append(" and ");
+			sb.append(JOB_ENDED_AT);
+			sb.append(" is not null");  // do not delete running entries
+			sb.append(" and ");
+			sb.append(JOB_STARTED_AT);
+			sb.append(" < ?/*#3*/");
+			// get the Date pointing to the past
+			Date dateUntilReadyToDelete = new Date(currentJobInfo.getStartDate().getTime() - (hoursToKeep * 60l * 60l * 1000l));
+			debug("Remove job instances older than " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(dateUntilReadyToDelete));
+			String sql = sb.toString();
+			debug(sql);
+			PreparedStatement ps = endConnection.prepareStatement(sql);
+			ps.setString(1, currentJobInfo.getName());
+			ps.setLong(2, currentJobInfo.getJobInstanceId());
+			ps.setTimestamp(3, new java.sql.Timestamp(dateUntilReadyToDelete.getTime()));
+			int countDeletedJobInstances = ps.executeUpdate();
+			if (endConnection.getAutoCommit() == false) {
+				endConnection.commit();
+			}
+			return countDeletedJobInstances;
+		} else {
+			return 0;
+		}
+	}
+
 	private long selectJobInstanceId(Connection conn, String jobGuid) throws SQLException {
 		if (jobGuid == null || jobGuid.trim().isEmpty()) {
 			throw new IllegalArgumentException("jobGuid cannot be null or empty");
