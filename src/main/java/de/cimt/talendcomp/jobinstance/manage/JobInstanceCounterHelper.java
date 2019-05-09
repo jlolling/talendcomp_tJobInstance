@@ -27,12 +27,12 @@ public class JobInstanceCounterHelper {
 	private Connection connection;
 	private String schemaName = null;
 	private Map<String, Integer> counters = new HashMap<String, Integer>();
-	private Map<String, String> counterTypes = new HashMap<String, String>();
 	public static final String JOB_INSTANCE_COUNTERS = "JOB_INSTANCE_COUNTERS";
 	private static final String COUNTER_NAME = "COUNTER_NAME";
 	private static final String COUNTER_TYPE = "COUNTER_TYPE";
 	private static final String COUNTER_VALUE = "COUNTER_VALUE";
 	private String tableName = JOB_INSTANCE_COUNTERS;
+	private static String TYPE_KEY_DELIMITER = "°";
 
 	private String getTable() {
 		return schemaName != null ? schemaName + "." + tableName : tableName;
@@ -46,23 +46,21 @@ public class JobInstanceCounterHelper {
 
 	public void addToCounter(String key, Number value, String type) {
 		if (key != null && value != null) {
-			Integer pv = counters.get(key);
+			Integer pv = counters.get(getCombinedKey(key, type));
 			if (pv != null) {
 				value = value.intValue() + pv.intValue();
 			}
-			counters.put(key, value.intValue());
-			counterTypes.put(key, type);
+			counters.put(getCombinedKey(key, type), value.intValue());
 		}
 	}
 
 	public void subToCounter(String key, Number value, String type) {
 		if (key != null && value != null) {
-			Integer pv = counters.get(key);
+			Integer pv = counters.get(getCombinedKey(key, type));
 			if (pv != null) {
 				value = pv.intValue() - value.intValue();
 			}
-			counters.put(key, value.intValue());
-			counterTypes.put(key, type);
+			counters.put(getCombinedKey(key, type), value.intValue());
 		}
 	}
 
@@ -85,6 +83,28 @@ public class JobInstanceCounterHelper {
 		this.connection = connection;
 	}
 	
+	private String getCombinedKey(String key, String type) {
+		return type + TYPE_KEY_DELIMITER + key;
+	}
+	
+	private String getCounterValueKey(String combinedKey) {
+		int pos = combinedKey.indexOf(TYPE_KEY_DELIMITER);
+		if (pos != -1) {
+			return combinedKey.substring(pos + 1);
+		} else {
+			return combinedKey;
+		}
+	}
+	
+	private String getCounterValueType(String combinedKey) {
+		int pos = combinedKey.indexOf(TYPE_KEY_DELIMITER);
+		if (pos > 0) {
+			return combinedKey.substring(0, pos);
+		} else {
+			return null;
+		}
+	}
+
 	public void writeCounters() throws Exception {
 		if (counters.isEmpty() == false) {
 			StringBuilder sb = new StringBuilder();
@@ -106,8 +126,8 @@ public class JobInstanceCounterHelper {
 					Integer value = entry.getValue();
 					if (value != null) {
 						ps.setLong(1, jobInstanceId);
-						ps.setString(2, entry.getKey());
-						ps.setString(3, counterTypes.get(entry.getKey()));
+						ps.setString(2, getCounterValueKey(entry.getKey()));
+						ps.setString(3, getCounterValueType(entry.getKey()));
 						ps.setInt(4, value);
 						ps.addBatch();
 						hasValues = true;
