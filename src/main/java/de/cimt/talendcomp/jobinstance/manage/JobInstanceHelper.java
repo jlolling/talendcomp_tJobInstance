@@ -194,9 +194,9 @@ public class JobInstanceHelper {
 		sb.append(",");
 		sb.append(JOB_PROJECT); // 17
 		sb.append(",");
-		sb.append(JOB_DISPLAY_NAME); // 18
+		sb.append(PROCESS_INSTANCE_NAME); // 18
 		sb.append(",");
-		sb.append(PROCESS_INSTANCE_NAME); // 19
+		sb.append(JOB_DISPLAY_NAME); // 19
 		sb.append(")");
 		sb.append(" values (");
 		int paramIndex = 1;
@@ -222,6 +222,7 @@ public class JobInstanceHelper {
 			psInsert = startConnection.prepareStatement(sql);
 			autoIncrementColumn = false;
 		}
+		// #1
 		// start set parameters
 		if (useGeneratedJID) {
 			long genJid = jid.createJID();
