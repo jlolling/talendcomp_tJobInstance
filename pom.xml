@@ -45,6 +45,11 @@
 			<version>9.4.1209.jre7</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+		  <groupId>com.heliosapm.jmxlocal</groupId>
+		  <artifactId>jmxlocal</artifactId>
+		  <version>1.0</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
