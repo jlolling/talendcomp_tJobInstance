@@ -959,7 +959,7 @@ public class JobInstanceHelper {
 	public void subCountInput(Number in, String name) {
 		currentJobInfo.subCountInput(in);
 		if (isNotEmpty(name)) {
-			ch.addToCounter(name, in, "input");
+			ch.subToCounter(name, in, "input");
 		}
 	}
 
@@ -977,7 +977,7 @@ public class JobInstanceHelper {
 	public void subCountOutput(Number out, String name) {
 		currentJobInfo.subCountOutput(out);
 		if (isNotEmpty(name)) {
-			ch.addToCounter(name, out, "output");
+			ch.subToCounter(name, out, "output");
 		}
 	}
 
@@ -991,7 +991,7 @@ public class JobInstanceHelper {
 	public void subCountUpdate(Number out, String name) {
 		currentJobInfo.subCountUpdate(out);
 		if (isNotEmpty(name)) {
-			ch.addToCounter(name, out, "update");
+			ch.subToCounter(name, out, "update");
 		}
 	}
 
@@ -1005,7 +1005,7 @@ public class JobInstanceHelper {
 	public void subCountReject(Number rej, String name) {
 		currentJobInfo.subCountReject(rej);
 		if (isNotEmpty(name)) {
-			ch.addToCounter(name, rej, "reject");
+			ch.subToCounter(name, rej, "reject");
 		}
 	}
 

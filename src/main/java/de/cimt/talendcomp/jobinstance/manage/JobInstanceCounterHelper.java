@@ -59,6 +59,8 @@ public class JobInstanceCounterHelper {
 			Integer pv = counters.get(getCombinedKey(key, type));
 			if (pv != null) {
 				value = pv.intValue() - value.intValue();
+			} else {
+				value = value.intValue() > 0 ? value.intValue() * -1 : value.intValue();
 			}
 			counters.put(getCombinedKey(key, type), value.intValue());
 		}
