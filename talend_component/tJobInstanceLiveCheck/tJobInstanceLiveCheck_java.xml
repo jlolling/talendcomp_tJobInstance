@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <COMPONENT> 
-  <HEADER AUTHOR="cimt AG" COMPATIBILITY="ALL" DATA_AUTO_PROPAGATE="true" PLATEFORM="ALL" RELEASE_DATE="20190516" SERIAL="" STARTABLE="true" STATUS="PROD" VERSION="7.6"> 
+  <HEADER AUTHOR="cimt AG" COMPATIBILITY="ALL" DATA_AUTO_PROPAGATE="true" PLATEFORM="ALL" RELEASE_DATE="20190917" SERIAL="" STARTABLE="true" STATUS="PROD" VERSION="7.7"> 
     <SIGNATURE/> 
   </HEADER>  
   <FAMILIES> 
@@ -56,16 +56,17 @@
     <PARAMETER FIELD="TEXT" NAME="TABLE_NAME" NUM_ROW="20" SHOW_IF="USE_PROJECT_SPECIFIC_NAMES == 'false'"> 
       <DEFAULT/> 
     </PARAMETER>  
-    <PARAMETER NAME="RELEASE_LABEL_20190516" FIELD="LABEL" COLOR="0;0;0" NUM_ROW="900">
-      <DEFAULT>Release: 7.6 build at: 20190516</DEFAULT>
+    <PARAMETER NAME="RELEASE_LABEL_20190917" FIELD="LABEL" COLOR="0;0;0" NUM_ROW="900">
+      <DEFAULT>Release: 7.7 build at: 20190917</DEFAULT>
     </PARAMETER>
   </ADVANCED_PARAMETERS>  
   <CODEGENERATION> 
     <IMPORTS> 
       <!-- the name part "user" must match to the value in parameter PROJECT_SPECIFIC_NAME_MAP_RESOURCE			<IMPORT NAME="custom_mapping_test" MODULE="mapping_user.properties.jar" REQUIRED="true" />			 -->  
-      <IMPORT NAME="cimt-talendcomp-jobinstance" MODULE="cimt-talendcomp-jobinstance-7.6.jar" REQUIRED="true"/>
+      <IMPORT NAME="cimt-talendcomp-jobinstance" MODULE="cimt-talendcomp-jobinstance-7.7.jar" REQUIRED="true"/>
       <IMPORT NAME="gelfj" MODULE="gelfj-1.1.16.jar" REQUIRED="true"/>
       <IMPORT NAME="json-simple" MODULE="json-simple-1.1.jar" REQUIRED="true"/>
+      <IMPORT NAME="jmxlocal" MODULE="jmxlocal-1.0.jar" REQUIRED="true"/>
     </IMPORTS> 
   </CODEGENERATION>  
   <RETURNS> 
