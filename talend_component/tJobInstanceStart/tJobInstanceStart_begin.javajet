@@ -244,7 +244,9 @@
     // check if a job instance is still running
 	de.cimt.talendcomp.jobinstance.manage.JobInfo alreadyRunningJob = <%=cid%>.getJobInstanceAlreadyRunning(<%=checkJobSingletonByWorkItem%>);
 	if (alreadyRunningJob != null) {
-	   System.err.println("Job: " + jobName + ": Already running instance detected!");
+	   String s = "Job: " + jobName + ": Already running instance detected with job_instance_id: " + alreadyRunningJob.getJobInstanceId() + ", started-at: " + TalendDate.formatDate("yyyy-MM-dd HH:mm:ss", alreadyRunningJob.getStartDate()) + ", host: " + alreadyRunningJob.getHostName() + ", os-pid: " + alreadyRunningJob.getHostPid();
+	   System.err.println(s);
+	   globalMap.put("<%=cid%>_ERROR_MESSAGE", s);
 	   globalMap.put("<%=cid%>_JOB_RUNS_ALONE", false);
 	   globalMap.put("<%=cid%>_ALREADY_RUNNING_JOB_START_DATE", alreadyRunningJob.getStartDate());
 	   globalMap.put("<%=cid%>_ALREADY_RUNNING_JOB_JOB_INSTANCE_ID", alreadyRunningJob.getJobInstanceId());
