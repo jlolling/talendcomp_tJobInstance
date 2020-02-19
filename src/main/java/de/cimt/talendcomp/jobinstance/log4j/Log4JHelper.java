@@ -263,9 +263,11 @@ public class Log4JHelper {
 	        	if (l == Logger.getRootLogger()) {
 	        		sb.append(" is root");
 	        	}
-	        	sb.append(" [Level=");
-	        	sb.append(l.getLevel().toString());
-	        	sb.append("]");
+	        	if (l.getLevel() != null) {
+		        	sb.append(" [Level=");
+		        	sb.append(String.valueOf(l.getLevel()));
+		        	sb.append("]");
+	        	}
 	        	if (l.equals(jobLogger)) {
 		        	sb.append("  <-- this is the logger for this talend job!");
 	        	}
