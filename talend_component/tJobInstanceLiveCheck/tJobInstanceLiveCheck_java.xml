@@ -64,6 +64,7 @@
     <IMPORTS> 
       <!-- the name part "user" must match to the value in parameter PROJECT_SPECIFIC_NAME_MAP_RESOURCE			<IMPORT NAME="custom_mapping_test" MODULE="mapping_user.properties.jar" REQUIRED="true" />			 -->  
       <IMPORT NAME="cimt-talendcomp-jobinstance" MODULE="cimt-talendcomp-jobinstance-7.10.jar" MVN="mvn:org.talend.libraries/cimt-talendcomp-jobinstance-7.10/6.0.0-SNAPSHOT" REQUIRED="true"/>
+      <IMPORT NAME="log4j" MODULE="log4j-1.2.17.jar" MVN="mvn:org.talend.libraries/log4j-1.2.17/6.0.0-SNAPSHOT" REQUIRED="true"/>
       <IMPORT NAME="gelfj" MODULE="gelfj-1.1.16.jar" MVN="mvn:org.talend.libraries/gelfj-1.1.16/6.0.0-SNAPSHOT" REQUIRED="true"/>
       <IMPORT NAME="json-simple" MODULE="json-simple-1.1.jar" MVN="mvn:org.talend.libraries/json-simple-1.1/6.0.0-SNAPSHOT" REQUIRED="true"/>
       <IMPORT NAME="jmxlocal" MODULE="jmxlocal-1.0.jar" MVN="mvn:org.talend.libraries/jmxlocal-1.0/6.0.0-SNAPSHOT" REQUIRED="true"/>
