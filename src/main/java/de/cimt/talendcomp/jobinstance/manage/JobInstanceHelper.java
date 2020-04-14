@@ -1206,6 +1206,10 @@ public class JobInstanceHelper {
         			message.append(":");
             		message.append(entry.getValue().toString());
             		message.append("\n");
+            		if (compName.contains("tRunJob")) {
+            			message.append(compName + " returncode: " + globalMap.get(compName + "_CHILD_RETURN_CODE"));
+            			message.append("\n" + compName + " stacktrace: " + globalMap.get(compName + "_CHILD_EXCEPTION_STACKTRACE"));
+            		}
         		}
         	}
     	}
