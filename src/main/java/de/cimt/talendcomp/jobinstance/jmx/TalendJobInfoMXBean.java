@@ -10,10 +10,6 @@ public interface TalendJobInfoMXBean {
 	
 	String[] getContextVars() throws IOException;
 
-	String getLogLevel() throws IOException;
-	
-	void setLogLevel(String level) throws IOException;
-	
 	long getJobInstanceId() throws IOException;
 	
 	String getTalendPid() throws IOException;

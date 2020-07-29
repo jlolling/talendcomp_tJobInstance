@@ -29,22 +29,8 @@ create table dwh_manage.job_instance_status (
    host_pid integer,
    host_user varchar(128) UTF8);
 
-create table dwh_manage.job_instance_context (
-    job_instance_id bigint not null,
-    attribute_key varchar(255)  UTF8 not null,
-    attribute_value varchar(1024) UTF8,
-    attribute_type varchar(32) UTF8 not null,
-    is_output_attr boolean not null);
-
 create table dwh_manage.job_instance_counters (
     job_instance_id bigint not null,
     counter_name varchar(128) not null,
     counter_type varchar(20),
     counter_value integer not null);
-
-create table dwh_manage.job_instance_logs (
-   job_instance_id bigint not null,
-   log_ts timestamp not null,
-   log_name varchar(128) not null,
-   log_level varchar(128) not null,
-   log_message varchar(10000));

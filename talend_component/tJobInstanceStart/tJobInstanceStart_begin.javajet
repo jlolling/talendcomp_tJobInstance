@@ -31,9 +31,7 @@
     boolean closeConnection = useDataSource || "true".equals(ElementParameterParser.getValue(node, "__CLOSE_CONNECTION__"));
     String jobName = ElementParameterParser.getValue(node, "__JOB_NAME__");
     String taskName = ElementParameterParser.getValue(node, "__TASK_NAME__");
-    String jobDisplayName = ElementParameterParser.getValue(node, "__JOB_DISPLAY_NAME__");
     String tableName = ElementParameterParser.getValue(node, "__TABLE_NAME__");
-    String tableNameContext = ElementParameterParser.getValue(node, "__TABLE_NAME_CONTEXT__");
     String tableNameCounter = ElementParameterParser.getValue(node, "__TABLE_NAME_COUNTER__");
     String schemaName = ElementParameterParser.getValue(node, "__SCHEMA_NAME__");
     String isSerialPk = ElementParameterParser.getValue(node, "__IS_AUTO_INCREMENT__");
@@ -57,12 +55,7 @@
 	boolean doNotSavePasswords = "true".equals(ElementParameterParser.getValue(node, "__DO_NOT_SAVE_PASSWORDS__"));
 	String maxMessageLength = ElementParameterParser.getValue(node, "__MAX_MESSAGE_LENGTH__");
 	boolean setUTCTimeZone = "true".equals(ElementParameterParser.getValue(node, "__SET_UTC_TIMEZONE__"));
-	boolean useDbAppender = "true".equals(ElementParameterParser.getValue(node, "__USE_DB_APPENDER__"));
-	String patternLayout = ElementParameterParser.getValue(node, "__PATTEN_LAYOUT__");
-	String batchMillis = ElementParameterParser.getValue(node, "__LOG_BATCH_UPDATE_MILLIS__");
-	String batchSize = ElementParameterParser.getValue(node, "__LOG_BATCH_SIZE__");
 	boolean memoryMonitoring = "true".equals(ElementParameterParser.getValue(node, "__MEASURE_MEMORY_USAGE__"));
-    boolean debug = "true".equals(ElementParameterParser.getValue(node, "__DEBUG__"));
     boolean reduceResumeLogs = "true".equals(ElementParameterParser.getValue(node, "__REDUCE_RESUME_LOGS__"));
     String initialPrevJobInstanceId = ElementParameterParser.getValue(node, "__INITIAL_PREV_JOB_INSTANCE_ID__");
     if (initialPrevJobInstanceId == null || initialPrevJobInstanceId.trim().isEmpty()) {
@@ -88,7 +81,6 @@
     String sysoutJobInstanceIdExpression = ElementParameterParser.getValue(node, "__SYSOUT_JOB_INSTANCE_ID_EXPRESSION__");
     boolean useGeneratedJID = "true".equals(ElementParameterParser.getValue(node, "__USE_GENERATED_JID__"));
     boolean activateJMX = "true".equals(ElementParameterParser.getValue(node, "__ACTIVATE_JMX__"));
-	boolean isLog4jEnabled = "true".equals(ElementParameterParser.getValue(node.getProcess(), "__LOG4J_ACTIVATE__"));
 %>
 <%  if (setUTCTimeZone) { %>
     if ("UTC".equals(java.util.TimeZone.getDefault().getID()) == false) {
@@ -107,16 +99,16 @@
 	de.cimt.talendcomp.jobinstance.manage.JobInstanceHelper <%=cid%> = new de.cimt.talendcomp.jobinstance.manage.JobInstanceHelper();
 	<%=cid%>.setJobStartedAt(jobStartedAt);
 	globalMap.put("<%=cid%>_JOB_START_DATE", <%=cid%>.getJobStartedAt());
-	<%=cid%>.setDebug(<%=debug%>);
 	// job info
 	<%=cid%>.setJobInfo(projectName + "/" + jobName + "-" + jobVersion + ":" + contextStr);
 	<%=cid%>.setProject(projectName);
+	<%=cid%>.setJobName(<%=jobName%>);
+	<%=cid%>.setJobGuid(pid);
+	<%=cid%>.setRootJobGuid(rootPid);
+	<%=cid%>.setParentJobGuid(fatherPid);
 	// setup table meta data
 <%  if (tableName != null && tableName.trim().isEmpty() == false) { %>
 	<%=cid%>.setTableName(<%=tableName%>);
-<%  } %>
-<%  if (tableNameContext != null && tableNameContext.trim().isEmpty() == false) { %>
-	<%=cid%>.setContextTableName(<%=tableNameContext%>);
 <%  } %>
 <%  if (tableNameCounter != null && tableNameCounter.trim().isEmpty() == false) { %>
 	<%=cid%>.setCounterTableName(<%=tableNameCounter%>);
@@ -133,7 +125,32 @@
 <%		if ("false".equals(isSerialPk)) { %>
 	<%=cid%>.setSequenceExpression(<%=sequence%>);
 <%		} %>
-<% 	} %>
+<% } %>
+<%  if (taskName != null && taskName.isEmpty() == false) { %>
+	<%=cid%>.setJobDisplayName(<%=taskName%>);
+<%  } %>
+<%  if (processInstanceName != null && processInstanceName.isEmpty() == false) { %>
+	<%=cid%>.setProcessInstanceName(<%=processInstanceName%>);
+<%  } %>
+<%  if (jobWorkItem != null && jobWorkItem.trim().isEmpty() == false) { %>
+	<%=cid%>.setJobWorkItem(<%=jobWorkItem%>, <%=emptyWorkItemAsNull%>);
+	globalMap.put("<%=cid%>_WORK_ITEM", <%=cid%>.getJobWorkItem());
+<%  } %>
+<%  if (okResultCodes != null && okResultCodes.trim().isEmpty() == false) { %>
+	<%=cid%>.setOkResultCodes(<%=okResultCodes%>);
+<%  } %>
+<%  if (timeRangeStart != null && timeRangeStart.trim().isEmpty() == false) { %>
+	<%=cid%>.setTimeRangeStart(<%=timeRangeStart%>);
+<%  } %>
+<%  if (timeRangeEnd != null && timeRangeEnd.trim().isEmpty() == false) { %>
+	<%=cid%>.setTimeRangeEnd(<%=timeRangeEnd%>);
+<%  } %>
+<%  if (valueRangeStart != null && valueRangeStart.trim().isEmpty() == false) { %>
+	<%=cid%>.setValueRangeStart(<%=valueRangeStart%>);
+<%  } %>
+<%  if (valueRangeEnd != null && valueRangeEnd.trim().isEmpty() == false) { %>
+	<%=cid%>.setValueRangeEnd(<%=valueRangeEnd%>);
+<%  } %>
 <%  if (useDataSource) {%>
 	{
 		java.util.Map<String, routines.system.TalendDataSource> dataSources = (java.util.Map<String, routines.system.TalendDataSource>) globalMap.get(KEY_DB_DATASOURCES);
@@ -172,73 +189,6 @@
 		}
 	}
 <%  } %>
-
-<%  if (readContext) { %>
-	{   // load context start
-		// configure context helper
-		de.cimt.talendcomp.jobinstance.manage.JobInstanceContextHelper contextHelper = new de.cimt.talendcomp.jobinstance.manage.JobInstanceContextHelper();
-		// setup table meta data
-		contextHelper.setSchemaName(<%=cid%>.getSchemaName());
-		contextHelper.setConnection(<%=cid%>.getConnection());
-		contextHelper.loadContext(<%=taskName%>);
-<%  	List<IContextParameter> listCtxParams = node.getProcess().getContextManager().getDefaultContext().getContextParameterList();
-    	for (IContextParameter ctxParam : listCtxParams) {
-			String javaClass = null;
-			if ("id_List Of Value".equals(ctxParam.getType()) || "id_File".equals(ctxParam.getType()) || "id_Directory".equals(ctxParam.getType())) {
-				javaClass = "java.lang.String";	
-			} else {
-				try { 
-					JavaType javaType = JavaTypesManager.getJavaTypeFromId(ctxParam.getType());
-					if (javaType != null && javaType.getNullableClass() != null) {
-						javaClass = javaType.getNullableClass().getName();
-					}
-				} catch (Throwable t) {} 
-			}				
-			if (javaClass != null) { %>
-		{
-			Object value = contextHelper.getAttribute("<%=ctxParam.getName()%>", "<%=javaClass%>");
-			if (value != null) {
-				context.<%=ctxParam.getName()%> = (<%=javaClass%>) value;
-			}
-		}
-<%			} %>
-<%  	} // for %>
-	} // load context end
-<%  } // if (readContext) %>
-
-    // set job data
-	<%=cid%>.setJobName(<%=jobName%>);
-<%  if (contextVarProcess != null && contextVarProcess.isEmpty() == false) { %>
-	<%=cid%>.setProcessInstanceId(<%=contextVarProcess%>);
-<%  } %>
-	<%=cid%>.setJobGuid(pid);
-	<%=cid%>.setRootJobGuid(rootPid);
-	<%=cid%>.setParentJobGuid(fatherPid);
-<%  if (jobDisplayName != null && jobDisplayName.isEmpty() == false) { %>
-	<%=cid%>.setJobDisplayName(<%=jobDisplayName%>);
-<%  } %>
-<%  if (processInstanceName != null && processInstanceName.isEmpty() == false) { %>
-	<%=cid%>.setProcessInstanceName(<%=processInstanceName%>);
-<%  } %>
-<%  if (jobWorkItem != null && jobWorkItem.trim().isEmpty() == false) { %>
-	<%=cid%>.setJobWorkItem(<%=jobWorkItem%>, <%=emptyWorkItemAsNull%>);
-	globalMap.put("<%=cid%>_WORK_ITEM", <%=cid%>.getJobWorkItem());
-<%  } %>
-<%  if (okResultCodes != null && okResultCodes.trim().isEmpty() == false) { %>
-	<%=cid%>.setOkResultCodes(<%=okResultCodes%>);
-<%  } %>
-<%  if (timeRangeStart != null && timeRangeStart.trim().isEmpty() == false) { %>
-	<%=cid%>.setTimeRangeStart(<%=timeRangeStart%>);
-<%  } %>
-<%  if (timeRangeEnd != null && timeRangeEnd.trim().isEmpty() == false) { %>
-	<%=cid%>.setTimeRangeEnd(<%=timeRangeEnd%>);
-<%  } %>
-<%  if (valueRangeStart != null && valueRangeStart.trim().isEmpty() == false) { %>
-	<%=cid%>.setValueRangeStart(<%=valueRangeStart%>);
-<%  } %>
-<%  if (valueRangeEnd != null && valueRangeEnd.trim().isEmpty() == false) { %>
-	<%=cid%>.setValueRangeEnd(<%=valueRangeEnd%>);
-<%  } %>
    boolean createEntry = true;
 <%  if (checkJobSingleton) { %>
     // check if a job instance is still running
@@ -275,18 +225,6 @@
 		globalMap.put("<%=cid%>", <%=cid%>);
 <%	if (contextVar != null && contextVar.isEmpty() == false) { %>
 		<%=contextVar%> = jobInstanceId_<%=cid%>;
-<%  } %>
-<%  if (useDbAppender) { %>
-    	<%=cid%>.setLogLayoutPattern(<%=patternLayout%>);
-<%  	if (batchMillis != null && batchMillis.trim().isEmpty() == false) { %>
-    	// submit messages in time interval
-		<%=cid%>.setLogBatchPeriodMillis(<%=batchMillis%>);
-<%  	} %>
-<%  	if (batchSize != null && batchSize.trim().isEmpty() == false) { %>
-    	// max messages in queue until submit 
-		<%=cid%>.setLogBatchSize(<%=batchSize%>);
-<%  	} %>
-		globalMap.put("<%=cid%>_DB_APPENDER", <%=cid%>.getAppender());
 <%  } %>
 <%  if (returnLastInstanceData) { %>
     // retrieve last job run data
@@ -380,124 +318,7 @@
 		throw e;
 	}
 <%  } %>
-<%  
-	boolean useLog4j = "true".equals(ElementParameterParser.getValue(node, "__USE_LOG4J__"));
-    String log4jConfigFile = ElementParameterParser.getValue(node, "__LOG4J_CONFIG_FILE__");
-    boolean useJobLogFile = "true".equals(ElementParameterParser.getValue(node, "__USE_LOG_FILE__"));
-    String logFilePattern = ElementParameterParser.getValue(node, "__LOG_FILE_PATH__");
-    String logFileLayout = ElementParameterParser.getValue(node, "__LOG_FILE_LAYOUT__");
-    boolean catchSysout = "true".equals(ElementParameterParser.getValue(node, "__CATCH_SYSOUT__"));
-    String forwardToConsole = ElementParameterParser.getValue(node, "__FORWARD_TO_CONSOLE__");
-    String helperName = ElementParameterParser.getValue(node, "__HELPER_NAME__");
-    if (helperName == null || helperName.trim().isEmpty() || "\"\"".equals(helperName)) {
-    	helperName = "pid";
-    }
-    boolean addContextToMDC = "true".equals(ElementParameterParser.getValue(node, "__ADD_CONTEXT_TO_MDC__"));
-    if (useLog4j) { %>
-    { // open block to have the variables locally
-	de.cimt.talendcomp.jobinstance.log4j.Log4JHelper lh = de.cimt.talendcomp.jobinstance.log4j.Log4JHelper.get(<%=helperName%>);
-	if (lh == null) {
-		lh = new de.cimt.talendcomp.jobinstance.log4j.Log4JHelper();
-		de.cimt.talendcomp.jobinstance.log4j.Log4JHelper.put(<%=helperName%>, lh);
-		lh.setJobStartedAt(jobStartedAt);
-<%  	if (log4jConfigFile != null && log4jConfigFile.trim().isEmpty() == false) { %>
-		de.cimt.talendcomp.jobinstance.log4j.Log4JHelper.setLog4jConfigFile(<%=log4jConfigFile%>);
-<%  	} %>
-		lh.setDebug(<%=debug%>);
-		lh.setProject(projectName);
-		lh.setJobName(<%=jobName%>);
-		lh.setVersion(jobVersion);
-		lh.setContext(contextStr);
-		lh.setPid(pid);
-		lh.setRootPid(rootPid);
-		lh.setFatherPid(fatherPid);
-<%  	if (addContextToMDC) {
-    		List<IContextParameter> listCtxParams = node.getProcess().getContextManager().getDefaultContext().getContextParameterList();
-    		for (IContextParameter ctxParam : listCtxParams) { %>
-<%          	if (ctxParam.getName().toLowerCase().contains("passw") == false && "id_Password".equals(ctxParam.getType()) == false) { %>
-		lh.addContextVar("<%=ctxParam.getName()%>", context.<%=ctxParam.getName()%>);
-<%          	} else { %>
-		// leaf out password attribute <%=ctxParam.getName()%>
-<%          	} %>
-<%  		} // for
-    	} // if (addContextToMDC)  %>
-		lh.setJobInstanceId((Long) globalMap.get("<%=cid%>_JOB_INSTANCE_ID"));
-		lh.setWorkItem((String) globalMap.get("<%=cid%>_WORK_ITEM"));
-		// initialize Log4J if needed
-		if (de.cimt.talendcomp.jobinstance.log4j.Log4JHelper.isLog4JInitialized() == false) {
-			try {
-				de.cimt.talendcomp.jobinstance.log4j.Log4JHelper.initLog4J();
-			} catch (Exception e) {
-				globalMap.put("<%=cid%>_ERROR_MESSAGE", "Init log4j failed:" + e.getMessage());
-				throw e; 
-			}
-		}
-   	    lh.initJobLogger();
-<%  	if (useJobLogFile && logFilePattern != null && logFilePattern.trim().isEmpty() == false) { %>
-		globalMap.put("<%=cid%>_LOG_FILE_PATH", lh.configureFileAppender(<%=logFilePattern%>, <%=logFileLayout%>));
-		Object fileAppender = lh.getFileAppender();
-		if (fileAppender != null && lh.getPid().equals(pid)) {
-			// to be able to close it at the end of the job, but only if it our own appender
-			globalMap.put("<%=cid%>_FILE_APPENDER", fileAppender);
-		}
-<%  	} %>
-<%  	if (useDbAppender) { %>
-		org.apache.log4j.Appender dbAppender = (org.apache.log4j.Appender) globalMap.get("<%=cid%>_DB_APPENDER");
-		if (dbAppender != null) {
-			lh.addAppender(dbAppender);
-		} else {
-			System.err.println("No database appender available.");
-		}
-<%  	} %>
-<%  	if (debug) { %>
-		lh.printOutLoggers();
-<%  	} %>
-<%  	if (catchSysout) { %>
-		lh.catchStandardOut(<%=forwardToConsole%>);
-<% 		} %>
-	} // if (lh == null)
-	// instantiate a new resume util
-	class LogConnector extends ResumeUtil {
-				
-		private de.cimt.talendcomp.jobinstance.log4j.Log4JHelper logHelper = null;
-		private Long jobInstanceId = null;
-		
-		public LogConnector(de.cimt.talendcomp.jobinstance.log4j.Log4JHelper logHelper, Long jobInstanceId) {
-			super(resuming_logs_dir_path, isChildJob, rootPid);
-			super.initCommonInfo(
-					pid, rootPid, fatherPid, projectName,
-					jobName, contextStr, jobVersion);
-			this.logHelper = logHelper;
-		}
-		
-		@Override
-		public void addLog(String type, String partName, String parentPart, String threadId, String logPriority, String errorCode,
-	            String message, String stackTrace, String dynamicData) {
-<%     if (reduceResumeLogs) { %>
-			if ("CHECKPOINT".equals(type) == false && "NODE".equals(type) == false && "JOB_STARTED".equals(type) == false && "JOB_ENDED".equals(type) == false) {
-<%     } %>
-	        try {
-		        super.addLog(type, partName, parentPart, threadId, logPriority, errorCode, message, stackTrace, dynamicData);
-	        } catch (Throwable t) {}
-			try {
-				if (logPriority != null && logPriority.trim().isEmpty() == false) {
-					logHelper.logOut(partName, logPriority, message, pid, jobInstanceId); 
-				}
-			} catch (Exception e) {
-				globalMap.put("<%=cid%>_ERROR_MESSAGE",
-						"logOut failed:" + e.getMessage());
-				throw new RuntimeException(e);
-			}
-<%     if (reduceResumeLogs) { %>
-			}
-<%     } %>	        
-	    }
-		
-	 }
-	 resumeUtil = new LogConnector(lh, <%=cid%>.getJobInstanceId());
-    } // close block
-<%  } // end of if (useLog4j) %>
-<%  if (useLog4j == false && closeConnection) { %>
+<%  if (closeConnection) { %>
     	<%=cid%>.closeConnection(); // will close the connection but only if no logDBAppender is used
 <%  } %>
 <%  if (sysoutJobInstanceId) { %>
@@ -507,7 +328,7 @@
       <%=cid%>.closeConnection();
     	System.err.println("Job: " + jobName + " does not creates a job instance status entry, because of job is already running!");
     } // if (createEntry) ... we have to do this here to take care the connection will be closed
-<%  if (useLog4j == false && reduceResumeLogs) { %>
+<%  if (reduceResumeLogs) { %>
 	// instantiate a new resume util which reduces resume logs
 	class ResumeUtilRed extends ResumeUtil {
 				
@@ -575,33 +396,6 @@
 			String[] arr = list.toArray(new String[list.size()]);
 			java.util.Arrays.sort(arr); 
 			return arr;
-		}
-	
-		@Override
-		public String getLogLevel() throws java.io.IOException {
-<%	if (isLog4jEnabled) { %>
-			if (log != null) {
-				return log.getLevel().toString();
-			}
-<%	} %>
-			return null;
-		}
-	
-		@Override
-		public void setLogLevel(String level) throws java.io.IOException {
-<%	if (isLog4jEnabled) { %>
-			if (log != null && level != null) {
-				if ("info".equalsIgnoreCase(level)) {
-					log.setLevel(org.apache.log4j.Level.INFO);
-				} else if ("debug".equalsIgnoreCase(level)) {
-					log.setLevel(org.apache.log4j.Level.DEBUG);
-				} else if ("warn".equalsIgnoreCase(level)) {
-					log.setLevel(org.apache.log4j.Level.WARN);
-				} else if ("error".equalsIgnoreCase(level)) {
-					log.setLevel(org.apache.log4j.Level.ERROR);
-				}
-			}
-<%	} %>
 		}
 	
 		@Override

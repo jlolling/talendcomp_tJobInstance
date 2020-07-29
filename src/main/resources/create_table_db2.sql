@@ -36,16 +36,6 @@ create index dwh_manage.job_instances_job_name on dwh_manage.job_instance_status
 --drop sequence dwh_manage.job_instance_id;
 create sequence dwh_manage.seq_job_instance_id start with 1;
 
---drop table dwh_manage.job_instances_context;
-create table dwh_manage.job_instance_context (
-    job_instance_id bigint not null,
-    attribute_key varchar(255) not null,
-    attribute_value varchar(1024),
-    attribute_type varchar(32) not null,
-    is_output_attr smallint not null);
-    
-create index job_instances_context_idx on dwh_manage.job_instance_context(job_instance_id, is_output_attr, attribute_key);
-
 --drop table dwh_manage.job_instance_counters;
 create table dwh_manage.job_instance_counters (
     job_instance_id bigint not null,
@@ -54,13 +44,3 @@ create table dwh_manage.job_instance_counters (
     counter_value integer not null);
     
 create index job_instance_counters_idx on dwh_manage.job_instance_counters(job_instance_id, counter_name);
-
---drop table dwh_manage.job_instance_logs;
-create table dwh_manage.job_instance_logs (
-    job_instance_id bigint not null,
-    log_ts timestamp not null,
-    log_level varchar(10), -- INFO, WARN, ERROR, DEBUG, TRACE
-    log_name varchar(128) not null,
-    log_message clob);
-	
-create index job_instance_logs_jobid on dwh_manage.job_instance_logs(job_instance_id);

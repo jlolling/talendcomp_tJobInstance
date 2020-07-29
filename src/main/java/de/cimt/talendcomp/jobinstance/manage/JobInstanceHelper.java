@@ -39,18 +39,15 @@ import java.util.TimeZone;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
-import org.apache.log4j.Appender;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PatternLayout;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.cimt.talendcomp.jobinstance.jmx.TalendJobInfoMXBean;
-import de.cimt.talendcomp.jobinstance.log4j.JobInstanceLogDBAppender;
 import de.cimt.talendcomp.jobinstance.process.ProcessHelper;
 
 public class JobInstanceHelper {
 	
-	private final static Logger logger = null;
+	private final static Logger logger = LoggerFactory.getLogger(JobInstanceHelper.class);
 	public static final String TABLE_JOB_INSTANCE_STATUS = "JOB_INSTANCE_STATUS";
 	public static final String VIEW_JOB_INSTANCE_STATUS = "JOB_INSTANCE_STATUS_VIEW";
 	public static final String JOB_INSTANCE_ID = "JOB_INSTANCE_ID";
@@ -95,7 +92,6 @@ public class JobInstanceHelper {
 	private JobInstanceCounterHelper ch = new JobInstanceCounterHelper();
 	private String okResultCodes = null;
 	private boolean hasPrevInstance = false;
-	private JobInstanceLogDBAppender logDbAppender = null;
 	private int messageMaxLength = 1000;
 	private String logLayoutPattern = null;
 	private Integer logBatchPeriodMillis = null;
@@ -115,18 +111,6 @@ public class JobInstanceHelper {
 	public JobInstanceHelper() {
 		currentJobInfo = new JobInfo();
 		retrieveProcessInfo();
-	}
-	
-	public Appender getAppender() {
-		if (logDbAppender == null) {
-			logDbAppender = new JobInstanceLogDBAppender(startConnection, currentJobInfo.getJobInstanceId());
-			logDbAppender.setSchemaName(schemaName);
-			logDbAppender.setBatchPeriodMillis(logBatchPeriodMillis);
-			if (logLayoutPattern != null) {
-				logDbAppender.setLayout(new PatternLayout(logLayoutPattern));
-			}
-		}
-		return logDbAppender;
 	}
 	
 	private void retrieveProcessInfo() {
@@ -1223,11 +1207,9 @@ public class JobInstanceHelper {
     
     public void closeConnection() throws SQLException {
     	if (startConnection != null) {
-    		if (logDbAppender == null) {
-    			if (startConnection.isClosed() == false) {
-            		startConnection.close();
-    			}
-    		}
+			if (startConnection.isClosed() == false) {
+        		startConnection.close();
+			}
     	}
     	if (endConnection != null) {
     		if (endConnection != startConnection) {
@@ -1515,14 +1497,6 @@ public class JobInstanceHelper {
 		this.messageMaxLength = messageMaxLength;
 	}
 	
-	public void closeDbAppender() {
-		if (logDbAppender != null) {
-			logDbAppender.close();
-		}
-		Logger.getLogger("talend").removeAppender(logDbAppender);
-		logDbAppender = null; // to enable in closeConnection the close of the connection
-	}
-		
 	public String getLogLayoutPattern() {
 		return logLayoutPattern;
 	}
@@ -1828,17 +1802,6 @@ public class JobInstanceHelper {
 			Calendar c = Calendar.getInstance(TimeZone.getDefault());
 			c.setTimeInMillis(maximumReachedAt);
 			System.out.println("Maximum of memory usage measured at: " + sdf.format(c.getTime()));
-		}
-	}
-
-	public static void setDebug(boolean debug) {
-		JobInstanceHelper.debug = debug;
-		if (logger != null) {
-			if (debug) {
-				logger.setLevel(Level.DEBUG);
-			} else {
-				logger.setLevel(Level.INFO);
-			}
 		}
 	}
 

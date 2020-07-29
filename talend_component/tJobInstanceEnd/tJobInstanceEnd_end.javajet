@@ -51,24 +51,6 @@
 			// cleanup previous job instances with the same work item
 			globalMap.put("<%=cid%>_DELETED_PREVIOUS_JOB_INSTANCES", <%=cid%>.cleanupByWorkItem());
 <%  } %>
-   	<%=cid%>.closeDbAppender();
-   	globalMap.remove("<%=cid%>_DB_APPENDER");
-		// close all other known appenders in this job
-		for (java.util.Map.Entry<String, Object> entry : globalMap.entrySet()) {
-			if (entry.getKey().endsWith("_APPENDER")) {
-				Object object = entry.getValue();
-				if (object instanceof org.apache.log4j.Appender) {
-					// detach appender
-					org.apache.log4j.Logger.getLogger("talend").removeAppender((org.apache.log4j.Appender) object);
-					try {
-						// close appender
-						((org.apache.log4j.Appender) object).close();
-					} catch (Throwable t) {
-						// ignore errors
-					}
-				}
-			}
-		}
 <%  if (closeConnection) { %>
 		<%=cid%>.closeConnection();
 <%  } %>

@@ -44,13 +44,3 @@ create table dwh_manage.job_instance_counters (
     counter_value integer not null);
     
 create index job_instance_counters_idx on dwh_manage.job_instance_counters(job_instance_id, counter_name);
-
---drop table dwh_manage.job_instance_logs;
-create table dwh_manage.job_instance_logs (
-   job_instance_id bigint not null,
-   log_ts timestamp not null,
-   log_name varchar(128) not null,
-   log_level varchar(128) not null,
-   log_message text);
-
-create index job_instance_logs_jobid on dwh_manage.job_instance_logs(job_instance_id);
