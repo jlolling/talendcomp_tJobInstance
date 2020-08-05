@@ -1551,7 +1551,7 @@ public class JobInstanceHelper {
 		final List<Integer> runningPidList = ph.retrieveProcessList();
 		countProcesses = runningPidList.size();
 		if (countProcesses == 0) {
-			throw new Exception("No running OS processes detected, this is not a valid state, abort check!");
+			throw new Exception("No running OS processes detected, this is not a valid state, abort check! Detected OS: ");
 		}
 		debug("Found " + countProcesses + " running processes on the server: " + hostName);
 		if (lastSystemStart != null) {

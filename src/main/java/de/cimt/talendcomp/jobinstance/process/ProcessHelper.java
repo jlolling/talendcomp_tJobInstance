@@ -52,7 +52,7 @@ public class ProcessHelper {
 		} else if (isWindows) {
 			return retrieveProcessListForWindows();
 		} else {
-			throw new Exception("OS could not be recognized!");
+			throw new Exception("OS could not be recognized! Environment os.name=" + System.getProperty("os.name"));
 		}
 	}
 	
@@ -66,15 +66,18 @@ public class ProcessHelper {
 	
 	public List<Integer> retrieveProcessListForUnix() throws Exception {
 		List<Integer> pids = new ArrayList<Integer>();
-		ProcessBuilder pb = new ProcessBuilder("ps", "-eo", "pid,cmd");
+		ProcessBuilder pb = new ProcessBuilder("ps", "-eo", "pid");
 		Process process = pb.start();
 		BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
 		String line = null;
-		Pattern patternPid = Pattern.compile("[0-9]{1,6}");
+		Pattern patternPid = Pattern.compile("[0-9]{1,8}");
+		StringBuilder psCommandResponse = new StringBuilder();
 		while ((line = br.readLine()) != null) {
 			line = line.trim();
+			psCommandResponse.append(line);
+			psCommandResponse.append("\n");
 			Matcher m = patternPid.matcher(line);
-			if (m.matches()) {
+			if (m.find()) {
 				int pid = Integer.parseInt(line);
 				if (pid > 1) {
 					pids.add(pid);
@@ -82,6 +85,9 @@ public class ProcessHelper {
 			}
 		}
 		br.close();
+		if (pids.isEmpty()) {
+			System.out.println("No pids could be extracted from the ps command response:\n" + psCommandResponse);
+		}
 		return pids;
 	}
 
@@ -92,10 +98,13 @@ public class ProcessHelper {
 		BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
 		String line = null;
 		Pattern pattern = Pattern.compile("PID[:\\s]*([0-9]{1,6})", Pattern.CASE_INSENSITIVE);
+		StringBuilder psCommandResponse = new StringBuilder();
 		while ((line = br.readLine()) != null) {
 			line = line.trim();
+			psCommandResponse.append(line);
+			psCommandResponse.append("\n");
 			Matcher m = pattern.matcher(line);
-			if (m.matches()) {
+			if (m.find()) {
 				String pidStr = m.group(1);
 				int pid = Integer.parseInt(pidStr);
 				if (pid > 1) {
@@ -104,6 +113,9 @@ public class ProcessHelper {
 			}
 		}
 		br.close();
+		if (pids.isEmpty()) {
+			System.out.println("No pids could be extracted from the tasklist command response:\n" + psCommandResponse);
+		}
 		return pids;
 	}
 	
