@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <COMPONENT> 
-  <HEADER AUTHOR="cimt AG" COMPATIBILITY="ALL" DATA_AUTO_PROPAGATE="false" PLATEFORM="ALL" RELEASE_DATE="20200806" SERIAL="" STARTABLE="true" STATUS="PROD" VERSION="8.1"> 
+  <HEADER AUTHOR="cimt AG" COMPATIBILITY="ALL" DATA_AUTO_PROPAGATE="false" PLATEFORM="ALL" RELEASE_DATE="20200821" SERIAL="" STARTABLE="true" STATUS="PROD" VERSION="8.2"> 
     <SIGNATURE/> 
   </HEADER>  
   <FAMILIES> 
@@ -48,6 +48,9 @@
     <PARAMETER FIELD="TEXT" NAME="TIME_RANGE_END" NUM_ROW="22"/>  
     <PARAMETER FIELD="TEXT" NAME="VALUE_RANGE_START" NUM_ROW="23"/>  
     <PARAMETER FIELD="TEXT" NAME="VALUE_RANGE_END" NUM_ROW="23"/>  
+    <PARAMETER FIELD="TEXT" NAME="CONTEXT_VAR_JOB_INSTANCE_ID" NUM_ROW="30"> 
+      <DEFAULT/> 
+    </PARAMETER>  
     <PARAMETER FIELD="CHECK" NAME="SINGLETON_JOB_INSTANCE" NUM_ROW="40" GROUP="SINGLETON"> 
       <DEFAULT>false</DEFAULT> 
     </PARAMETER>  
@@ -143,13 +146,13 @@
     <PARAMETER FIELD="CHECK" NAME="ACTIVATE_JMX" NUM_ROW="80"> 
       <DEFAULT>false</DEFAULT> 
     </PARAMETER>  
-    <PARAMETER NAME="RELEASE_LABEL_20200806" FIELD="LABEL" COLOR="0;0;0" NUM_ROW="900">
-      <DEFAULT>Release: 8.1 build at: 20200806</DEFAULT>
+    <PARAMETER NAME="RELEASE_LABEL_20200821" FIELD="LABEL" COLOR="0;0;0" NUM_ROW="900">
+      <DEFAULT>Release: 8.2 build at: 20200821</DEFAULT>
     </PARAMETER>
   </ADVANCED_PARAMETERS>  
   <CODEGENERATION> 
     <IMPORTS> 
-      <IMPORT NAME="cimt-talendcomp-jobinstance" MODULE="cimt-talendcomp-jobinstance-8.1.jar" MVN="mvn:org.talend.libraries/cimt-talendcomp-jobinstance-8.1/6.0.0-SNAPSHOT" REQUIRED="true"/>
+      <IMPORT NAME="cimt-talendcomp-jobinstance" MODULE="cimt-talendcomp-jobinstance-8.2.jar" MVN="mvn:org.talend.libraries/cimt-talendcomp-jobinstance-8.2/6.0.0-SNAPSHOT" REQUIRED="true"/>
       <IMPORT NAME="slf4j-api" MODULE="slf4j-api-1.7.30.jar" MVN="mvn:org.talend.libraries/slf4j-api-1.7.30/6.0.0-SNAPSHOT" REQUIRED="true"/>
       <IMPORT NAME="jmxlocal" MODULE="jmxlocal-1.0.jar" MVN="mvn:org.talend.libraries/jmxlocal-1.0/6.0.0-SNAPSHOT" REQUIRED="true"/>
     </IMPORTS> 

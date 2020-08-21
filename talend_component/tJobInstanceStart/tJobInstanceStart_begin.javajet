@@ -22,7 +22,6 @@
     String valueRangeEnd = ElementParameterParser.getValue(node, "__VALUE_RANGE_END__");
     boolean readContext = "true".equals(ElementParameterParser.getValue(node, "__READ_CONTEXT_PARAMETERS__"));
     String processInstanceName = ElementParameterParser.getValue(node, "__PROCESS_INSTANCE_NAME__");
-    String contextVarProcess = ElementParameterParser.getValue(node, "__CONTEXT_VAR_PROCESS_INSTANCE_ID__");
     String contextVar = ElementParameterParser.getValue(node, "__CONTEXT_VAR_JOB_INSTANCE_ID__");
     boolean useDataSource = "true".equals(ElementParameterParser.getValue(node, "__USE_DATA_SOURCE__"));
     boolean useDataSourceAsDbName = "true".equals(ElementParameterParser.getValue(node, "__USE_DATA_SOURCE_ALIAS_AS_DBNAME__"));
