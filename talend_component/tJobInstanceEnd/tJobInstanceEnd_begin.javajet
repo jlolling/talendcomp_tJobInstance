@@ -173,4 +173,6 @@
 		globalMap.put("<%=cid%>_UPDATE_COUNTER", <%=cid%>.getCountInput());
 		globalMap.put("<%=cid%>_REJECT_COUNTER", <%=cid%>.getCountRejected());
 		globalMap.put("<%=cid%>_DELETE_COUNTER", <%=cid%>.getCountDeleted());
-	} // if (<%=cid%> == null)
+	} else { // if (<%=cid%> == null) 
+		throw new Exception("The tJobInstanceStart component was initialized most likely because of problems with the database connction.");
+	}

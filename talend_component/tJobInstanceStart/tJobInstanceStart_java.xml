@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <COMPONENT> 
-  <HEADER AUTHOR="cimt AG" COMPATIBILITY="ALL" DATA_AUTO_PROPAGATE="false" PLATEFORM="ALL" RELEASE_DATE="20200821" SERIAL="" STARTABLE="true" STATUS="PROD" VERSION="8.2"> 
+  <HEADER AUTHOR="cimt AG" COMPATIBILITY="ALL" DATA_AUTO_PROPAGATE="false" PLATEFORM="ALL" RELEASE_DATE="20200918" SERIAL="" STARTABLE="true" STATUS="PROD" VERSION="8.3"> 
     <SIGNATURE/> 
   </HEADER>  
   <FAMILIES> 
@@ -146,13 +146,13 @@
     <PARAMETER FIELD="CHECK" NAME="ACTIVATE_JMX" NUM_ROW="80"> 
       <DEFAULT>false</DEFAULT> 
     </PARAMETER>  
-    <PARAMETER NAME="RELEASE_LABEL_20200821" FIELD="LABEL" COLOR="0;0;0" NUM_ROW="900">
-      <DEFAULT>Release: 8.2 build at: 20200821</DEFAULT>
+    <PARAMETER NAME="RELEASE_LABEL_20200918" FIELD="LABEL" COLOR="0;0;0" NUM_ROW="900">
+      <DEFAULT>Release: 8.3 build at: 20200918</DEFAULT>
     </PARAMETER>
   </ADVANCED_PARAMETERS>  
   <CODEGENERATION> 
     <IMPORTS> 
-      <IMPORT NAME="cimt-talendcomp-jobinstance" MODULE="cimt-talendcomp-jobinstance-8.2.jar" MVN="mvn:org.talend.libraries/cimt-talendcomp-jobinstance-8.2/6.0.0-SNAPSHOT" REQUIRED="true"/>
+      <IMPORT NAME="cimt-talendcomp-jobinstance" MODULE="cimt-talendcomp-jobinstance-8.3.jar" MVN="mvn:org.talend.libraries/cimt-talendcomp-jobinstance-8.3/6.0.0-SNAPSHOT" REQUIRED="true"/>
       <IMPORT NAME="slf4j-api" MODULE="slf4j-api-1.7.30.jar" MVN="mvn:org.talend.libraries/slf4j-api-1.7.30/6.0.0-SNAPSHOT" REQUIRED="true"/>
       <IMPORT NAME="jmxlocal" MODULE="jmxlocal-1.0.jar" MVN="mvn:org.talend.libraries/jmxlocal-1.0/6.0.0-SNAPSHOT" REQUIRED="true"/>
     </IMPORTS> 

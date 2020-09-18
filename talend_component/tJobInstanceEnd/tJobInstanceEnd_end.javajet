@@ -58,8 +58,8 @@
 			globalMap.put("<%=cid%>_ERROR_MESSAGE", e.getMessage());
 			throw e;
 		}
-	} // if (<%=cid%> != null)
 <%	if (activateJMX) { %>
-	<%=cid%>.unregisterTalendJobMBean();
+   	<%=cid%>.unregisterTalendJobMBean();
 <%	} %>
+	} // if (<%=cid%> != null)
 	
