@@ -174,5 +174,5 @@
 		globalMap.put("<%=cid%>_REJECT_COUNTER", <%=cid%>.getCountRejected());
 		globalMap.put("<%=cid%>_DELETE_COUNTER", <%=cid%>.getCountDeleted());
 	} else { // if (<%=cid%> == null) 
-		throw new Exception("The tJobInstanceStart component was initialized most likely because of problems with the database connction.");
+		throw new Exception("The tJobInstanceStart component was not initialized most likely because of problems with the related database connection.");
 	}
