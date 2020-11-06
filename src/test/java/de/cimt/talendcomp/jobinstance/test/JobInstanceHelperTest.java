@@ -5,16 +5,20 @@ import static org.junit.Assert.assertTrue;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.After;
 import org.junit.Test;
 
-import de.cimt.talend.mock.TalendJobMock;
 import de.cimt.talendcomp.jobinstance.manage.JobInstanceHelper;
-import routines.TalendDate;
 
-public class JobInstanceHelperTest extends TalendJobMock {
+public class JobInstanceHelperTest {
+	
+	private Map<String, Object> globalMap = new HashMap<>();
+	SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 	
 	public void createConnection() throws Exception {
 		Class.forName("org.postgresql.Driver");
@@ -123,8 +127,7 @@ public class JobInstanceHelperTest extends TalendJobMock {
 						.getPrevTimeRangeEnd();
 				assertEquals(expectedTimeRangeEnd, prevTimeRangeEnd);
 				if (prevTimeRangeEnd == null) {
-					prevTimeRangeEnd = TalendDate.parseDate(
-							"yyyy-MM-dd", "1970-01-01");
+					prevTimeRangeEnd = sdf.parse("1970-01-01");
 				}
 				globalMap.put(
 						"tJobInstanceStart_1_PREV_TIME_RANGE_END",
@@ -174,9 +177,7 @@ public class JobInstanceHelperTest extends TalendJobMock {
 						"tJobInstanceStart_1_PREV_JOB_INSTANCE_ID",
 						0l);
 				globalMap.put(
-						"tJobInstanceStart_1_PREV_JOB_START_DATE",
-						TalendDate.parseDate("yyyy-MM-dd",
-								"1970-01-01"));
+						"tJobInstanceStart_1_PREV_JOB_START_DATE",sdf.parse("1970-01-01"));
 				globalMap
 						.remove("tJobInstanceStart_1_PREV_JOB_STOP_DATE");
 				globalMap
@@ -188,9 +189,7 @@ public class JobInstanceHelperTest extends TalendJobMock {
 				globalMap
 						.remove("tJobInstanceStart_1_PREV_TIME_RANGE_START");
 				globalMap.put(
-						"tJobInstanceStart_1_PREV_TIME_RANGE_END",
-						TalendDate.parseDate("yyyy-MM-dd",
-								"1970-01-01"));
+						"tJobInstanceStart_1_PREV_TIME_RANGE_END",sdf.parse("1970-01-01"));
 				globalMap
 						.remove("tJobInstanceStart_1_PREV_VALUE_RANGE_START");
 				globalMap.put(
