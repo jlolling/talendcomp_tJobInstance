@@ -1,41 +1,42 @@
-CREATE TABLE JOB_INSTANCE_STATUS (
-  JOB_INSTANCE_ID BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  PROCESS_INSTANCE_ID BIGINT DEFAULT NULL,
-  PROCESS_INSTANCE_NAME VARCHAR(255) DEFAULT NULL,
-  JOB_NAME VARCHAR(255) NOT NULL,
-  JOB_PROJECT varchar(128),
-  JOB_DISPLAY_NAME VARCHAR(255) DEFAULT NULL,
-  JOB_GUID VARCHAR(100) NOT NULL,
-  JOB_EXT_ID VARCHAR(255) DEFAULT NULL,
-  JOB_INFO VARCHAR(255) DEFAULT NULL,
-  ROOT_JOB_GUID VARCHAR(100) DEFAULT NULL,
-  WORK_ITEM VARCHAR(1024) DEFAULT NULL,
-  TIME_RANGE_START TIMESTAMP(3) NULL DEFAULT NULL,
-  TIME_RANGE_END TIMESTAMP(3) NULL DEFAULT NULL,
-  VALUE_RANGE_START VARCHAR(512) DEFAULT NULL,
-  VALUE_RANGE_END VARCHAR(512) DEFAULT NULL,
-  JOB_STARTED_AT TIMESTAMP(3) NULL DEFAULT NULL,
-  JOB_ENDED_AT TIMESTAMP(3) NULL DEFAULT NULL,
-  JOB_RESULT VARCHAR(1024) DEFAULT NULL,
-  COUNT_INPUT INT(11) DEFAULT NULL,
-  COUNT_OUTPUT INT(11) DEFAULT NULL,
-  COUNT_UPDATED INT(11) DEFAULT NULL,
-  COUNT_REJECTED INT(11) DEFAULT NULL,
-  COUNT_DELETED INT(11) DEFAULT NULL,
-  RETURN_CODE INT(11) DEFAULT NULL,
-  RETURN_MESSAGE TEXT,
-  HOST_NAME VARCHAR(255) DEFAULT NULL,
-  HOST_PID INT(11) DEFAULT NULL,
-  HOST_USER VARCHAR(128) DEFAULT NULL,
-  PRIMARY KEY (JOB_INSTANCE_ID)
-) DEFAULT CHARSET=UTF8;
+create table job_instance_status (
+  job_instance_id bigint unsigned not null auto_increment,
+  process_instance_id bigint default null,
+  process_instance_name varchar(255) default null,
+  job_name varchar(255) not null,
+  job_project varchar(128),
+  job_display_name varchar(255) default null,
+  job_guid varchar(100) not null,
+  job_ext_id varchar(255) default null,
+  job_info varchar(255) default null,
+  root_job_guid varchar(100) default null,
+  work_item varchar(1024) default null,
+  time_range_start datetime null default null,
+  time_range_end datetime null default null,
+  value_range_start varchar(512) default null,
+  value_range_end varchar(512) default null,
+  job_started_at datetime null default null,
+  job_ended_at datetime null default null,
+  job_result varchar(1024) default null,
+  count_input integer default null,
+  count_output integer default null,
+  count_updated integer default null,
+  count_rejected integer default null,
+  count_deleted integer default null,
+  return_code integer default null,
+  return_message text,
+  host_name varchar(255) default null,
+  host_pid integer default null,
+  host_user varchar(128) default null,
+  primary key (job_instance_id)
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
-CREATE INDEX JOB_INSTANCE_STATUS_JOB_GUID ON JOB_INSTANCE_STATUS(JOB_GUID);
-CREATE INDEX JOB_INSTANCE_STATUS_JOB_NAME ON JOB_INSTANCE_STATUS(JOB_NAME);
+create index job_instance_status_job_guid on job_instance_status(job_guid);
+create index job_instance_status_job_name on job_instance_status(job_name);
 
-CREATE TABLE JOB_INSTANCE_COUNTERS (
-    JOB_INSTANCE_ID BIGINT NOT NULL,     -- reference to the job instance
-    COUNTER_NAME VARCHAR(128) NOT NULL,  -- name of the counter set in tJobInstanceEnd for a counter
-    COUNTER_TYPE VARCHAR(20),            -- type of the counter
-    COUNTER_VALUE INTEGER,               -- value of the counter
-    CONSTRAINT PK_JOB_INSTANCE_COUNTERS PRIMARY KEY (JOB_INSTANCE_ID, COUNTER_NAME));
+create table job_instance_counters (
+    job_instance_id bigint not null,     -- reference to the job instance
+    counter_name varchar(128) not null,  -- name of the counter set in tjobinstanceend for a counter
+    counter_type varchar(20),            -- type of the counter
+    counter_value integer,               -- value of the counter
+    constraint pk_job_instance_counters primary key (job_instance_id, counter_name)
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
