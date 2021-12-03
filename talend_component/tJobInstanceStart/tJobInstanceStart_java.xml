@@ -140,7 +140,7 @@
       <DEFAULT>false</DEFAULT> 
     </PARAMETER>  
     <PARAMETER FIELD="TEXT" NAME="SEQUENCE_EXPRESSION" NUM_ROW="60" REQUIRED="true" SHOW_IF="(USE_GENERATED_JID == 'false') and (IS_AUTO_INCREMENT == 'false')"> 
-      <DEFAULT>"nextval('b17_management.seq_job_instance_id')"</DEFAULT> 
+      <DEFAULT>"nextval('dwh_manage.seq_job_instance_id')"</DEFAULT> 
     </PARAMETER>  
     <PARAMETER FIELD="CHECK" NAME="REDUCE_RESUME_LOGS" NUM_ROW="70"> 
       <DEFAULT>true</DEFAULT> 
