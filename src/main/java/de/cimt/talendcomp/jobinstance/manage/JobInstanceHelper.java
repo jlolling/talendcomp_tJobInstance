@@ -81,7 +81,7 @@ public class JobInstanceHelper {
 	public static final String OVERRIDE_DIE_CODE_KEY = "OVERRIDE_DIE_CODE";
 	private Connection startConnection = null;
 	private Connection endConnection = null;
-	private String tableName = TABLE_JOB_INSTANCE_STATUS;
+	private String tableNameStatus = TABLE_JOB_INSTANCE_STATUS;
 	private String viewName = VIEW_JOB_INSTANCE_STATUS;
 	private String schemaName = null;
 	private String sequenceExpression = null;
@@ -744,12 +744,12 @@ public class JobInstanceHelper {
 
 	private String getTable(boolean write) {
 		if (write) {
-			return schemaName != null ? schemaName + "." + tableName : tableName;
+			return schemaName != null ? schemaName + "." + tableNameStatus : tableNameStatus;
 		} else {
 			if (useViewToReadStatus) {
 				return schemaName != null ? schemaName + "." + viewName : viewName;
 			} else {
-				return schemaName != null ? schemaName + "." + tableName : tableName;
+				return schemaName != null ? schemaName + "." + tableNameStatus : tableNameStatus;
 			}
 		}
 	}
@@ -1069,7 +1069,7 @@ public class JobInstanceHelper {
 	
 	public void setTableName(String tableName) {
 		if (tableName != null && tableName.trim().isEmpty() == false) {
-			this.tableName = tableName;
+			this.tableNameStatus = tableName;
 		}
 	}
 	
@@ -1822,13 +1822,13 @@ public class JobInstanceHelper {
 		synchronized(scannerCounterMap) {
 			Integer counter = scannerCounterMap.get(scannerUniqueName + "_nb_line_total");
 			if (counter == null) {
-				counter = new Integer(0);
+				counter = Integer.valueOf(0);
 				scannerCounterMap.put(scannerUniqueName + "_nb_line_total", counter);
 			}
 			scannerCounterMap.put(scannerUniqueName + "_nb_line_total", counter + 1);
 			counter = scannerCounterMap.get(scannerUniqueName + "_nb_line");
 			if (counter == null) {
-				counter = new Integer(0);
+				counter = Integer.valueOf(0);
 				scannerCounterMap.put(scannerUniqueName + "_nb_line", counter);
 			}
 			scannerCounterMap.put(scannerUniqueName + "_nb_line", counter + 1);
@@ -1873,7 +1873,7 @@ public class JobInstanceHelper {
 		synchronized(scannerCounterMap) {
 			Integer counter = scannerCounterMap.get(scannerUniqueName + "_flow");
 			if (counter == null) {
-				counter = new Integer(0);
+				counter = Integer.valueOf(0);
 				scannerCounterMap.put(scannerUniqueName + "_flow", counter);
 			}
 			scannerCounterMap.put(scannerUniqueName + "_flow", counter + 1);
@@ -1968,4 +1968,10 @@ public class JobInstanceHelper {
 		}
 	}
 
+	public void setTableNameCounters(String tableNameCounters) {
+		if (tableNameCounters != null && tableNameCounters.trim().isEmpty() == false) {
+			ch.setTableName(tableNameCounters);
+		}
+	}
+	
 }

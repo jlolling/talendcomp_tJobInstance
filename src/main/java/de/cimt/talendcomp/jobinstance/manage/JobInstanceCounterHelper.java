@@ -153,4 +153,10 @@ public class JobInstanceCounterHelper {
 		}
 	}
 
+	public void setTableName(String tableName) {
+		if (tableName != null && tableName.trim().isEmpty() == false) {
+			this.tableName = tableName;
+		}
+	}
+
 }

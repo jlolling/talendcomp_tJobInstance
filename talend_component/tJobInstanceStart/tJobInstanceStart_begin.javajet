@@ -110,7 +110,7 @@
 	<%=cid%>.setTableName(<%=tableName%>);
 <%  } %>
 <%  if (tableNameCounter != null && tableNameCounter.trim().isEmpty() == false) { %>
-	<%=cid%>.setCounterTableName(<%=tableNameCounter%>);
+	<%=cid%>.setTableNameCounters(<%=tableNameCounter%>);
 <%  } %>
 <%	if (maxMessageLength != null && maxMessageLength.trim().isEmpty() == false) { %>
 	<%=cid%>.setMaxMessageLength(<%=maxMessageLength%>);

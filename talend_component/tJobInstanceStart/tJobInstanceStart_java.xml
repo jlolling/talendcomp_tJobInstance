@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <COMPONENT> 
-  <HEADER AUTHOR="cimt AG" COMPATIBILITY="ALL" DATA_AUTO_PROPAGATE="false" PLATEFORM="ALL" RELEASE_DATE="20211206" SERIAL="" STARTABLE="true" STATUS="PROD" VERSION="8.4"> 
+  <HEADER AUTHOR="cimt AG" COMPATIBILITY="ALL" DATA_AUTO_PROPAGATE="false" PLATEFORM="ALL" RELEASE_DATE="20220405" SERIAL="" STARTABLE="true" STATUS="PROD" VERSION="8.5"> 
     <SIGNATURE/> 
   </HEADER>  
   <FAMILIES> 
@@ -127,6 +127,12 @@
   </PARAMETERS>  
   <ADVANCED_PARAMETERS> 
     <PARAMETER FIELD="TEXT" NAME="SCHEMA_NAME" NUM_ROW="20" SHOW_IF="(USE_DATA_SOURCE == 'true') and (USE_DATA_SOURCE == 'true')"/>  
+    <PARAMETER FIELD="TEXT" NAME="TABLE_NAME" NUM_ROW="25"> 
+      <DEFAULT>"JOB_INSTANCE_STATUS"</DEFAULT> 
+    </PARAMETER>  
+    <PARAMETER FIELD="TEXT" NAME="TABLE_NAME_COUNTER" NUM_ROW="26"> 
+      <DEFAULT>"JOB_INSTANCE_COUNTERS"</DEFAULT> 
+    </PARAMETER>  
     <PARAMETER FIELD="TEXT" NAME="MAX_MESSAGE_LENGTH" NUM_ROW="40" REQUIRED="true"> 
       <DEFAULT>1000</DEFAULT> 
     </PARAMETER>  
@@ -148,13 +154,13 @@
     <PARAMETER FIELD="CHECK" NAME="ACTIVATE_JMX" NUM_ROW="80"> 
       <DEFAULT>false</DEFAULT> 
     </PARAMETER>  
-    <PARAMETER NAME="RELEASE_LABEL_20211206" FIELD="LABEL" COLOR="0;0;0" NUM_ROW="900">
-      <DEFAULT>Release: 8.4 build at: 20211206</DEFAULT>
+    <PARAMETER NAME="RELEASE_LABEL_20220405" FIELD="LABEL" COLOR="0;0;0" NUM_ROW="900">
+      <DEFAULT>Release: 8.5 build at: 20220405</DEFAULT>
     </PARAMETER>
   </ADVANCED_PARAMETERS>  
   <CODEGENERATION> 
     <IMPORTS> 
-      <IMPORT NAME="cimt-talendcomp-jobinstance" MODULE="cimt-talendcomp-jobinstance-8.4.jar" MVN="mvn:org.talend.libraries/cimt-talendcomp-jobinstance-8.4/6.0.0-SNAPSHOT" REQUIRED="true"/>
+      <IMPORT NAME="cimt-talendcomp-jobinstance" MODULE="cimt-talendcomp-jobinstance-8.5.jar" MVN="mvn:org.talend.libraries/cimt-talendcomp-jobinstance-8.5/6.0.0-SNAPSHOT" REQUIRED="true"/>
       <IMPORT NAME="slf4j-api" MODULE="slf4j-api-1.7.30.jar" MVN="mvn:org.talend.libraries/slf4j-api-1.7.30/6.0.0-SNAPSHOT" REQUIRED="true"/>
       <IMPORT NAME="jmxlocal" MODULE="jmxlocal-1.0.jar" MVN="mvn:org.talend.libraries/jmxlocal-1.0/6.0.0-SNAPSHOT" REQUIRED="true"/>
     </IMPORTS> 
