@@ -100,7 +100,7 @@
 	globalMap.put("<%=cid%>_JOB_START_DATE", <%=cid%>.getJobStartedAt());
 	// job info
 	{
-		String cleanedContext = de.cimt.talendcomp.jobinstance.manage.JobInstanceHelper(contextStr);
+		String cleanedContext = de.cimt.talendcomp.jobinstance.manage.JobInstanceHelper.getCleanedContext(contextStr);
 		globalMap.put("<%=cid%>_CONTEXT", cleanedContext);
 		<%=cid%>.setJobInfo(projectName + "/" + jobName + "-" + jobVersion + ":" + cleanedContext);
 	}
