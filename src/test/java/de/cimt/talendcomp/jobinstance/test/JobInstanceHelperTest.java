@@ -33,6 +33,14 @@ public class JobInstanceHelperTest {
 			conn.close();
 		}
 	}
+	
+	@Test  
+	public void testCleanupContext() {
+		String test = "test_2_98765";
+		String expected = "test_2";
+		String actual = JobInstanceHelper.getCleanedContext(test);
+		assertTrue("contextStr cleanup failed", expected.equals(actual));
+	}
 
 	@Test
 	public void testCreateAndUpdateEntry() throws Exception {

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <COMPONENT> 
-  <HEADER AUTHOR="cimt AG" COMPATIBILITY="ALL" DATA_AUTO_PROPAGATE="true" PLATEFORM="ALL" RELEASE_DATE="20220405" SERIAL="" STARTABLE="true" STATUS="PROD" VERSION="8.5"> 
+  <HEADER AUTHOR="cimt AG" COMPATIBILITY="ALL" DATA_AUTO_PROPAGATE="true" PLATEFORM="ALL" RELEASE_DATE="20230129" SERIAL="" STARTABLE="true" STATUS="PROD" VERSION="8.6"> 
     <SIGNATURE/> 
   </HEADER>  
   <FAMILIES> 
@@ -53,16 +53,15 @@
     <PARAMETER FIELD="TEXT" NAME="TABLE_NAME" NUM_ROW="20" SHOW_IF="USE_PROJECT_SPECIFIC_NAMES == 'false'"> 
       <DEFAULT/> 
     </PARAMETER>  
-    <PARAMETER NAME="RELEASE_LABEL_20220405" FIELD="LABEL" COLOR="0;0;0" NUM_ROW="900">
-      <DEFAULT>Release: 8.5 build at: 20220405</DEFAULT>
+    <PARAMETER NAME="RELEASE_LABEL_20230129" FIELD="LABEL" COLOR="0;0;0" NUM_ROW="900">
+      <DEFAULT>Release: 8.6 build at: 20230129</DEFAULT>
     </PARAMETER>
   </ADVANCED_PARAMETERS>  
   <CODEGENERATION> 
     <IMPORTS> 
       <!-- the name part "user" must match to the value in parameter PROJECT_SPECIFIC_NAME_MAP_RESOURCE			<IMPORT NAME="custom_mapping_test" MODULE="mapping_user.properties.jar" REQUIRED="true" />			 -->  
-      <IMPORT NAME="cimt-talendcomp-jobinstance" MODULE="cimt-talendcomp-jobinstance-8.5.jar" MVN="mvn:org.talend.libraries/cimt-talendcomp-jobinstance-8.5/6.0.0-SNAPSHOT" REQUIRED="true"/>
+      <IMPORT NAME="cimt-talendcomp-jobinstance" MODULE="cimt-talendcomp-jobinstance-8.6.jar" MVN="mvn:org.talend.libraries/cimt-talendcomp-jobinstance-8.6/6.0.0-SNAPSHOT" REQUIRED="true"/>
       <IMPORT NAME="slf4j-api" MODULE="slf4j-api-1.7.30.jar" MVN="mvn:org.talend.libraries/slf4j-api-1.7.30/6.0.0-SNAPSHOT" REQUIRED="true"/>
-      <IMPORT NAME="jmxlocal" MODULE="jmxlocal-1.0.jar" MVN="mvn:org.talend.libraries/jmxlocal-1.0/6.0.0-SNAPSHOT" REQUIRED="true"/>
     </IMPORTS> 
   </CODEGENERATION>  
   <RETURNS> 

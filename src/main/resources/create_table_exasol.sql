@@ -21,6 +21,7 @@ create table dwh_manage.job_instance_status (
    count_input integer,
    count_output integer,
    count_updated integer,
+   count_updated integer,
    count_rejected integer,
    count_deleted integer,
    return_code integer,

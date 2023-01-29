@@ -834,7 +834,6 @@ public class JobInstanceHelper {
 		this.currentJobInfo.setJobInfo(jobInfo != null ? jobInfo.trim() : null);
 	}
 
-
 	public String getJobWorkItem() {
 		return currentJobInfo.getWorkItem();
 	}
@@ -854,6 +853,10 @@ public class JobInstanceHelper {
 				currentJobInfo.setWorkItem(value);
 			}
 		}
+	}
+	
+	public static String getCleanedContext(String contextStr) {
+		return contextStr.trim().replaceAll("_[0-9]{4,}$", "");
 	}
 
 	public void setJobWorkItem(Integer jobWorkItem, boolean emptyAsNull) {

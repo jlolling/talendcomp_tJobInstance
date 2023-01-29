@@ -99,7 +99,11 @@
 	<%=cid%>.setJobStartedAt(jobStartedAt);
 	globalMap.put("<%=cid%>_JOB_START_DATE", <%=cid%>.getJobStartedAt());
 	// job info
-	<%=cid%>.setJobInfo(projectName + "/" + jobName + "-" + jobVersion + ":" + contextStr);
+	{
+		String cleanedContext = de.cimt.talendcomp.jobinstance.manage.JobInstanceHelper(contextStr);
+		globalMap.put("<%=cid%>_CONTEXT", cleanedContext);
+		<%=cid%>.setJobInfo(projectName + "/" + jobName + "-" + jobVersion + ":" + cleanedContext);
+	}
 	<%=cid%>.setProject(projectName);
 	<%=cid%>.setJobName(<%=jobName%>);
 	<%=cid%>.setJobGuid(pid);
