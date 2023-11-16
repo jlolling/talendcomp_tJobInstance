@@ -19,4 +19,14 @@ public class TestProcessHelper {
 		assertTrue("Empty list", pidList.size() > 0);
 	}
 
+	@Test
+	public void testListProcessesUnixAltCommand() throws Exception {
+		ProcessHelper ph = new ProcessHelper();
+		ph.init();
+		ph.setUnixCommand("ps -o pid");
+		List<Integer> pidList = ph.retrieveProcessListForUnix();
+		System.out.println("Found: " + pidList.size() + " processes");
+		assertTrue("Empty list", pidList.size() == 1);
+	}
+
 }
