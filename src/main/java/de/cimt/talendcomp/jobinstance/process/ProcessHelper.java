@@ -25,8 +25,6 @@ import java.util.regex.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import jdk.internal.org.jline.utils.Log;
-
 public class ProcessHelper {
 	
 	private static Logger LOG = LogManager.getLogger(ProcessHelper.class);
@@ -74,10 +72,24 @@ public class ProcessHelper {
 		return isWindows;
 	}
 	
+	private List<String> getCommandAsList(String command) {
+		if (command == null || command.trim().isEmpty()) {
+			throw new IllegalArgumentException("command cannot be null or empty");
+		}
+		String[] array = command.split("\\s");
+		List<String> cl = new ArrayList<String>();
+		for (String part : array) {
+			if (part != null && part.trim().isEmpty() == false) {
+				cl.add(part.trim());
+			}
+		}
+		return cl;
+	}
+	
 	public List<Integer> retrieveProcessListForUnix() throws Exception {
-		Log.info("Retrieve Unix PIDs with command: '" + unixCommand + "' and regex: '" + unixPidPattern + "'");
+		LOG.info("Retrieve Unix PIDs with command: '" + unixCommand + "' and regex: '" + unixPidPattern + "'");
 		List<Integer> pids = new ArrayList<Integer>();
-		ProcessBuilder pb = new ProcessBuilder(unixCommand);
+		ProcessBuilder pb = new ProcessBuilder(getCommandAsList(unixCommand));
 		Process process = pb.start();
 		BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
 		String line = null;
@@ -103,9 +115,9 @@ public class ProcessHelper {
 	}
 
 	public List<Integer> retrieveProcessListForWindows() throws Exception {
-		Log.info("Retrieve Windows PIDs with command: '" + windowsCommand + "' and regex: '" + windowsPidPattern + "'");
+		LOG.info("Retrieve Windows PIDs with command: '" + windowsCommand + "' and regex: '" + windowsPidPattern + "'");
 		List<Integer> pids = new ArrayList<Integer>();
-		ProcessBuilder pb = new ProcessBuilder(windowsCommand);
+		ProcessBuilder pb = new ProcessBuilder(getCommandAsList(windowsCommand));
 		Process process = pb.start();
 		BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
 		String line = null;

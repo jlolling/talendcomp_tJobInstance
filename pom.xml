@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>de.cimt.talendcomp</groupId>
 	<artifactId>cimt-talendcomp-jobinstance</artifactId>
-	<version>8.8</version>
+	<version>8.9</version>
 	<organization>
 		<name>cimt AG</name>
 	</organization>
@@ -31,6 +31,12 @@
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-api</artifactId>
+			<version>2.18.0</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
 			<version>2.18.0</version>
 			<scope>provided</scope>
 		</dependency>
