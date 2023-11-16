@@ -53,15 +53,16 @@
     <PARAMETER FIELD="TEXT" NAME="TABLE_NAME" NUM_ROW="20" SHOW_IF="USE_PROJECT_SPECIFIC_NAMES == 'false'"> 
       <DEFAULT/> 
     </PARAMETER>  
+    <PARAMETER FIELD="TEXT" NAME="ALTERNATIVE_UNIX_COMMAND" NUM_ROW="30"/>  
+    <PARAMETER FIELD="TEXT" NAME="ALTERNATIVE_UNIX_PID_PATTERN" NUM_ROW="40"/>  
+    <PARAMETER FIELD="TEXT" NAME="ALTERNATIVE_WINDOWS_COMMAND" NUM_ROW="50"/>  
+    <PARAMETER FIELD="TEXT" NAME="ALTERNATIVE_WINDOWS_PID_PATTERN" NUM_ROW="60"/>  
     <PARAMETER NAME="RELEASE_LABEL_20230129" FIELD="LABEL" COLOR="0;0;0" NUM_ROW="900">
       <DEFAULT>Release: 8.6 build at: 20230129</DEFAULT>
     </PARAMETER>
   </ADVANCED_PARAMETERS>  
   <CODEGENERATION> 
     <IMPORTS> 
-      <!-- the name part "user" must match to the value in parameter PROJECT_SPECIFIC_NAME_MAP_RESOURCE			<IMPORT NAME="custom_mapping_test" MODULE="mapping_user.properties.jar" REQUIRED="true" />			 -->  
-      <IMPORT NAME="cimt-talendcomp-jobinstance" MODULE="cimt-talendcomp-jobinstance-8.6.jar" MVN="mvn:org.talend.libraries/cimt-talendcomp-jobinstance-8.6/6.0.0-SNAPSHOT" REQUIRED="true"/>
-      <IMPORT NAME="slf4j-api" MODULE="slf4j-api-1.7.30.jar" MVN="mvn:org.talend.libraries/slf4j-api-1.7.30/6.0.0-SNAPSHOT" REQUIRED="true"/>
     </IMPORTS> 
   </CODEGENERATION>  
   <RETURNS> 

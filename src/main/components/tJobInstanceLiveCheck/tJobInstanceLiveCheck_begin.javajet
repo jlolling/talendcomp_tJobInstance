@@ -21,6 +21,22 @@
     if (node.getOutgoingConnections().size() > 0) {
     	conn = node.getOutgoingConnections().get(0);
     }
+    String unixCommand = ElementParameterParser.getValue(node, "__ALTERNATIVE_UNIX_COMMAND__");
+    if (unixCommand == null || unixCommand.trim().isEmpty()) {
+    	unixCommand = "null";
+    }
+    String windowsCommand = ElementParameterParser.getValue(node, "__ALTERNATIVE_WINDOWS_COMMAND__");
+    if (windowsCommand == null || windowsCommand.trim().isEmpty()) {
+    	windowsCommand = "null";
+    }
+	String unixPidPattern = ElementParameterParser.getValue(node, "__ALTERNATIVE_UNIX_PID_PATTERN__");
+    if (unixPidPattern == null || unixPidPattern.trim().isEmpty()) {
+    	unixPidPattern = "null";
+    }
+	String windowsPidPattern = ElementParameterParser.getValue(node, "__ALTERNATIVE_WINDOWS_PID_PATTERN__");
+    if (windowsPidPattern == null || windowsPidPattern.trim().isEmpty()) {
+    	windowsPidPattern = "null";
+    }
 %>
 	// instantiate the job instance helper
 	de.cimt.talendcomp.jobinstance.manage.JobInstanceHelper <%=cid%> = new de.cimt.talendcomp.jobinstance.manage.JobInstanceHelper();
@@ -70,6 +86,12 @@
 	globalMap.put("<%=cid%>", <%=cid%>);
 	globalMap.put("<%=cid%>_HOST_NAME", <%=cid%>.getHostName());
 	java.util.List<de.cimt.talendcomp.jobinstance.manage.JobInfo> listDiedInstances_<%=cid%> = new java.util.ArrayList<de.cimt.talendcomp.jobinstance.manage.JobInfo>();
+	// set alternative commands and filter pattern to extract PIDs 
+	<%=cid%>.setUnixCommand(<%=unixCommand%>);
+	<%=cid%>.setWindowsCommand(<%=windowsCommand%>);
+	<%=cid%>.setUnixPidPattern(<%=unixPidPattern%>);
+	<%=cid%>.setWindowsPidPattern(<%=windowsPidPattern%>);
+	// collect PIDs and cleanup job instance status entries
 	try {
 		listDiedInstances_<%=cid%> = <%=cid%>.cleanupBrokenJobInstances();
 	} catch (Exception e) {

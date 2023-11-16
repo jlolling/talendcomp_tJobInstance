@@ -39,15 +39,15 @@ import java.util.TimeZone;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import de.cimt.talendcomp.jobinstance.jmx.TalendJobInfoMXBean;
 import de.cimt.talendcomp.jobinstance.process.ProcessHelper;
 
 public class JobInstanceHelper {
 	
-	private final static Logger logger = LoggerFactory.getLogger(JobInstanceHelper.class);
+	private final static Logger logger = LogManager.getLogger(JobInstanceHelper.class);
 	public static final String TABLE_JOB_INSTANCE_STATUS = "JOB_INSTANCE_STATUS";
 	public static final String VIEW_JOB_INSTANCE_STATUS = "JOB_INSTANCE_STATUS_VIEW";
 	public static final String JOB_INSTANCE_ID = "JOB_INSTANCE_ID";
@@ -1543,6 +1543,39 @@ public class JobInstanceHelper {
 	private int countBrokenInstances = 0;
 	private Date lastSystemStart = null;
 	
+	private String unixCommand = "ps -eo pid";
+	private String unixPidPattern = "[0-9]{1,8}";
+	private String windowsCommand = "tasklist /fo list";
+	private String windowsPidPattern = "PID[:\\s]*([0-9]{1,6})";
+	
+	public void setUnixCommand(String unixCommand) {
+		if (unixCommand != null && unixCommand.trim().isEmpty() == false) {
+			this.unixCommand = unixCommand;
+		}
+	}
+
+	public String getUnixPidPattern() {
+		return unixPidPattern;
+	}
+
+	public void setUnixPidPattern(String unixPidPattern) {
+		if (unixPidPattern != null && unixPidPattern.trim().isEmpty() == false) {
+			this.unixPidPattern = unixPidPattern;
+		}
+	}
+
+	public void setWindowsCommand(String windowsCommand) {
+		if (windowsCommand != null && windowsCommand.trim().isEmpty() == false) {
+			this.windowsCommand = windowsCommand;
+		}
+	}
+
+	public void setWindowsPidPattern(String windowsPidPattern) {
+		if (windowsPidPattern != null && windowsPidPattern.trim().isEmpty() == false) {
+			this.windowsPidPattern = windowsPidPattern;
+		}
+	}
+
 	public List<JobInfo> cleanupBrokenJobInstances() throws Exception {
 		checkConnection(startConnection);
 		countRunningJobInstances = 0;
@@ -1550,6 +1583,10 @@ public class JobInstanceHelper {
 		String hostName = currentJobInfo.getHostName();
 		final java.sql.Timestamp endedAt = new java.sql.Timestamp(System.currentTimeMillis());
 		ProcessHelper ph = new ProcessHelper();
+		ph.setUnixCommand(unixCommand);
+		ph.setWindowsCommand(windowsCommand);
+		ph.setUnixPidPattern(unixPidPattern);
+		ph.setWindowsPidPattern(windowsPidPattern);
 		ph.init();
 		final List<Integer> runningPidList = ph.retrieveProcessList();
 		countProcesses = runningPidList.size();

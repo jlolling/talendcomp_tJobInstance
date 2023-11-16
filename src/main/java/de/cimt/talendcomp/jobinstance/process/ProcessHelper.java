@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 Jan Lolling jan.lolling@gmail.com
+ * Copyright 2023 Jan Lolling jan.lolling@gmail.com
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,10 +22,20 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import jdk.internal.org.jline.utils.Log;
+
 public class ProcessHelper {
 	
+	private static Logger LOG = LogManager.getLogger(ProcessHelper.class);
 	private boolean isUnix = false;
 	private boolean isWindows = false;
+	private String unixCommand = "ps -eo pid";
+	private String unixPidPattern = "[0-9]{1,8}";
+	private String windowsCommand = "tasklist /fo list";
+	private String windowsPidPattern = "PID[:\\s]*([0-9]{1,6})";
 	
 	public ProcessHelper() {}
 	
@@ -65,12 +75,13 @@ public class ProcessHelper {
 	}
 	
 	public List<Integer> retrieveProcessListForUnix() throws Exception {
+		Log.info("Retrieve Unix PIDs with command: '" + unixCommand + "' and regex: '" + unixPidPattern + "'");
 		List<Integer> pids = new ArrayList<Integer>();
-		ProcessBuilder pb = new ProcessBuilder("ps", "-eo", "pid");
+		ProcessBuilder pb = new ProcessBuilder(unixCommand);
 		Process process = pb.start();
 		BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
 		String line = null;
-		Pattern patternPid = Pattern.compile("[0-9]{1,8}");
+		Pattern patternPid = Pattern.compile(unixPidPattern);
 		StringBuilder psCommandResponse = new StringBuilder();
 		while ((line = br.readLine()) != null) {
 			line = line.trim();
@@ -86,18 +97,19 @@ public class ProcessHelper {
 		}
 		br.close();
 		if (pids.isEmpty()) {
-			System.out.println("No pids could be extracted from the ps command response:\n" + psCommandResponse);
+			LOG.error("No pids could be extracted by unix command: '" + unixCommand + "' using pattern: '" + unixPidPattern + "' response:\n" + psCommandResponse);
 		}
 		return pids;
 	}
 
 	public List<Integer> retrieveProcessListForWindows() throws Exception {
+		Log.info("Retrieve Windows PIDs with command: '" + windowsCommand + "' and regex: '" + windowsPidPattern + "'");
 		List<Integer> pids = new ArrayList<Integer>();
-		ProcessBuilder pb = new ProcessBuilder("tasklist", "/fo", "list");
+		ProcessBuilder pb = new ProcessBuilder(windowsCommand);
 		Process process = pb.start();
 		BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
 		String line = null;
-		Pattern pattern = Pattern.compile("PID[:\\s]*([0-9]{1,6})", Pattern.CASE_INSENSITIVE);
+		Pattern pattern = Pattern.compile(windowsPidPattern, Pattern.CASE_INSENSITIVE);
 		StringBuilder psCommandResponse = new StringBuilder();
 		while ((line = br.readLine()) != null) {
 			line = line.trim();
@@ -114,9 +126,49 @@ public class ProcessHelper {
 		}
 		br.close();
 		if (pids.isEmpty()) {
-			System.out.println("No pids could be extracted from the tasklist command response:\n" + psCommandResponse);
+			LOG.error("No pids could be extracted by windows command: '" + windowsCommand + "' using pattern: '" + windowsPidPattern + "' response:\n" + psCommandResponse);
 		}
 		return pids;
+	}
+
+	public String getUnixCommand() {
+		return unixCommand;
+	}
+
+	public void setUnixCommand(String unixCommand) {
+		if (unixCommand != null && unixCommand.trim().isEmpty() == false) {
+			this.unixCommand = unixCommand;
+		}
+	}
+
+	public String getUnixPidPattern() {
+		return unixPidPattern;
+	}
+
+	public void setUnixPidPattern(String unixPidPattern) {
+		if (unixPidPattern != null && unixPidPattern.trim().isEmpty() == false) {
+			this.unixPidPattern = unixPidPattern;
+		}
+	}
+
+	public String getWindowsCommand() {
+		return windowsCommand;
+	}
+
+	public void setWindowsCommand(String windowsCommand) {
+		if (windowsCommand != null && windowsCommand.trim().isEmpty() == false) {
+			this.windowsCommand = windowsCommand;
+		}
+	}
+
+	public String getWindowsPidPattern() {
+		return windowsPidPattern;
+	}
+
+	public void setWindowsPidPattern(String windowsPidPattern) {
+		if (windowsPidPattern != null && windowsPidPattern.trim().isEmpty() == false) {
+			this.windowsPidPattern = windowsPidPattern;
+		}
 	}
 	
 }
