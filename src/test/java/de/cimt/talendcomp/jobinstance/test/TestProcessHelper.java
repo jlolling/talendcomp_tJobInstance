@@ -29,4 +29,19 @@ public class TestProcessHelper {
 		assertTrue("Empty list", pidList.size() == 1);
 	}
 
+	@Test
+	public void testListProcessesUnixAltCommandErrorHandling() throws Exception {
+		ProcessHelper ph = new ProcessHelper();
+		ph.init();
+		ph.setUnixCommand("xyz abc");
+		try {
+			ph.retrieveProcessListForUnix();
+			assertTrue(false);
+		} catch (Exception e) {
+			String m = e.getMessage();
+			System.out.println(m);
+			assertTrue(m != null && m.contains("Unix command"));
+		}
+	}
+
 }

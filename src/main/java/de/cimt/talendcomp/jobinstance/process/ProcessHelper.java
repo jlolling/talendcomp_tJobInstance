@@ -90,7 +90,12 @@ public class ProcessHelper {
 		LOG.info("Retrieve Unix PIDs with command: '" + unixCommand + "' and regex: '" + unixPidPattern + "'");
 		List<Integer> pids = new ArrayList<Integer>();
 		ProcessBuilder pb = new ProcessBuilder(getCommandAsList(unixCommand));
-		Process process = pb.start();
+		Process process = null;
+		try {
+			process = pb.start();
+		} catch (Exception ioe) {
+			throw new Exception("Unix command to get PID list: '" + unixCommand + "' failed: " + ioe.getMessage(), ioe);
+		}
 		BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
 		String line = null;
 		Pattern patternPid = Pattern.compile(unixPidPattern);
@@ -118,7 +123,12 @@ public class ProcessHelper {
 		LOG.info("Retrieve Windows PIDs with command: '" + windowsCommand + "' and regex: '" + windowsPidPattern + "'");
 		List<Integer> pids = new ArrayList<Integer>();
 		ProcessBuilder pb = new ProcessBuilder(getCommandAsList(windowsCommand));
-		Process process = pb.start();
+		Process process = null;
+		try {
+			process = pb.start();
+		} catch (Exception ioe) {
+			throw new Exception("Windows command to get PID list: " + windowsCommand + " failed: " + ioe.getMessage(), ioe);
+		}
 		BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
 		String line = null;
 		Pattern pattern = Pattern.compile(windowsPidPattern, Pattern.CASE_INSENSITIVE);
