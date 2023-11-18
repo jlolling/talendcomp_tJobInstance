@@ -14,7 +14,7 @@ public class TestProcessHelper {
 	public void testListProcessesUnix() throws Exception {
 		ProcessHelper ph = new ProcessHelper();
 		ph.init();
-		List<Integer> pidList = ph.retrieveProcessListForUnix();
+		List<Integer> pidList = ph.retrieveProcessList();
 		System.out.println("Found: " + pidList.size() + " processes");
 		assertTrue("Empty list", pidList.size() > 0);
 	}
@@ -23,8 +23,9 @@ public class TestProcessHelper {
 	public void testListProcessesUnixAltCommand() throws Exception {
 		ProcessHelper ph = new ProcessHelper();
 		ph.init();
-		ph.setUnixCommand("ps -o pid");
-		List<Integer> pidList = ph.retrieveProcessListForUnix();
+		ph.setUnixCommand("ps -o command -o pid");
+		ph.setUnixPidPattern("([0-9]{1,8})");
+		List<Integer> pidList = ph.retrieveProcessList();
 		System.out.println("Found: " + pidList.size() + " processes");
 		assertTrue("Empty list", pidList.size() == 1);
 	}
@@ -35,12 +36,12 @@ public class TestProcessHelper {
 		ph.init();
 		ph.setUnixCommand("xyz abc");
 		try {
-			ph.retrieveProcessListForUnix();
+			ph.retrieveProcessList();
 			assertTrue(false);
 		} catch (Exception e) {
 			String m = e.getMessage();
 			System.out.println(m);
-			assertTrue(m != null && m.contains("Unix command"));
+			assertTrue(m != null && m.contains("failed"));
 		}
 	}
 

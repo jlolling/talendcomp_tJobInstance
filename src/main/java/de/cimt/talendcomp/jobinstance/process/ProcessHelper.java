@@ -31,7 +31,7 @@ public class ProcessHelper {
 	private boolean isUnix = false;
 	private boolean isWindows = false;
 	private String unixCommand = "ps -eo pid";
-	private String unixPidPattern = "[0-9]{1,8}";
+	private String unixPidPattern = "([0-9]{1,9})";
 	private String windowsCommand = "tasklist /fo list";
 	private String windowsPidPattern = "PID[:\\s]*([0-9]{1,6})";
 	
@@ -56,9 +56,9 @@ public class ProcessHelper {
 	
 	public List<Integer> retrieveProcessList() throws Exception {
 		if (isUnix) {
-			return retrieveProcessListForUnix();
+			return retrieveProcessList(unixCommand, unixPidPattern);
 		} else if (isWindows) {
-			return retrieveProcessListForWindows();
+			return retrieveProcessList(windowsCommand, windowsPidPattern);
 		} else {
 			throw new Exception("OS could not be recognized! Environment os.name=" + System.getProperty("os.name"));
 		}
@@ -86,69 +86,46 @@ public class ProcessHelper {
 		return cl;
 	}
 	
-	public List<Integer> retrieveProcessListForUnix() throws Exception {
-		LOG.info("Retrieve Unix PIDs with command: '" + unixCommand + "' and regex: '" + unixPidPattern + "'");
+	public List<Integer> retrieveProcessList(String command, String patternStr) throws Exception {
+		LOG.info("Retrieve PIDs with command: '" + command + "' and regex: '" + patternStr + "'");
 		List<Integer> pids = new ArrayList<Integer>();
-		ProcessBuilder pb = new ProcessBuilder(getCommandAsList(unixCommand));
+		ProcessBuilder pb = new ProcessBuilder(getCommandAsList(command));
 		Process process = null;
 		try {
 			process = pb.start();
 		} catch (Exception ioe) {
-			throw new Exception("Unix command to get PID list: '" + unixCommand + "' failed: " + ioe.getMessage(), ioe);
+			throw new Exception("Command to get PID list: '" + command + "' failed: " + ioe.getMessage(), ioe);
 		}
 		BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
 		String line = null;
-		Pattern patternPid = Pattern.compile(unixPidPattern);
+		Pattern patternPid = Pattern.compile(patternStr);
 		StringBuilder psCommandResponse = new StringBuilder();
+		int receivedLines = 0;
 		while ((line = br.readLine()) != null) {
+			receivedLines++;
 			line = line.trim();
 			psCommandResponse.append(line);
 			psCommandResponse.append("\n");
 			Matcher m = patternPid.matcher(line);
 			if (m.find()) {
-				int pid = Integer.parseInt(line);
-				if (pid > 1) {
-					pids.add(pid);
+				if (m.groupCount() == 0) {
+					throw new Exception("The regex to find the PIDs must have at least one group (only the first group will be used). regex: " + patternStr);
 				}
+				if (m.start() < m.end()) {
+	            	String pidStr = m.group(1);
+					int pid = Integer.parseInt(pidStr);
+					if (pid > 1) {
+						pids.add(pid);
+					}
+	            }
 			}
 		}
 		br.close();
+		if (receivedLines == 0) {
+			throw new Exception("The command: '" + command + "' to find PIDs does not have any response");
+		}
 		if (pids.isEmpty()) {
-			LOG.error("No pids could be extracted by unix command: '" + unixCommand + "' using pattern: '" + unixPidPattern + "' response:\n" + psCommandResponse);
-		}
-		return pids;
-	}
-
-	public List<Integer> retrieveProcessListForWindows() throws Exception {
-		LOG.info("Retrieve Windows PIDs with command: '" + windowsCommand + "' and regex: '" + windowsPidPattern + "'");
-		List<Integer> pids = new ArrayList<Integer>();
-		ProcessBuilder pb = new ProcessBuilder(getCommandAsList(windowsCommand));
-		Process process = null;
-		try {
-			process = pb.start();
-		} catch (Exception ioe) {
-			throw new Exception("Windows command to get PID list: " + windowsCommand + " failed: " + ioe.getMessage(), ioe);
-		}
-		BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
-		String line = null;
-		Pattern pattern = Pattern.compile(windowsPidPattern, Pattern.CASE_INSENSITIVE);
-		StringBuilder psCommandResponse = new StringBuilder();
-		while ((line = br.readLine()) != null) {
-			line = line.trim();
-			psCommandResponse.append(line);
-			psCommandResponse.append("\n");
-			Matcher m = pattern.matcher(line);
-			if (m.find()) {
-				String pidStr = m.group(1);
-				int pid = Integer.parseInt(pidStr);
-				if (pid > 1) {
-					pids.add(pid);
-				}
-			}
-		}
-		br.close();
-		if (pids.isEmpty()) {
-			LOG.error("No pids could be extracted by windows command: '" + windowsCommand + "' using pattern: '" + windowsPidPattern + "' response:\n" + psCommandResponse);
+			throw new Exception("No pids could be extracted by command: '" + command + "' using pattern: '" + patternStr + "' response:\n" + psCommandResponse);
 		}
 		return pids;
 	}

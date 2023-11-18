@@ -1588,11 +1588,8 @@ public class JobInstanceHelper {
 		ph.setUnixPidPattern(unixPidPattern);
 		ph.setWindowsPidPattern(windowsPidPattern);
 		ph.init();
-		final List<Integer> runningPidList = ph.retrieveProcessList();
+		final List<Integer> runningPidList = ph.retrieveProcessList(); // throws an exception if nothing found
 		countProcesses = runningPidList.size();
-		if (countProcesses == 0) {
-			throw new Exception("No running OS processes detected, this is not a valid state, abort check! Detected OS: " + (ph.isUnix() ? " Unix" : " Windows"));
-		}
 		debug("Found " + countProcesses + " running processes on the server: " + hostName);
 		if (lastSystemStart != null) {
 			final StringBuilder updateInstanceLastStart = new StringBuilder();
