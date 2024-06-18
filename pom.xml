@@ -4,11 +4,11 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>de.cimt.talendcomp</groupId>
 	<artifactId>cimt-talendcomp-jobinstance</artifactId>
-	<version>8.9</version>
+	<version>8.10</version>
 	<organization>
 		<name>cimt AG</name>
 	</organization>
-	<name>Job Instance Components library</name>
+	<name>Job Instance Components Library</name>
 	<dependencies>
 		<dependency>
 			<groupId>junit</groupId>

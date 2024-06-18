@@ -37,6 +37,10 @@
     if (windowsPidPattern == null || windowsPidPattern.trim().isEmpty()) {
     	windowsPidPattern = "null";
     }
+    String delay = ElementParameterParser.getValue(node, "__DELAY_START_TIME_FOR_DEAD_CHECK__");
+    if (delay == null || delay.trim().isEmpty()) {
+    	delay = "null";
+    }
 %>
 	// instantiate the job instance helper
 	de.cimt.talendcomp.jobinstance.manage.JobInstanceHelper <%=cid%> = new de.cimt.talendcomp.jobinstance.manage.JobInstanceHelper();

@@ -107,6 +107,7 @@ public class JobInstanceHelper {
 	private boolean useViewToReadStatus = false;
 	private boolean useGeneratedJID = false;
 	private static JID jid = new JID();
+	private int delayForCheckInstancesInSec = 0;
 	
 	public JobInstanceHelper() {
 		currentJobInfo = new JobInfo();
@@ -1588,9 +1589,6 @@ public class JobInstanceHelper {
 		ph.setUnixPidPattern(unixPidPattern);
 		ph.setWindowsPidPattern(windowsPidPattern);
 		ph.init();
-		final List<Integer> runningPidList = ph.retrieveProcessList(); // throws an exception if nothing found
-		countProcesses = runningPidList.size();
-		debug("Found " + countProcesses + " running processes on the server: " + hostName);
 		if (lastSystemStart != null) {
 			final StringBuilder updateInstanceLastStart = new StringBuilder();
 			updateInstanceLastStart.append("update ");
@@ -1636,11 +1634,16 @@ public class JobInstanceHelper {
 		select.append("' and ");
 		select.append(JOB_ENDED_AT);
 		select.append(" is null");
+		select.append("  and ");
+		select.append(JOB_STARTED_AT);
+		select.append(" < ?");
+		
 		synchronized(startConnection) {
-			Statement stat = startConnection.createStatement();
 			String sql = select.toString();
 			debug(sql);
-			ResultSet rs = stat.executeQuery(sql);
+			PreparedStatement stat = startConnection.prepareStatement(sql);
+			stat.setTimestamp(1, new java.sql.Timestamp(System.currentTimeMillis() - (delayForCheckInstancesInSec * 1000l)));
+			ResultSet rs = stat.executeQuery();
 			while (rs.next()) {
 				runningProcessInstancesList.add(getBrokenJobInfoFromResultSet(rs));
 				countRunningJobInstances++;
@@ -1648,6 +1651,9 @@ public class JobInstanceHelper {
 			rs.close();
 			stat.close();
 		}
+		final List<Integer> runningPidList = ph.retrieveProcessList(); // throws an exception if nothing found
+		countProcesses = runningPidList.size();
+		debug("Found " + countProcesses + " running processes on the server: " + hostName);
 		final List<JobInfo> diedProcessInstances = new ArrayList<JobInfo>();
 		for (JobInfo pi : runningProcessInstancesList) {
 			if (runningPidList.contains(pi.getHostPid()) == false) {
@@ -2008,6 +2014,16 @@ public class JobInstanceHelper {
 	public void setTableNameCounters(String tableNameCounters) {
 		if (tableNameCounters != null && tableNameCounters.trim().isEmpty() == false) {
 			ch.setTableName(tableNameCounters);
+		}
+	}
+
+	public int getDelayForCheckInstancesInSec() {
+		return delayForCheckInstancesInSec;
+	}
+
+	public void setDelayForCheckInstancesInSec(Integer delayForCheckInstancesInSec) {
+		if (delayForCheckInstancesInSec != null) {
+			this.delayForCheckInstancesInSec = delayForCheckInstancesInSec;
 		}
 	}
 	
