@@ -23,8 +23,8 @@ public class TestProcessHelper {
 	public void testListProcessesUnixAltCommand() throws Exception {
 		ProcessHelper ph = new ProcessHelper();
 		ph.init();
-		ph.setUnixCommand("ps -o command -o pid");
-		ph.setUnixPidPattern("([0-9]{2,8})");
+		ph.setUnixCommand("ps -eo pid");
+		ph.setUnixPidPattern("([0-9]{2,9})");
 		List<Integer> pidList = ph.retrieveProcessList();
 		System.out.println("Found: " + pidList.size() + " processes");
 		assertTrue("Empty list", pidList.size() == 1);

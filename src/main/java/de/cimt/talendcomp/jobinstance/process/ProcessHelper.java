@@ -31,9 +31,9 @@ public class ProcessHelper {
 	private boolean isUnix = false;
 	private boolean isWindows = false;
 	private String unixCommand = "ps -eo pid";
-	private String unixPidPattern = "([0-9]{1,9})";
+	private String unixPidPattern = "([0-9]{2,9})";
 	private String windowsCommand = "tasklist /fo list";
-	private String windowsPidPattern = "PID[:\\s]*([0-9]{1,6})";
+	private String windowsPidPattern = "PID[:\\s]*([0-9]{2,6})";
 	
 	public ProcessHelper() {}
 	
