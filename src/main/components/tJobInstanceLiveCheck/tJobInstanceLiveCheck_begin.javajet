@@ -96,6 +96,7 @@
 	<%=cid%>.setUnixPidPattern(<%=unixPidPattern%>);
 	<%=cid%>.setWindowsPidPattern(<%=windowsPidPattern%>);
 	// collect PIDs and cleanup job instance status entries
+	<%=cid%>.setDelayForCheckInstancesInSec(<%=delay%>);
 	try {
 		listDiedInstances_<%=cid%> = <%=cid%>.cleanupBrokenJobInstances();
 	} catch (Exception e) {
