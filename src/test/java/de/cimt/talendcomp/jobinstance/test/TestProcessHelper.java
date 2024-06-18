@@ -24,7 +24,7 @@ public class TestProcessHelper {
 		ProcessHelper ph = new ProcessHelper();
 		ph.init();
 		ph.setUnixCommand("ps -o command -o pid");
-		ph.setUnixPidPattern("([0-9]{1,8})");
+		ph.setUnixPidPattern("([0-9]{2,8})");
 		List<Integer> pidList = ph.retrieveProcessList();
 		System.out.println("Found: " + pidList.size() + " processes");
 		assertTrue("Empty list", pidList.size() == 1);

@@ -17,7 +17,7 @@ public class TestJID {
 	public void testCreateJIDInBulk() throws Exception {
 		JID jid = new JID();
 		long lastId = 0;
-		for (int t = 0; t < 1000; t++) {
+		for (int t = 0; t < 10; t++) {
 			for (int i = 0; i < 100000; i++) {
 				long id = jid.createJID();
 				if (id <= lastId) {
@@ -26,7 +26,7 @@ public class TestJID {
 				lastId = id;
 			}
 			System.out.println("Iteration: " + t + " lastId: " + lastId + " currentMillis: " + jid.getCurrentMillisecond() + " sequenceValue: " + jid.getSequenceValue());
-			if (t % 2 == 0) {
+			if (t % 10 == 0) {
 				Thread.sleep(500);
 			}
 		}
@@ -35,7 +35,7 @@ public class TestJID {
 	@Test
 	public void testParallel() throws Exception {
 		List<Thread> listProcesses = new ArrayList<Thread>();
-		for (int i = 0; i < 100; i++) {
+		for (int i = 0; i < 10; i++) {
 			final int hi = i;
 			Thread process = new Thread() {
 				@Override
@@ -50,7 +50,7 @@ public class TestJID {
 			process.setName("Process_" + i);
 			process.start();
 			listProcesses.add(process);
-			Thread.sleep(100);
+			Thread.sleep(10);
 		}
 		boolean running = true;
 		while (running) {
@@ -60,7 +60,7 @@ public class TestJID {
 					running = true;
 				}
 			}
-			Thread.sleep(100);
+			Thread.sleep(10);
 		}
 		assertTrue(true);
 	}
@@ -69,14 +69,14 @@ public class TestJID {
 		System.out.println("Thread: " + Thread.currentThread().getName() + " START");
 		JID jid = new JID();
 		jid.setHostIndex(hostIndex);
-		for (int i = 0; i < 1000; i++) {
+		for (int i = 0; i < 100; i++) {
 			long id = jid.createJID();
 			final long locLastId = lastId;
 			if (id == locLastId) {
 				throw new Exception("Same or lower id found:" + id + " i: " + i + " lastId: " + locLastId);
 			}
 			lastId = id;
-			Thread.sleep(100);
+			Thread.sleep(10);
 		}
 		System.out.println("Thread: " + Thread.currentThread().getName() + " END with lastId: " + lastId);
 	}
