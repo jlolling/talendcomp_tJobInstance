@@ -24,10 +24,10 @@ public class TestProcessHelper {
 		ProcessHelper ph = new ProcessHelper();
 		ph.init();
 		ph.setUnixCommand("ps -eo pid");
-		ph.setUnixPidPattern("([0-9]{2,9})");
+		ph.setUnixPidPattern("([0-9]{1,9})");
 		List<Integer> pidList = ph.retrieveProcessList();
 		System.out.println("Found: " + pidList.size() + " processes");
-		assertTrue("Empty list", pidList.size() == 1);
+		assertTrue("Empty list", pidList.size() > 0);
 	}
 
 	@Test

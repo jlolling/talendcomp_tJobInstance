@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Jan Lolling jan.lolling@gmail.com
+ * Copyright 2024 Jan Lolling jan.lolling@gmail.com
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1544,8 +1544,8 @@ public class JobInstanceHelper {
 	private int countBrokenInstances = 0;
 	private Date lastSystemStart = null;
 	
-	private String unixCommand = "ps -eo pid";
-	private String unixPidPattern = "[0-9]{1,8}";
+	private String unixCommand = "ps -eo pid=";
+	private String unixPidPattern = "([0-9]{1,8})";
 	private String windowsCommand = "tasklist /fo list";
 	private String windowsPidPattern = "PID[:\\s]*([0-9]{1,6})";
 	

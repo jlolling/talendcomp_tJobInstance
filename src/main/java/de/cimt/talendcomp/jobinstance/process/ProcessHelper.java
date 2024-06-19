@@ -30,10 +30,10 @@ public class ProcessHelper {
 	private static Logger LOG = LogManager.getLogger(ProcessHelper.class);
 	private boolean isUnix = false;
 	private boolean isWindows = false;
-	private String unixCommand = "ps -eo pid";
-	private String unixPidPattern = "([0-9]{2,9})";
+	private String unixCommand = "ps -eo pid=";
+	private String unixPidPattern = "([0-9]{1,9})";
 	private String windowsCommand = "tasklist /fo list";
-	private String windowsPidPattern = "PID[:\\s]*([0-9]{2,6})";
+	private String windowsPidPattern = "PID[:\\s]*([0-9]{1,9})";
 	
 	public ProcessHelper() {}
 	
@@ -106,10 +106,13 @@ public class ProcessHelper {
 			line = line.trim();
 			psCommandResponse.append(line);
 			psCommandResponse.append("\n");
+			if (line.isEmpty()) {
+				continue;
+			}
 			Matcher m = patternPid.matcher(line);
 			if (m.find()) {
 				if (m.groupCount() == 0) {
-					throw new Exception("The regex to find the PIDs must have at least one group (only the first group will be used). regex: " + patternStr);
+					throw new Exception("The regex to find the PIDs must have at least one group (only the first group will be used). regex: " + patternStr + " command: " + command + " current line: " + line);
 				}
 				if (m.start() < m.end()) {
 	            	String pidStr = m.group(1);
