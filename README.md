@@ -8,4 +8,4 @@ It consists of 4 components:
 
 Documentation: https://github.com/jlolling/talendcomp_tJobInstance/blob/master/doc/tJobInstanceStart.pdf
 
-These components can be obtained here in Github in the Releases section -----> (on the right side in the middle)
+These components can be obtained here in Github in the [Releases section](https://github.com/jlolling/talendcomp_tJobInstance/releases)
