@@ -1,9 +1,9 @@
 package de.cimt.talendcomp.jobinstance.manage;
 
 /**
- * 64:    Das oberste Bit wird immer 0 gesetzt um eine positive Ganzzahl zu behalten
- * 63-13: die letzten 51 Bits der Unix Time in ms
- * 12-1:  Sequence innerhalb der Millisekunde mit zufälligem Offset im Bereich von 0-1000
+ * 64:    The top bit is always set to 0 to retain a positive integer
+ * 63-13: The last 51 bits of the Unix Time in ms
+ * 12-1:  Sequence within the millisecond with random offset in the range of 0-1000
  * 
  * @author jan.lolling@gmail.com
  *
